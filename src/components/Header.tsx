@@ -2,17 +2,29 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useHeader } from "@/hooks/useHeader";
 
 const Header = () => {
+  const header = useHeader();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const navLinks = [
-    { href: "/how-it-works", label: "How It Works" },
-    { href: "/pricing", label: "Pricing" },
-    { href: "/about", label: "About" },
-    { href: "/faq", label: "FAQ" },
-    { href: "/contact", label: "Contact" },
-  ];
+  if (!header) {
+    return (
+      <header className="h-16 md:h-20 flex items-center px-4">
+        <span className="text-muted-foreground">Loading...</span>
+      </header>
+    );
+  }
+
+  const {
+    brandName,
+    brandAccent,
+    phoneNumberLabel,
+    ctaText,
+    ctaLink,
+    navLinks,
+  } = header;
+
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
@@ -24,16 +36,17 @@ const Header = () => {
               <Truck className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">
-              CarShippers<span className="text-accent">.ai</span>
+              {brandName}
+              <span className="text-accent">{brandAccent}</span>
             </span>
           </a>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
+            {navLinks?.map((link) => (
               <a
-                key={link.href}
-                href={link.href}
+                key={link.id}
+                href={link.url}
                 className="text-muted-foreground hover:text-foreground font-medium transition-colors"
               >
                 {link.label}
@@ -43,12 +56,16 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <a href="tel:+18885551234" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <a
+              href={`tel:${phoneNumberLabel}`}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
               <Phone className="w-4 h-4" />
-              <span className="font-medium">(888) 555-1234</span>
+              <span className="font-medium">{phoneNumberLabel}</span>
             </a>
-            <Button variant="hero" size="default">
-              Get Instant Quote
+
+            <Button variant="hero" size="default" asChild>
+              <a href={ctaLink}>{ctaText}</a>
             </Button>
           </div>
 
@@ -75,26 +92,29 @@ const Header = () => {
           >
             <div className="container mx-auto px-4 py-4">
               <nav className="flex flex-col gap-4">
-                {navLinks.map((link) => (
+                {navLinks?.map((link) => (
                   <a
-                    key={link.href}
-                    href={link.href}
+                    key={link.id}
+                    href={link.url}
                     className="text-foreground font-medium py-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {link.label}
                   </a>
                 ))}
+
                 <hr className="border-border" />
-                <a 
-                  href="tel:+18885551234" 
+
+                <a
+                  href={`tel:${phoneNumberLabel}`}
                   className="flex items-center gap-2 text-foreground font-medium py-2"
                 >
                   <Phone className="w-4 h-4" />
-                  (888) 555-1234
+                  {phoneNumberLabel}
                 </a>
-                <Button variant="hero" size="lg" className="w-full">
-                  Get Instant Quote
+
+                <Button variant="hero" size="lg" className="w-full" asChild>
+                  <a href={ctaLink}>{ctaText}</a>
                 </Button>
               </nav>
             </div>
