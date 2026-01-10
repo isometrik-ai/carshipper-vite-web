@@ -1,74 +1,40 @@
-import { Truck, Phone, Mail, Facebook, Twitter, Instagram } from "lucide-react";
+import { Truck, Phone, Mail, Facebook, Twitter, Instagram, LucideIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { FOOTER_ENDPOINT } from "@/constants/apiConstants";
+
+// Helper to map string icon names to Lucide components
+const IconMap: Record<string, LucideIcon> = {
+  Truck: Truck,
+  Phone: Phone,
+  Mail: Mail,
+  Facebook: Facebook,
+  Twitter: Twitter,
+  Instagram: Instagram,
+};
 
 const Footer = () => {
+  const [data, setData] = useState<any>(null);
   const currentYear = new Date().getFullYear();
 
-  const footerLinks = {
-    company: [
-      { label: "About Us", href: "/about" },
-      { label: "How It Works", href: "/how-it-works" },
-      { label: "Pricing", href: "/pricing" },
-      { label: "Reviews", href: "/#reviews" },
-      { label: "Contact", href: "/contact" },
-    ],
-    services: [
-      { label: "Open Transport", href: "/open-transport" },
-      { label: "Enclosed Transport", href: "/enclosed-transport" },
-      { label: "Flatbed Transport", href: "/flatbed-transport" },
-      { label: "Heavy Hauling", href: "/heavy-hauling" },
-      { label: "Fleet Transport", href: "/fleet-transport" },
-      { label: "Dealership Delivery", href: "/dealership-delivery" },
-      { label: "Auto Auction Shipping", href: "/auto-auction-shipping" },
-      { label: "Rental Car Logistics", href: "/rental-car-logistics" },
-      { label: "OEM Transport", href: "/oem-transport" },
-    ],
-    resources: [
-      { label: "How It Works", href: "/how-it-works" },
-      { label: "Get a Quote", href: "/quote" },
-      { label: "FAQ", href: "/faq" },
-      { label: "Blog", href: "/blog" },
-      { label: "Track Shipment", href: "/track" },
-    ],
-  };
+  useEffect(() => {
+    const fetchFooter = async () => {
+      try {
+        // Deep populate for all nested links and columns [cite: 3, 4, 5]
+        const response = await axios.get(FOOTER_ENDPOINT);
+        if (response.data?.data) {
+          setData(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching footer data:", error);
+      }
+    };
+    fetchFooter();
+  }, []);
 
-  const seoLinks = {
-    states: [
-      { label: "California", href: "/california-car-shipping" },
-      { label: "Texas", href: "/texas-car-shipping" },
-      { label: "Florida", href: "/florida-car-shipping" },
-      { label: "New York", href: "/new-york-car-shipping" },
-      { label: "Illinois", href: "/illinois-car-shipping" },
-      { label: "Pennsylvania", href: "/pennsylvania-car-shipping" },
-      { label: "Ohio", href: "/ohio-car-shipping" },
-      { label: "Georgia", href: "/georgia-car-shipping" },
-    ],
-    cities: [
-      { label: "Los Angeles", href: "/los-angeles-car-shipping" },
-      { label: "New York City", href: "/new-york-city-car-shipping" },
-      { label: "Chicago", href: "/chicago-car-shipping" },
-      { label: "Houston", href: "/houston-car-shipping" },
-      { label: "Phoenix", href: "/phoenix-car-shipping" },
-      { label: "Miami", href: "/miami-car-shipping" },
-      { label: "Dallas", href: "/dallas-car-shipping" },
-      { label: "San Francisco", href: "/san-francisco-car-shipping" },
-    ],
-    makes: [
-      { label: "Honda", href: "/ship-honda" },
-      { label: "Toyota", href: "/ship-toyota" },
-      { label: "Ford", href: "/ship-ford" },
-      { label: "Chevrolet", href: "/ship-chevrolet" },
-      { label: "Nissan", href: "/ship-nissan" },
-      { label: "Tesla", href: "/ship-tesla" },
-      { label: "BMW", href: "/ship-bmw" },
-      { label: "Mercedes", href: "/ship-mercedes" },
-    ],
-  };
+  if (!data) return null;
 
-  const socialLinks = [
-    { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
-    { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-    { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
-  ];
+  const LogoIcon = IconMap[data.logo_icon_name] || Truck;
 
   return (
     <footer className="bg-foreground text-primary-foreground">
@@ -79,33 +45,31 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <a href="/" className="flex items-center gap-2 mb-6">
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                <Truck className="w-6 h-6 text-primary-foreground" />
+                <LogoIcon className="w-6 h-6 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold">
-                CarShippers<span className="text-accent">.ai</span>
+                {data.logoText}<span className="text-accent">{data.logo_highlight_text}</span>
               </span>
             </a>
             <p className="text-primary-foreground/70 mb-6 max-w-sm">
-              AI-powered car shipping. Get instant quotes, transparent pricing, and 
-              door-to-door service from licensed carriers.
+              {data.description}
             </p>
-            
+
             {/* Contact Info */}
             <div className="space-y-3">
-              <a 
-                href="tel:+18885551234" 
-                className="flex items-center gap-3 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-              >
-                <Phone className="w-5 h-5" />
-                (888) 555-1234
-              </a>
-              <a 
-                href="mailto:info@carshippers.ai" 
-                className="flex items-center gap-3 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-              >
-                <Mail className="w-5 h-5" />
-                info@carshippers.ai
-              </a>
+              {data.feature_items?.map((item: any) => {
+                const ItemIcon = IconMap[item.icon_name] || Phone;
+                return (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    className="flex items-center gap-3 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                  >
+                    <ItemIcon className="w-5 h-5" />
+                    {item.text}
+                  </a>
+                );
+              })}
               <p className="text-primary-foreground/70 text-sm">
                 Available 24/7
               </p>
@@ -113,150 +77,80 @@ const Footer = () => {
 
             {/* Social Links */}
             <div className="flex items-center gap-3 mt-6">
-              <span className="text-primary-foreground/70 text-sm">Follow us:</span>
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors"
-                  aria-label={social.label}
-                >
-                  <social.icon className="w-4 h-4" />
-                </a>
-              ))}
+              <span className="text-primary-foreground/70 text-sm">{data.contact_link_text}</span>
+              {data.socialLinks?.map((social: any) => {
+                const SocialIcon = IconMap[social.platform] || Facebook;
+                return (
+                  <a
+                    key={social.id}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors"
+                    aria-label={social.platform}
+                  >
+                    <SocialIcon className="w-4 h-4" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
-          {/* Company Column */}
-          <div>
-            <h4 className="font-semibold mb-4">Company</h4>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link) => (
-                <li key={link.label}>
-                  <a 
-                    href={link.href}
-                    className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Services Column */}
-          <div>
-            <h4 className="font-semibold mb-4">Services</h4>
-            <ul className="space-y-3">
-              {footerLinks.services.map((link) => (
-                <li key={link.label}>
-                  <a 
-                    href={link.href}
-                    className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Resources Column */}
-          <div>
-            <h4 className="font-semibold mb-4">Resources</h4>
-            <ul className="space-y-3">
-              {footerLinks.resources.map((link) => (
-                <li key={link.label}>
-                  <a 
-                    href={link.href}
-                    className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Dynamic Navigation Columns (Company, Services, Resources) */}
+          {data.footerColumn?.map((column: any) => (
+            <div key={column.id}>
+              <h4 className="font-semibold mb-4">{column.heading}</h4>
+              <ul className="space-y-3">
+                {column.links?.map((link: any) => (
+                  <li key={link.id}>
+                    <a
+                      href={link.href}
+                      className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* SEO Links Section */}
+      {/* SEO Links Section (Horizontal Groups) */}
       <div className="border-t border-primary-foreground/10">
         <div className="container mx-auto px-4 py-8">
           <div className="space-y-6">
-            {/* States */}
-            <div>
-              <h5 className="text-sm font-semibold mb-3 text-primary-foreground/80">Ship Cars by State</h5>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                {seoLinks.states.map((link, index) => (
-                  <span key={link.label} className="flex items-center">
-                    <a 
-                      href={link.href}
-                      className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                    {index < seoLinks.states.length - 1 && (
-                      <span className="text-primary-foreground/30 ml-2">|</span>
-                    )}
-                  </span>
-                ))}
-                <span className="text-primary-foreground/30">|</span>
-                <a href="/states" className="text-accent hover:text-accent/80 transition-colors">
-                  View All States →
-                </a>
+            {data.horizontalGroups?.map((group: any) => (
+              <div key={group.id}>
+                {group.groupTitle && (
+                  <h5 className="text-sm font-semibold mb-3 text-primary-foreground/80">{group.groupTitle} </h5>
+                )}
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                  {group.links?.map((link: any, index: number) => (
+                    <span key={link.id} className="flex items-center">
+                      <a
+                        href={link.href}
+                        className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                      {index < group.links.length - 1 && (
+                        <span className="text-primary-foreground/30 ml-2">|</span>
+                      )}
+                    </span>
+                  ))}
+                  {group.viewAllLabel && (
+                    <>
+                      <span className="text-primary-foreground/30">|</span>
+                      <a href={group.viewAllHref} className="text-accent hover:text-accent/80 transition-colors">
+                        {group.viewAllLabel} →
+                      </a>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-
-            {/* Cities */}
-            <div>
-              <h5 className="text-sm font-semibold mb-3 text-primary-foreground/80">Ship Cars by City</h5>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                {seoLinks.cities.map((link, index) => (
-                  <span key={link.label} className="flex items-center">
-                    <a 
-                      href={link.href}
-                      className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                    {index < seoLinks.cities.length - 1 && (
-                      <span className="text-primary-foreground/30 ml-2">|</span>
-                    )}
-                  </span>
-                ))}
-                <span className="text-primary-foreground/30">|</span>
-                <a href="/cities" className="text-accent hover:text-accent/80 transition-colors">
-                  View All Cities →
-                </a>
-              </div>
-            </div>
-
-            {/* Car Makes */}
-            <div>
-              <h5 className="text-sm font-semibold mb-3 text-primary-foreground/80">Ship Cars by Brand</h5>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                {seoLinks.makes.map((link, index) => (
-                  <span key={link.label} className="flex items-center">
-                    <a 
-                      href={link.href}
-                      className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                    {index < seoLinks.makes.length - 1 && (
-                      <span className="text-primary-foreground/30 ml-2">|</span>
-                    )}
-                  </span>
-                ))}
-                <span className="text-primary-foreground/30">|</span>
-                <a href="/makes" className="text-accent hover:text-accent/80 transition-colors">
-                  View All Makes →
-                </a>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -266,18 +160,14 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/60">
             <p>
-              © {currentYear} CarShippers.ai. All rights reserved. | MC #XXXXXX | DOT #XXXXXX
+              © {currentYear} {data.logoText}{data.logo_highlight_text}. All rights reserved. | MC #XXXXXX | DOT #XXXXXX
             </p>
             <div className="flex items-center gap-4">
-              <a href="/privacy" className="hover:text-primary-foreground transition-colors">
-                Privacy Policy
-              </a>
-              <a href="/terms" className="hover:text-primary-foreground transition-colors">
-                Terms of Service
-              </a>
-              <a href="/sitemap.xml" className="hover:text-primary-foreground transition-colors">
-                Sitemap
-              </a>
+              {data.bottom_bar?.map((link: any) => (
+                <a key={link.id} href={link.href} className="hover:text-primary-foreground transition-colors">
+                  {link.label}
+                </a>
+              ))}
             </div>
           </div>
         </div>
