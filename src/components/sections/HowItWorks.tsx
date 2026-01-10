@@ -1,49 +1,38 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { FileText, CheckCircle, Truck, ArrowRight } from "lucide-react";
+import { useHowItWorks } from "@/hooks/useHowItWorks";
+import { RichTextBlock } from "@/types/how-it-works.types";
+import type { LucideIcon } from "lucide-react";
+
+const iconMap: Record<string, LucideIcon> = {
+  FileText,
+  CheckCircle,
+  Truck,
+};
+
+const iconBgMap: Record<string, string> = {
+  FileText: "bg-primary/10",
+  CheckCircle: "bg-success/10",
+  Truck: "bg-warning/10",
+};
+
+const iconColorMap: Record<string, string> = {
+  FileText: "text-primary",
+  CheckCircle: "text-success",
+  Truck: "text-warning",
+};
 
 const HowItWorks = () => {
-  const steps = [
-    {
-      icon: FileText,
-      number: "1",
-      title: "Request Your Quote",
-      description: "Enter your vehicle details. Our shipping experts verify routes and carrier availability—quote in 30 minutes.",
-      features: [
-        "No hidden fees",
-        "No credit card required",
-        "Expert-verified pricing",
-      ],
-      iconBg: "bg-primary/10",
-      iconColor: "text-primary",
-    },
-    {
-      icon: CheckCircle,
-      number: "2",
-      title: "Book Online",
-      description: "Love your quote? Book in 2 minutes. We assign a licensed, insured carrier from our vetted network.",
-      features: [
-        "Vetted carriers only",
-        "$1M+ insurance",
-        "4.5+ star ratings",
-      ],
-      iconBg: "bg-success/10",
-      iconColor: "text-success",
-    },
-    {
-      icon: Truck,
-      number: "3",
-      title: "Track & Receive",
-      description: "Relax while we handle the rest. Track your car in real-time. Delivered door-to-door in 5-7 days.",
-      features: [
-        "Real-time GPS tracking",
-        "Text/email updates",
-        "Door-to-door delivery",
-      ],
-      iconBg: "bg-warning/10",
-      iconColor: "text-warning",
-    },
-  ];
+  const { howItWorks, loading } = useHowItWorks();
+
+  if (loading || !howItWorks?.data?.[0]) return null;
+
+  const sectionData = howItWorks.data[0];
+  const steps = sectionData.steps.filter((s) => s.stepNumber && s.title);
+  const title = sectionData.title;
+  const subTitle = sectionData.subTitle;
+  const buttonLabel = sectionData.buttonLabel;
 
   return (
     <section id="how-it-works" className="py-20 md:py-28 bg-background">
@@ -56,57 +45,63 @@ const HowItWorks = () => {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Ship Your Car in 3 Easy Steps
+            {title}
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-            No complicated forms. No endless phone calls. Just simple, fast shipping.
+            {subTitle}
           </p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-          {steps.map((step, index) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.15 }}
-              className="relative text-center"
-            >
-              {/* Connector Line */}
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-16 left-[60%] w-[80%] h-0.5 bg-border" />
-              )}
+          {steps.map((step, index) => {
+            const IconComponent = step.icon ? iconMap[step.icon] : FileText;
+            const bgClass = step.icon ? iconBgMap[step.icon] : "bg-primary/10";
+            const colorClass = step.icon ? iconColorMap[step.icon] : "text-primary";
 
-              {/* Icon */}
-              <div className={`${step.iconBg} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 relative`}>
-                <step.icon className={`w-10 h-10 ${step.iconColor}`} />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
-                  {step.number}
+            return (
+              <motion.div
+                key={step.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+                className="relative text-center"
+              >
+                {/* Connector Line */}
+                {index < steps.length - 1 && (
+                  <div className="hidden md:block absolute top-16 left-[60%] w-[80%] h-0.5 bg-border" />
+                )}
+
+                {/* Icon */}
+                <div className={`${bgClass} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 relative`}>
+                  <IconComponent className={`w-10 h-10 ${colorClass}`} />
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
+                    {step.stepNumber}
+                  </div>
                 </div>
-              </div>
 
-              <h3 className="text-xl md:text-2xl font-bold text-foreground mb-4">
-                {step.title}
-              </h3>
+                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-4">
+                  {step.title}
+                </h3>
 
-              <p className="text-muted-foreground mb-6 leading-relaxed">
-                {step.description}
-              </p>
+                <p className="text-muted-foreground mb-6 leading-relaxed">
+                  {step.description?.map((block: RichTextBlock, idx: number) => (
+                    <span key={idx}>
+                      {block.children?.map((child, cidx) => (
+                        <span key={cidx}>
+                          {child.text}
+                        </span>
+                      ))}
+                      {idx < step.description!.length - 1 && <br />}
+                    </span>
+                  ))}
+                </p>
 
-              <ul className="space-y-2 text-left max-w-xs mx-auto">
-                {step.features.map((feature) => (
-                  <li 
-                    key={feature} 
-                    className="flex items-center gap-2 text-sm text-muted-foreground"
-                  >
-                    <CheckCircle className="w-4 h-4 text-success flex-shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
+                {/* Features list - Optional placeholder for future enhancement */}
+                {/* If you want to add features from the step object, add them here */}
+              </motion.div>
+            );
+          })}
         </div>
 
         <motion.div
@@ -117,7 +112,7 @@ const HowItWorks = () => {
           className="text-center mt-16"
         >
           <Button variant="hero" size="xl">
-            Get My Quote (30 Min)
+            {buttonLabel}
             <ArrowRight className="w-5 h-5" />
           </Button>
         </motion.div>

@@ -12,6 +12,7 @@ const IconMap: Record<string, LucideIcon> = {
 };
 
 const Header = () => {
+  const header = useHeader();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -114,6 +115,7 @@ const Header = () => {
                     {link.label}
                   </a>
                 ))}
+
                 <hr className="border-border" />
                 <a
                   href={headerCTA.phoneHref}

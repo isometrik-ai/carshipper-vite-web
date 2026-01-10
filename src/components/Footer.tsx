@@ -41,19 +41,23 @@ const Footer = () => {
       {/* Main Footer */}
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
+
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <a href="/" className="flex items-center gap-2 mb-6">
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <LogoIcon className="w-6 h-6 text-primary-foreground" />
               </div>
+
               <span className="text-xl font-bold">
                 {data.logoText}<span className="text-accent">{data.logo_highlight_text}</span>
               </span>
             </a>
+
             <p className="text-primary-foreground/70 mb-6 max-w-sm">
               {data.description}
             </p>
+
 
             {/* Contact Info */}
             <div className="space-y-3">
@@ -71,7 +75,7 @@ const Footer = () => {
                 );
               })}
               <p className="text-primary-foreground/70 text-sm">
-                Available 24/7
+                {availabilityNote}
               </p>
             </div>
 
@@ -159,9 +163,11 @@ const Footer = () => {
       <div className="border-t border-primary-foreground/10">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/60">
+
             <p>
               © {currentYear} {data.logoText}{data.logo_highlight_text}. All rights reserved. | MC #XXXXXX | DOT #XXXXXX
             </p>
+
             <div className="flex items-center gap-4">
               {data.bottom_bar?.map((link: any) => (
                 <a key={link.id} href={link.href} className="hover:text-primary-foreground transition-colors">
@@ -169,6 +175,7 @@ const Footer = () => {
                 </a>
               ))}
             </div>
+
           </div>
         </div>
       </div>
