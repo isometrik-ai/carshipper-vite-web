@@ -20,7 +20,7 @@ const HowItWorksPage = () => {
   if (isLoading || error) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!data) return null;
 
-  const { hero_section, verifiedQuotes, customerSay, shipping } = data;
+  const { hero_section, verifiedQuotes, customerSay, shipping, howItWorksCTA } = data as any;
 
   return (
     <>
@@ -181,17 +181,17 @@ const HowItWorksPage = () => {
           {/* Call to Action */}
           <section className="py-16 md:py-24 bg-primary text-primary-foreground">
             <div className="container mx-auto px-4 text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">{howItWorksCTA.title}</h2>
               <p className="text-xl opacity-80 mb-8 max-w-2xl mx-auto">
-                Get your expert-verified quote in 30 minutes or less.
+                {howItWorksCTA.description}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to="/quote">
-                  <Button variant="secondary" size="lg" className="text-lg px-8">Get Your Quote</Button>
+                  <Button variant="secondary" size="lg" className="text-lg px-8">{howItWorksCTA.primary_button_text}</Button>
                 </Link>
-                <a href="tel:+18885551234" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <a href={howItWorksCTA.secondary_button_link} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                   <Icons.Phone className="w-5 h-5" />
-                  <span className="font-medium">(888) 555-1234</span>
+                  <span className="font-medium">{howItWorksCTA.secondary_button_text}</span>
                 </a>
               </div>
             </div>

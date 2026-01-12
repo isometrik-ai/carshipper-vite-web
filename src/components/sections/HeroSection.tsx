@@ -1,26 +1,30 @@
-import { CheckCircle, Shield, Star, Truck } from "lucide-react";
+import { CheckCircle, LucideIcon, Shield, Star, Truck } from "lucide-react";
 import QuoteForm from "@/components/QuoteForm";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-bg.jpg";
+import { HeroSectionData } from "@/types/landing-page.types";
 
-const HeroSection = () => {
-  const trustIndicators = [
-    { icon: CheckCircle, text: "Licensed & Bonded (MC #123456)" },
-    { icon: Shield, text: "Fully Insured Carriers" },
-    { icon: Star, text: "4.9★ from 2,847 Customers" },
-  ];
+
+const iconMap: Record<string, LucideIcon> = {
+  CheckCircle,
+  Star,
+  Shield
+};
+
+const HeroSection = ({ heroSectionData }: { heroSectionData: HeroSectionData | undefined }) => {
+  const { hero_title, hero_title_highlight, description, secondary_description, hero_section_tagline, Stats } = heroSectionData as HeroSectionData;
 
   return (
     <section className="relative min-h-screen pt-20 overflow-hidden">
       {/* Background Image */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${heroBg})` }}
       />
-      
+
       {/* Overlay Gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/85 to-primary/70" />
-      
+
       {/* Additional Accent Overlay */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-20 left-10 w-72 h-72 bg-accent rounded-full blur-3xl" />
@@ -43,36 +47,37 @@ const HeroSection = () => {
               className="inline-flex items-center gap-2 bg-primary-foreground/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6"
             >
               <Truck className="w-4 h-4" />
-              <span className="text-sm font-medium">AI-Powered Car Shipping</span>
+              <span className="text-sm font-medium">{hero_section_tagline}</span>
             </motion.div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Ship Your Car Anywhere in the US{" "}
-              <span className="text-gradient">in 30 Minutes</span>
+              {hero_title}
+              <span className="text-gradient">{hero_title_highlight}</span>
             </h1>
 
             <p className="text-xl md:text-2xl mb-8 text-primary-foreground/80 leading-relaxed">
-              Expert-verified quotes. Licensed carriers. Door-to-door service.
+              {description}
               <br className="hidden md:block" />
-              No hidden fees. No waiting days.
+              {secondary_description}
             </p>
 
             {/* Trust Indicators */}
             <div className="flex flex-wrap gap-4 md:gap-6">
-              {trustIndicators.map((indicator, index) => (
-                <motion.div
-                  key={indicator.text}
+              {Stats.map((indicator, index) => {
+                const IconComponent = iconMap[indicator.icon_name];
+                return <motion.div
+                  key={indicator.label}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
                   className="flex items-center gap-2"
                 >
-                  <indicator.icon className="w-5 h-5 text-success" />
+                  <IconComponent className="w-5 h-5 text-success" />
                   <span className="text-sm md:text-base text-primary-foreground/90">
-                    {indicator.text}
+                    {indicator.label}
                   </span>
                 </motion.div>
-              ))}
+              })}
             </div>
 
             {/* Stats Preview */}

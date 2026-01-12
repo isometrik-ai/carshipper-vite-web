@@ -8,7 +8,7 @@ interface HowItWorksApiResponse {
 
 const fetchHowItWorks = async (): Promise<HowItWorksResponse> => {
   const { data } = await apiClient.get<HowItWorksApiResponse>(
-    "/api/how-it-work?populate[hero_section][populate]=*&populate[verifiedQuotes][populate]=*&populate[customerSay][populate]=*&populate[shipping][populate]=*"
+    "/api/how-it-work?populate[hero_section][populate]=*&populate[verifiedQuotes][populate]=*&populate[customerSay][populate]=*&populate[shipping][populate]=*&populate[howItWorksCTA][populate]=*"
   );
   return data.data;
 };

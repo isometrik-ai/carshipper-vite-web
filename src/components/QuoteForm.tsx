@@ -26,7 +26,6 @@ type Step = "vehicles" | "running" | "pickup" | "drops" | "transport" | "timefra
 const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormProps) => {
   // Fetch dynamic configuration via React Query
   const { data: configResponse, isLoading: isConfigLoading } = useQuoteFormConfig();
-  console.log(configResponse);
   const config = configResponse;
 
   const [currentStep, setCurrentStep] = useState<Step>("vehicles");
