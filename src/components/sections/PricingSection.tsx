@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Flame } from "lucide-react";
+import { PricingSectionProps } from "@/types/landing-page.types";
 
 interface RouteCardProps {
   from: string;
@@ -56,55 +57,7 @@ const RouteCard = ({ from, to, price, timeline, distance, popular }: RouteCardPr
   );
 };
 
-const PricingSection = () => {
-  const routes = [
-    {
-      from: "Los Angeles, CA",
-      to: "New York, NY",
-      distance: "2,790 miles",
-      price: "$1,450",
-      timeline: "7-10 days",
-      popular: true,
-    },
-    {
-      from: "Miami, FL",
-      to: "Chicago, IL",
-      distance: "1,380 miles",
-      price: "$950",
-      timeline: "5-7 days",
-    },
-    {
-      from: "Austin, TX",
-      to: "Seattle, WA",
-      distance: "2,140 miles",
-      price: "$1,280",
-      timeline: "6-9 days",
-      popular: true,
-    },
-    {
-      from: "Phoenix, AZ",
-      to: "Boston, MA",
-      distance: "2,660 miles",
-      price: "$1,380",
-      timeline: "7-10 days",
-    },
-    {
-      from: "Denver, CO",
-      to: "Atlanta, GA",
-      distance: "1,420 miles",
-      price: "$980",
-      timeline: "5-7 days",
-    },
-    {
-      from: "San Francisco, CA",
-      to: "Dallas, TX",
-      distance: "1,730 miles",
-      price: "$1,150",
-      timeline: "5-8 days",
-      popular: true,
-    },
-  ];
-
+const PricingSection = ({ title, subTitle, routes, buttonLabel, routeTitle }: PricingSectionProps) => {
   return (
     <section id="pricing" className="py-20 md:py-28 bg-background">
       <div className="container mx-auto px-4">
@@ -116,10 +69,10 @@ const PricingSection = () => {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Transparent Pricing, No Surprises
+            {title}
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-            See what real customers pay for popular routes
+            {subTitle}
           </p>
         </motion.div>
 
@@ -145,10 +98,10 @@ const PricingSection = () => {
           className="text-center mt-16"
         >
           <p className="text-muted-foreground mb-6">
-            Your route not listed? Get your custom quote in 30 seconds.
+            {routeTitle}
           </p>
           <Button variant="hero" size="xl">
-            Calculate My Custom Price
+            {buttonLabel}
             <ArrowRight className="w-5 h-5" />
           </Button>
         </motion.div>

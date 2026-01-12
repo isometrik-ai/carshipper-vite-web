@@ -4,59 +4,19 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { CheckCircle, Info, ArrowRight } from "lucide-react";
+import { usePricing } from "@/hooks/api/usePricing";
 
 const Pricing = () => {
-  const pricingFactors = [
-    { factor: "Distance", description: "Longer routes cost more, but per-mile rate decreases" },
-    { factor: "Vehicle Size", description: "SUVs, trucks cost $50-200 more than sedans" },
-    { factor: "Transport Type", description: "Enclosed transport costs $300-500 more" },
-    { factor: "Season", description: "Summer and snowbird season (winter) cost 10-20% more" },
-    { factor: "Pickup Speed", description: "Expedited (1-2 days) costs $100-300 more" },
-    { factor: "Location", description: "Rural areas may cost $50-150 more" },
-  ];
+  const { data, isLoading, error } = usePricing();
 
-  const popularRoutes = [
-    { from: "Los Angeles", to: "New York", distance: "2,790 mi", price: "$1,400-1,600", days: "7-10" },
-    { from: "Los Angeles", to: "Chicago", distance: "2,015 mi", price: "$1,200-1,400", days: "6-8" },
-    { from: "Los Angeles", to: "Miami", distance: "2,750 mi", price: "$1,500-1,700", days: "7-10" },
-    { from: "New York", to: "Miami", distance: "1,280 mi", price: "$900-1,100", days: "4-6" },
-    { from: "Houston", to: "Los Angeles", distance: "1,550 mi", price: "$1,000-1,200", days: "5-7" },
-    { from: "Phoenix", to: "Chicago", distance: "1,750 mi", price: "$1,100-1,300", days: "5-7" },
-    { from: "Seattle", to: "Denver", distance: "1,320 mi", price: "$950-1,150", days: "4-6" },
-    { from: "Atlanta", to: "Dallas", distance: "780 mi", price: "$700-900", days: "3-4" },
-  ];
-
-  const serviceTypes = [
-    {
-      name: "Open Transport",
-      price: "$800-1,400",
-      description: "Most popular option. Your car is shipped on an open carrier with 7-10 other vehicles.",
-      features: [
-        "90% of customers choose this",
-        "Best value for standard vehicles",
-        "Safe and reliable",
-        "Fully insured",
-      ],
-      recommended: true,
-    },
-    {
-      name: "Enclosed Transport",
-      price: "$1,500-2,500",
-      description: "Premium protection. Your car is shipped in a fully enclosed trailer.",
-      features: [
-        "Maximum protection from elements",
-        "Ideal for luxury & exotic cars",
-        "Classic and collectible vehicles",
-        "Lowered or modified cars",
-      ],
-      recommended: false,
-    },
-  ];
+  if (isLoading || error || !data) {
+    return <div className="min-h-screen flex items-center justify-center">Loading Pricing...</div>;
+  }
 
   return (
     <>
       <Helmet>
-        <title>Car Shipping Prices | Cost Calculator | CarShippers.ai</title>
+        <title>{data.helmet_title}</title>
         <meta
           name="description"
           content="Car shipping costs $800-2,500 depending on distance, vehicle size, and transport type. Get your exact price in 30 minutes. No hidden fees."
@@ -66,7 +26,7 @@ const Pricing = () => {
 
       <div className="min-h-screen flex flex-col">
         <Header />
-        
+
         <main className="flex-1 pt-20">
           {/* Hero */}
           <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background">
@@ -78,20 +38,20 @@ const Pricing = () => {
                 className="max-w-3xl mx-auto text-center"
               >
                 <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                  Transparent <span className="text-primary">Pricing</span>
+                  {data.title} <span className="text-primary">{data.title_highlight}</span>
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8">
-                  No hidden fees. No surprises. Get your exact price in 30 minutes.
+                  {data.sub_title}
                 </p>
                 <div className="inline-flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-full text-sm font-medium">
                   <CheckCircle className="w-4 h-4" />
-                  Price you see = Price you pay
+                  {data.sub_title_highlight}
                 </div>
               </motion.div>
             </div>
           </section>
 
-          {/* Service Types */}
+          {/* Service Types - Transport Options */}
           <section className="py-16">
             <div className="container mx-auto px-4">
               <motion.h2
@@ -101,19 +61,19 @@ const Pricing = () => {
                 transition={{ duration: 0.5 }}
                 className="text-3xl font-bold text-center mb-12"
               >
-                Transport Options
+                {data.service_title}
               </motion.h2>
               <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {serviceTypes.map((service, index) => (
+                {/* Note: Ensure your Strapi JSON includes 'serviceTypes' component array if not in the provided snippet */}
+                {data.serviceTypes?.map((service: any, index: number) => (
                   <motion.div
                     key={service.name}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className={`relative bg-card rounded-2xl border p-6 ${
-                      service.recommended ? "border-primary shadow-lg" : "border-border"
-                    }`}
+                    className={`relative bg-card rounded-2xl border p-6 ${service.recommended ? "border-primary shadow-lg" : "border-border"
+                      }`}
                   >
                     {service.recommended && (
                       <span className="absolute -top-3 left-6 bg-primary text-primary-foreground text-xs px-3 py-1 rounded-full font-medium">
@@ -124,7 +84,7 @@ const Pricing = () => {
                     <p className="text-3xl font-bold text-primary mb-4">{service.price}</p>
                     <p className="text-muted-foreground mb-4">{service.description}</p>
                     <ul className="space-y-2">
-                      {service.features.map((feature, i) => (
+                      {service.features?.map((feature: string, i: number) => (
                         <li key={i} className="flex items-start gap-2 text-sm">
                           <CheckCircle className="w-4 h-4 text-success mt-0.5" />
                           <span>{feature}</span>
@@ -147,24 +107,23 @@ const Pricing = () => {
                 transition={{ duration: 0.5 }}
                 className="text-3xl font-bold text-center mb-4"
               >
-                Popular Route Pricing
+                {data.popular_route_title}
               </motion.h2>
               <p className="text-center text-muted-foreground mb-12">
-                Average prices for open transport. Get your exact quote in 30 minutes.
+                {data.sub_popular_routes_title}
               </p>
               <div className="max-w-5xl mx-auto overflow-x-auto">
                 <table className="w-full bg-card rounded-2xl border border-border overflow-hidden">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-4 font-semibold">Route</th>
-                      <th className="text-left p-4 font-semibold">Distance</th>
-                      <th className="text-left p-4 font-semibold">Price Range</th>
-                      <th className="text-left p-4 font-semibold">Transit Time</th>
+                      {data.popular_route_table_title?.map((header: string) => (
+                        <th key={header} className="text-left p-4 font-semibold">{header}</th>
+                      ))}
                       <th className="p-4"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {popularRoutes.map((route, index) => (
+                    {data.popularRoutes?.map((route: any, index: number) => (
                       <motion.tr
                         key={index}
                         initial={{ opacity: 0 }}
@@ -182,13 +141,13 @@ const Pricing = () => {
                         <td className="p-4 font-semibold text-primary">{route.price}</td>
                         <td className="p-4 text-muted-foreground">{route.days} days</td>
                         <td className="p-4">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="text-primary"
-                            onClick={() => window.location.href = "/#quote-form"}
+                            onClick={() => window.location.href = data.quoteButton?.label_url || "/#quote-form"}
                           >
-                            Quote <ArrowRight className="w-4 h-4 ml-1" />
+                            {data.quoteButton?.button_label} <ArrowRight className="w-4 h-4 ml-1" />
                           </Button>
                         </td>
                       </motion.tr>
@@ -216,7 +175,7 @@ const Pricing = () => {
                   Understanding the factors that determine your shipping cost.
                 </p>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {pricingFactors.map((item, index) => (
+                  {data.pricingFactors?.map((item: any, index: number) => (
                     <motion.div
                       key={item.factor}
                       initial={{ opacity: 0, y: 20 }}
@@ -248,17 +207,10 @@ const Pricing = () => {
                   transition={{ duration: 0.5 }}
                   className="text-3xl font-bold mb-8"
                 >
-                  Every Quote Includes
+                  {data.quote_tilte}
                 </motion.h2>
                 <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {[
-                    "Door-to-door service",
-                    "Full insurance coverage",
-                    "Real-time tracking",
-                    "No hidden fees",
-                    "Licensed carriers only",
-                    "24/7 support",
-                  ].map((item, index) => (
+                  {data.quotes?.map((item: string, index: number) => (
                     <motion.div
                       key={item}
                       initial={{ opacity: 0, scale: 0.9 }}
@@ -286,24 +238,24 @@ const Pricing = () => {
                 transition={{ duration: 0.5 }}
               >
                 <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-                  Get Your Exact Price
+                  {data.pricingCTA?.title}
                 </h2>
                 <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-                  Expert-verified quote delivered in 30 minutes. No obligation.
+                  {data.pricingCTA?.description}
                 </p>
                 <Button
                   variant="secondary"
                   size="lg"
                   className="text-lg px-8"
-                  onClick={() => window.location.href = "/#quote-form"}
+                  onClick={() => window.location.href = data.pricingCTA?.primary_button_link || "/#quote-form"}
                 >
-                  Get Your Quote
+                  {data.pricingCTA?.primary_button_text}
                 </Button>
               </motion.div>
             </div>
           </section>
         </main>
-        
+
         <Footer />
       </div>
     </>

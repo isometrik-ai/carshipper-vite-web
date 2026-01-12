@@ -1,3 +1,4 @@
+import { TestimonialsSectionProps } from "@/types/landing-page.types";
 import { motion } from "framer-motion";
 import { Star, CheckCircle, Car, MapPin } from "lucide-react";
 
@@ -74,39 +75,7 @@ const TestimonialCard = ({
   );
 };
 
-const TestimonialsSection = () => {
-  const testimonials: TestimonialCardProps[] = [
-    {
-      name: "Marcus T.",
-      location: "Los Angeles, CA",
-      rating: 5,
-      vehicle: "2023 Tesla Model 3",
-      route: "CA → FL",
-      quote:
-        "Got my quote in 28 seconds! Competitors took 3 hours to even respond. Shipped my Tesla from CA to FL—flawless experience. Driver was professional, car arrived perfect.",
-      verified: true,
-    },
-    {
-      name: "Jennifer L.",
-      location: "Miami, FL",
-      rating: 5,
-      vehicle: "2021 Honda Accord",
-      route: "FL → TX",
-      quote:
-        "No hidden fees, no surprises. The price they quoted was EXACTLY what I paid. Tracking was amazing—I knew where my car was every step of the way. Highly recommend!",
-      verified: true,
-    },
-    {
-      name: "David K.",
-      location: "Austin, TX",
-      rating: 5,
-      vehicle: "2020 Ford F-150",
-      route: "TX → WA",
-      quote:
-        "Used them for a cross-country move. Shipped my truck from Texas to Washington. Driver called ahead, picked up on time, delivered 2 days early. Will use again.",
-      verified: true,
-    },
-  ];
+const TestimonialsSection = ({ title, subTitle, testimonials, reviewsInfo, testimonialsLink }: TestimonialsSectionProps) => {
 
   return (
     <section id="reviews" className="py-20 md:py-28 bg-muted/30">
@@ -119,10 +88,10 @@ const TestimonialsSection = () => {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            What Our Customers Say
+            {title}
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Real reviews from real customers
+            {subTitle}
           </p>
         </motion.div>
 
@@ -153,14 +122,14 @@ const TestimonialsSection = () => {
               <Star key={i} className="w-6 h-6 fill-warning text-warning" />
             ))}
             <span className="ml-2 text-lg font-semibold text-foreground">
-              4.9/5 from 2,847 reviews
+              {reviewsInfo}
             </span>
           </div>
           <a
             href="/reviews"
             className="text-primary hover:underline font-semibold inline-flex items-center gap-1"
           >
-            Read All Reviews →
+            {testimonialsLink}
           </a>
         </motion.div>
       </div>
