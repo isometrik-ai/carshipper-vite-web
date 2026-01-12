@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 /**
  * Helper to build Strapi URLs with nested population logic.
@@ -6,7 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_BASE_URL;
  */
 const buildUrl = (path: string, params?: string) => {
     const query = params ? `?${params}` : "";
-    return `${API_BASE_URL}/${path}${query}`;
+    return `${API_BASE_URL}/api/${path}${query}`;
 };
 
 export const FAQ_ENDPOINT = buildUrl(

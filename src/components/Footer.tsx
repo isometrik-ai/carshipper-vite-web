@@ -75,7 +75,7 @@ const Footer = () => {
                 );
               })}
               <p className="text-primary-foreground/70 text-sm">
-                {availabilityNote}
+                {data.availabilityNote}
               </p>
             </div>
 

@@ -1,38 +1,55 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { FileText, CheckCircle, Truck, ArrowRight } from "lucide-react";
-import { useHowItWorks } from "@/hooks/useHowItWorks";
+import { FileText, CheckCircle, Truck, ArrowRight, UserCheck, ClipboardCheck, CreditCard, MapPin } from "lucide-react";
 import { RichTextBlock } from "@/types/how-it-works.types";
 import type { LucideIcon } from "lucide-react";
+import { HOW_IT_WORKS_ENDPOINT } from "@/constants/apiConstants";
 
+// Expanded icon map to match the icons used in your shipping process JSON
 const iconMap: Record<string, LucideIcon> = {
   FileText,
   CheckCircle,
   Truck,
-};
-
-const iconBgMap: Record<string, string> = {
-  FileText: "bg-primary/10",
-  CheckCircle: "bg-success/10",
-  Truck: "bg-warning/10",
-};
-
-const iconColorMap: Record<string, string> = {
-  FileText: "text-primary",
-  CheckCircle: "text-success",
-  Truck: "text-warning",
+  UserCheck,
+  ClipboardCheck,
+  CreditCard,
+  MapPin,
 };
 
 const HowItWorks = () => {
-  const { howItWorks, loading } = useHowItWorks();
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (loading || !howItWorks?.data?.[0]) return null;
+  useEffect(() => {
+    const fetchHowItWorks = async () => {
+      try {
+        // Fetching data from your optimized endpoint
+        const response = await axios.get(HOW_IT_WORKS_ENDPOINT);
+        if (response.data?.data) {
+          // Strapi v5 returns data directly in response.data.data
+          setData(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching How It Works data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHowItWorks();
+  }, []);
 
-  const sectionData = howItWorks.data[0];
-  const steps = sectionData.steps.filter((s) => s.stepNumber && s.title);
-  const title = sectionData.title;
-  const subTitle = sectionData.subTitle;
-  const buttonLabel = sectionData.buttonLabel;
+  // Skeleton/Loading state
+  if (loading) return null;
+
+  // Destructure based on your Strapi JSON structure
+  const shipping = data?.shipping;
+  if (!shipping) return null;
+
+  const title = shipping.title;
+  const subTitle = shipping.descrption; // Matching your JSON's typo "descrption"
+  const steps = shipping.shipping_process || [];
 
   return (
     <section id="how-it-works" className="py-20 md:py-28 bg-background">
@@ -54,9 +71,8 @@ const HowItWorks = () => {
 
         <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
           {steps.map((step, index) => {
-            const IconComponent = step.icon ? iconMap[step.icon] : FileText;
-            const bgClass = step.icon ? iconBgMap[step.icon] : "bg-primary/10";
-            const colorClass = step.icon ? iconColorMap[step.icon] : "text-primary";
+            // Map the string icon_name from Strapi to the Lucide Component
+            const IconComponent = step.icon_name ? iconMap[step.icon_name] : FileText;
 
             return (
               <motion.div
@@ -67,16 +83,16 @@ const HowItWorks = () => {
                 transition={{ duration: 0.5, delay: index * 0.15 }}
                 className="relative text-center"
               >
-                {/* Connector Line */}
+                {/* Connector Line - Only show between items in 3-column grid */}
                 {index < steps.length - 1 && (
                   <div className="hidden md:block absolute top-16 left-[60%] w-[80%] h-0.5 bg-border" />
                 )}
 
-                {/* Icon */}
-                <div className={`${bgClass} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 relative`}>
-                  <IconComponent className={`w-10 h-10 ${colorClass}`} />
+                {/* Icon Container */}
+                <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                  <IconComponent className="w-10 h-10 text-primary" />
                   <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
-                    {step.stepNumber}
+                    {step.serial_no}
                   </div>
                 </div>
 
@@ -85,20 +101,12 @@ const HowItWorks = () => {
                 </h3>
 
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  {step.description?.map((block: RichTextBlock, idx: number) => (
-                    <span key={idx}>
-                      {block.children?.map((child, cidx) => (
-                        <span key={cidx}>
-                          {child.text}
-                        </span>
-                      ))}
-                      {idx < step.description!.length - 1 && <br />}
-                    </span>
-                  ))}
+                  {step.description}
                 </p>
 
-                {/* Features list - Optional placeholder for future enhancement */}
-                {/* If you want to add features from the step object, add them here */}
+                <div className="text-xs font-semibold text-primary uppercase tracking-wider">
+                  Est. Time: {step.time}
+                </div>
               </motion.div>
             );
           })}
@@ -112,8 +120,8 @@ const HowItWorks = () => {
           className="text-center mt-16"
         >
           <Button variant="hero" size="xl">
-            {buttonLabel}
-            <ArrowRight className="w-5 h-5" />
+            Get Your Free Quote
+            <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </motion.div>
       </div>

@@ -12,7 +12,6 @@ const IconMap: Record<string, LucideIcon> = {
 };
 
 const Header = () => {
-  const header = useHeader();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +19,7 @@ const Header = () => {
   useEffect(() => {
     const fetchHeaderData = async () => {
       try {
+        // Fetching Header Single Type with navLinks and headerCTA populated 
         const response = await axios.get(HEADER_ENDPOINT);
         if (response.data?.data) {
           setData(response.data.data);
@@ -115,7 +115,6 @@ const Header = () => {
                     {link.label}
                   </a>
                 ))}
-
                 <hr className="border-border" />
                 <a
                   href={headerCTA.phoneHref}
