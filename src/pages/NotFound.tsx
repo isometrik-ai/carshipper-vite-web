@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect } from "react";
+import { useNotFound } from "@/hooks/api/useNotFound";
 
 interface HomeLink {
   id: number;
@@ -16,32 +16,14 @@ interface NotFoundData {
 
 const NotFound = () => {
   const location = useLocation();
-  const [data, setData] = useState<NotFoundData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, error } = useNotFound();
 
   // Existing effect for logging 404 errors
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
   }, [location.pathname]);
 
-  // Fetch dynamic 404 data from Strapi
-  useEffect(() => {
-    const fetchNotFoundData = async () => {
-      try {
-        const response = await axios.get("http://localhost:1337/api/not-found?populate=*");
-        // Strapi v5 returns data directly in response.data.data
-        setData(response.data.data);
-      } catch (error) {
-        console.error("Error fetching 404 page data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotFoundData();
-  }, []);
-
-  if (loading) return null;
+  if (isLoading || error) return null;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted">

@@ -1,7 +1,5 @@
 import { Truck, Phone, Mail, Facebook, Twitter, Instagram, LucideIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { FOOTER_ENDPOINT } from "@/constants/apiConstants";
+import { useFooter } from "@/hooks/api/useFooter";
 
 // Helper to map string icon names to Lucide components
 const IconMap: Record<string, LucideIcon> = {
@@ -14,25 +12,12 @@ const IconMap: Record<string, LucideIcon> = {
 };
 
 const Footer = () => {
-  const [data, setData] = useState<any>(null);
+  const { data: footerResponse, isLoading, error } = useFooter();
   const currentYear = new Date().getFullYear();
 
-  useEffect(() => {
-    const fetchFooter = async () => {
-      try {
-        // Deep populate for all nested links and columns [cite: 3, 4, 5]
-        const response = await axios.get(FOOTER_ENDPOINT);
-        if (response.data?.data) {
-          setData(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching footer data:", error);
-      }
-    };
-    fetchFooter();
-  }, []);
+  if (isLoading || error || !footerResponse?.data) return null;
 
-  if (!data) return null;
+  const data = footerResponse.data;
 
   const LogoIcon = IconMap[data.logo_icon_name] || Truck;
 

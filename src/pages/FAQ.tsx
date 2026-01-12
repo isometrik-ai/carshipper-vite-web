@@ -1,66 +1,40 @@
 import { Helmet } from "react-helmet-async";
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useMemo } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import FAQSection from "./FAQSection";
-import { FAQ_ENDPOINT } from "@/constants/apiConstants";
-import { FAQTexts } from "@/types/faq.types";
+import { useFAQ } from "@/hooks/api/useFAQ";
 
 const FAQ = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [faqCategories, setFaqCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [faqsTexts, setFaqsTexts] = useState<FAQTexts>({
-    title: "",
-    sub_title: "",
-    loading_faq_msg: "",
-    no_mached_msg: "",
-    still_question_title: "",
-    button_label: "",
-    faq_helmet_title: "",
-  });
+  const { data: faqData, isLoading, error } = useFAQ();
 
-  useEffect(() => {
-    const fetchFAQs = async () => {
-      try {
-        const response = await axios.get(FAQ_ENDPOINT);
-        const attr = response.data?.data;
+  const faqCategories = faqData?.FaqCategories || [];
+  const faqsTexts = {
+    title: faqData?.title || "",
+    sub_title: faqData?.sub_title || "",
+    loading_faq_msg: faqData?.loading_faq_msg || "",
+    no_mached_msg: faqData?.no_mached_msg || "",
+    still_question_title: faqData?.still_question_title || "",
+    button_label: faqData?.button_label || "",
+    faq_helmet_title: faqData?.faq_helmet_title || "",
+  };
 
-        if (attr?.FaqCategories) {
-          setFaqCategories(attr.FaqCategories);
-          setFaqsTexts({
-            title: attr.title,
-            sub_title: attr.sub_title,
-            loading_faq_msg: attr.loading_faq_msg,
-            no_mached_msg: attr.no_mached_msg,
-            still_question_title: attr.still_question_title,
-            button_label: attr.button_label,
-            faq_helmet_title: attr.faq_helmet_title,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching FAQs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFAQs();
-  }, []);
-
-  // Filtering logic adapted for Athe 'questions' field in your JSON
-  const filteredCategories = faqCategories.map(category => ({
-    ...category,
-    FAQS: category.FAQS.filter(
-      (faq: any) =>
-        faq.questions.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-  })).filter(category => category.FAQS.length > 0);
+  // Filtering logic adapted for the 'questions' field in your JSON
+  const filteredCategories = useMemo(() => {
+    if (!faqCategories.length) return [];
+    return faqCategories.map(category => ({
+      ...category,
+      FAQS: category.FAQS.filter(
+        (faq: any) =>
+          faq.questions.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    })).filter(category => category.FAQS.length > 0);
+  }, [faqCategories, searchQuery]);
 
   return (
     <>
@@ -93,15 +67,17 @@ const FAQ = () => {
           <section className="py-16">
             <div className="container mx-auto px-4">
               <div className="max-w-3xl mx-auto">
-                {loading ? (
+                {isLoading ? (
                   <div className="text-center py-12">{faqsTexts.loading_faq_msg}</div>
+                ) : error ? (
+                  <div className="text-center py-12 text-red-500">Error loading FAQs</div>
                 ) : (
                   filteredCategories.map((category, index) => (
                     <FAQSection key={category.id} category={category} index={index} />
                   ))
                 )}
 
-                {!loading && filteredCategories.length === 0 && (
+                {!isLoading && !error && filteredCategories.length === 0 && (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">{faqsTexts.no_mached_msg} "{searchQuery}"</p>
                   </div>

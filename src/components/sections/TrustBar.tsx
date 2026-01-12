@@ -1,12 +1,8 @@
 import { motion } from "framer-motion";
 
-const TrustBar = () => {
-  const stats = [
-    { value: "30min", label: "Expert-Verified Quotes" },
-    { value: "10,000+", label: "Cars Shipped" },
-    { value: "4.9★", label: "Customer Rating" },
-    { value: "$0", label: "Hidden Fees" },
-  ];
+import { TrustBarProps } from "@/types/landing-page.types";
+
+const TrustBar = ({ stats }: TrustBarProps) => {
 
   return (
     <section className="py-12 bg-muted/50">

@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
 import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { BlocksRenderer, type BlocksContent } from "@strapi/blocks-react-renderer";
+import { usePrivacy } from "@/hooks/api/usePrivacy";
 
 // Define TypeScript interfaces
 interface PrivacySeo {
@@ -20,41 +19,11 @@ interface PolicySection {
   content: BlocksContent;
 }
 
-interface PrivacyData {
-  page_title: string;
-  last_updated: string;
-  privacySeo: PrivacySeo[];
-  policy_section: PolicySection[];
-}
-
 const Privacy = () => {
-  const [privacyData, setPrivacyData] = useState<PrivacyData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: privacyData, isLoading, error } = usePrivacy();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetching with populate=* to get components and SEO data
-        const response = await axios.get("http://localhost:1337/api/privacy?populate=*");
-
-        // Strapi v4/v5 wraps the response in a 'data' object
-        // If it's a Single Type, it usually looks like response.data.data.attributes
-        // Depending on your Strapi version, you may need to adjust this path:
-        const extractedData = response.data.data.attributes || response.data.data;
-
-        setPrivacyData(extractedData);
-      } catch (error) {
-        console.error("Error fetching privacy policy:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  if (!privacyData) return <div className="min-h-screen flex items-center justify-center">No data found.</div>;
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (error || !privacyData) return <div className="min-h-screen flex items-center justify-center">No data found.</div>;
 
   // Extract SEO data safely
   const seo = privacyData.privacySeo?.[0];

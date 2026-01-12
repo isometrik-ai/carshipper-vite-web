@@ -1,36 +1,15 @@
-import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { CheckCircle, Info, ArrowRight } from "lucide-react";
-import axios from "axios";
-import { PRICING_ENDPOINT } from "@/constants/apiConstants";
+import { usePricing } from "@/hooks/api/usePricing";
 
 const Pricing = () => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, error } = usePricing();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(PRICING_ENDPOINT);
-
-        if (response.data?.data) {
-          setData(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching Pricing page data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading || !data) {
+  if (isLoading || error || !data) {
     return <div className="min-h-screen flex items-center justify-center">Loading Pricing...</div>;
   }
 

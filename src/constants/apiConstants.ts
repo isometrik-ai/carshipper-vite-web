@@ -37,3 +37,5 @@ export const HOW_IT_WORKS_ENDPOINT = buildUrl(
     "how-it-work",
     "populate[hero_section][populate]=*&populate[verifiedQuotes][populate]=*&populate[customerSay][populate]=*&populate[shipping][populate]=*"
 );
+
+export const LANDING_PAGE_ENDPOINT = buildUrl("landing-page", "populate[FAQSection][populate]=*&populate[TestimonialsSection][populate]=*&populate[landingPageSeo][populate]=*&populate[FinalCTA][populate]=*&populate[trustBar][populate]=*&populate[why_choose_us][populate]=*&populate[pricing_section][populate]=*");    

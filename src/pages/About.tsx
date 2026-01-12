@@ -1,6 +1,4 @@
 import { Helmet } from "react-helmet-async";
-import { useState, useEffect } from "react";
-import axios from "axios";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -16,8 +14,7 @@ import {
   LucideIcon,
   Phone
 } from "lucide-react";
-import { ABOUT_ENDPOINT } from "@/constants/apiConstants";
-import { AboutData } from "@/types/about.types";
+import { useAbout } from "@/hooks/api/useAbout";
 
 const iconMap: Record<string, LucideIcon> = {
   Shield,
@@ -29,26 +26,9 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 const About = () => {
-  const [data, setData] = useState<AboutData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const { data, isLoading, error } = useAbout();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(ABOUT_ENDPOINT);
-        if (response.data?.data) {
-          setData(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching About page data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  if (loading || !data) {
+  if (isLoading || error || !data) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 

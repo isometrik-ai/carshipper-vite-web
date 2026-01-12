@@ -1,5 +1,3 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
 import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import * as Icons from "lucide-react"; // Import all icons for dynamic mapping
 import { Link } from "react-router-dom";
-import { HOW_IT_WORKS_ENDPOINT } from "@/constants/apiConstants";
+import { useHowItWorks } from "@/hooks/api/useHowItWorks";
 
 // Helper to render Lucide icons by name from Strapi
 const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
@@ -17,25 +15,9 @@ const DynamicIcon = ({ name, className }: { name: string; className?: string }) 
 };
 
 const HowItWorksPage = () => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, error } = useHowItWorks();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(HOW_IT_WORKS_ENDPOINT);
-        // Access data directly for Strapi v5
-        setData(response.data.data);
-      } catch (error) {
-        console.error("Error fetching How It Works data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (isLoading || error) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!data) return null;
 
   const { hero_section, verifiedQuotes, customerSay, shipping } = data;

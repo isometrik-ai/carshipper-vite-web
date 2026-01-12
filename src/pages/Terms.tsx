@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { BlocksRenderer, type BlocksContent } from "@strapi/blocks-react-renderer";
+import { useTerms } from "@/hooks/api/useTerms";
 
 // --- TypeScript Interfaces based on your JSON ---
 interface TermsSeo {
@@ -21,35 +20,11 @@ interface TermsSection {
   content: BlocksContent;
 }
 
-interface TermsData {
-  page_title: string;
-  last_updated: string;
-  terms_conditions: TermsSeo; // Matches your "terms_conditions" object
-  terms_conditions_section: TermsSection[]; // Matches your "terms_conditions_section" array
-}
-
 const Terms = () => {
-  const [termsData, setTermsData] = useState<TermsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: termsData, isLoading, error } = useTerms();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get("http://localhost:1337/api/terms-of-service?populate=*");
-        // Strapi v5 directly returns the fields in response.data.data
-        setTermsData(response.data.data);
-      } catch (error) {
-        console.error("Error fetching Terms of Service:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-
-  if (loading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
-  if (!termsData) return null;
+  if (isLoading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  if (error || !termsData) return null;
 
   const seo = termsData.terms_conditions;
 

@@ -28,7 +28,17 @@ import Quote from "./pages/Quote";
 import CaliforniaShipping from "./pages/CaliforniaShipping";
 import LosAngelesShipping from "./pages/LosAngelesShipping";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh for 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes - cache time (formerly cacheTime)
+      retry: 1, // Retry failed requests once
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      refetchOnReconnect: true, // Refetch when network reconnects
+    },
+  },
+});
 
 const App = () => (
   <HelmetProvider>

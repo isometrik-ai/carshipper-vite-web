@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, Truck, LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
-import { HEADER_ENDPOINT } from "@/constants/apiConstants";
+import { useHeader } from "@/hooks/api/useHeader";
 
 // Helper to map string icon names from Strapi to Lucide components 
 const IconMap: Record<string, LucideIcon> = {
@@ -13,28 +12,11 @@ const IconMap: Record<string, LucideIcon> = {
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: headerResponse, isLoading, error } = useHeader();
 
-  useEffect(() => {
-    const fetchHeaderData = async () => {
-      try {
-        // Fetching Header Single Type with navLinks and headerCTA populated 
-        const response = await axios.get(HEADER_ENDPOINT);
-        if (response.data?.data) {
-          setData(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching header data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (isLoading || error || !headerResponse?.data) return null;
 
-    fetchHeaderData();
-  }, []);
-
-  if (loading || !data) return null;
+  const data = headerResponse.data;
 
   // Destructure for cleaner access based on JSON structure 
   const { logoText, logoHighlight, logoIconName, navLinks, headerCTA } = data;

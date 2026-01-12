@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { FileText, CheckCircle, Truck, ArrowRight, UserCheck, ClipboardCheck, CreditCard, MapPin } from "lucide-react";
 import { RichTextBlock } from "@/types/how-it-works.types";
 import type { LucideIcon } from "lucide-react";
-import { HOW_IT_WORKS_ENDPOINT } from "@/constants/apiConstants";
+import { useHowItWorks } from "@/hooks/api/useHowItWorks";
 
 // Expanded icon map to match the icons used in your shipping process JSON
 const iconMap: Record<string, LucideIcon> = {
@@ -19,29 +17,10 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 const HowItWorks = () => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchHowItWorks = async () => {
-      try {
-        // Fetching data from your optimized endpoint
-        const response = await axios.get(HOW_IT_WORKS_ENDPOINT);
-        if (response.data?.data) {
-          // Strapi v5 returns data directly in response.data.data
-          setData(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching How It Works data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHowItWorks();
-  }, []);
+  const { data, isLoading, error } = useHowItWorks();
 
   // Skeleton/Loading state
-  if (loading) return null;
+  if (isLoading || error) return null;
 
   // Destructure based on your Strapi JSON structure
   const shipping = data?.shipping;
@@ -120,7 +99,7 @@ const HowItWorks = () => {
           className="text-center mt-16"
         >
           <Button variant="hero" size="xl">
-            Get Your Free Quote
+            {shipping.button_label}
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </motion.div>

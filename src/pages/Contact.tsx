@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Clock, MessageSquare, LucideIcon } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
-import { CONTACT_ENDPOINT } from "@/constants/apiConstants";
+import { useContact } from "@/hooks/api/useContact";
 
 const IconMap: Record<string, LucideIcon> = {
   Phone: Phone,
@@ -21,8 +20,7 @@ const IconMap: Record<string, LucideIcon> = {
 
 const Contact = () => {
   const { toast } = useToast();
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, error } = useContact();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,22 +28,6 @@ const Contact = () => {
     subject: "",
     message: "",
   });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(CONTACT_ENDPOINT);
-        if (response.data?.data) {
-          setData(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching contact data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +46,7 @@ const Contact = () => {
     }
   };
 
-  if (loading || !data) return null;
+  if (isLoading || error || !data) return null;
 
   return (
     <>
