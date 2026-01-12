@@ -90,12 +90,17 @@ export interface Vehicle {
   vinLookupLoading: boolean;
 }
 
-interface VehicleSelectorProps {
+export interface VehicleSelectorProps {
   vehicle: Vehicle;
   index: number;
   showRemove: boolean;
   onUpdate: (updates: Partial<Vehicle>) => void;
   onRemove: () => void;
+  vinLookupLabel?: string;
+  vinPlaceholder?: string;
+  manualDividerText?: string;
+  makeModelPlaceholder?: string;
+  vehicleData?: Record<string, string[]>;
 }
 
 export const VehicleSelector = ({
@@ -104,6 +109,11 @@ export const VehicleSelector = ({
   showRemove,
   onUpdate,
   onRemove,
+  vinLookupLabel = "VIN Number (optional - auto-fills details)",
+  vinPlaceholder = "Enter 17-character VIN",
+  manualDividerText = "or select manually",
+  makeModelPlaceholder = "Search make & model...",
+  vehicleData = {},
 }: VehicleSelectorProps) => {
   const [makeModelOpen, setMakeModelOpen] = useState(false);
 
@@ -162,15 +172,15 @@ export const VehicleSelector = ({
     }
   };
 
-  const selectedMakeModel = vehicle.make && vehicle.model 
-    ? `${vehicle.make}|${vehicle.model}` 
+  const selectedMakeModel = vehicle.make && vehicle.model
+    ? `${vehicle.make}|${vehicle.model}`
     : "";
 
   const displayValue = vehicle.year && vehicle.make && vehicle.model
     ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
     : vehicle.make && vehicle.model
-    ? `${vehicle.make} ${vehicle.model}`
-    : "";
+      ? `${vehicle.make} ${vehicle.model}`
+      : "";
 
   return (
     <div className="p-4 bg-muted/50 rounded-lg">
