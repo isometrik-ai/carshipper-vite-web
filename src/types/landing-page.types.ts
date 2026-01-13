@@ -50,6 +50,33 @@ export interface CTASection {
     trustBadges: string[];
 }
 
+export interface StatItem {
+    id: number;
+    label: string;
+    value: string | null;
+    icon_name: string | null;
+}
+
+export interface FeatureItem {
+    id: number;
+    label: string; // e.g., "30m", "10K+"
+    value: string; // e.g., "Expert Quotes"
+    icon_name: string | null;
+}
+
+export interface HeroSectionData {
+    id: number;
+    hero_title: string;
+    hero_title_highlight: string;
+    description: string;
+    secondary_description: string;
+    hero_section_tagline: string;
+    services: unknown[]; // Placeholder for future service objects
+    contact: unknown[];  // Placeholder for future contact objects
+    Stats: StatItem[];
+    features: FeatureItem[];
+}
+
 export interface LandingPageData {
     landingPageSeo?: {
         title: string;
@@ -82,8 +109,9 @@ export interface LandingPageData {
         QuestionCTA: QuestionCTA;
     };
     FinalCTA?: CTASection[];
-}
 
+    hero_section?: HeroSectionData
+}
 
 export interface TrustBarProps {
     stats: Array<{ value: string; label: string }>;

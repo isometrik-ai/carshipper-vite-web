@@ -5,6 +5,7 @@
 
 export interface HowItWorksResponse {
   data: HowItWorksData[];
+  shipping: any;
   meta: Record<string, any>;
 }
 

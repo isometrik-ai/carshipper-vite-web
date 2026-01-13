@@ -33,7 +33,8 @@ const Index = () => {
     pricing_section,
     TestimonialsSection: testimonialsData,
     FAQSection: faqData,
-    FinalCTA: ctaArray
+    FinalCTA: ctaArray,
+    hero_section: heroSectionData
   } = data;
 
   return (
@@ -47,7 +48,7 @@ const Index = () => {
         <Header />
 
         <main className="flex-1">
-          <HeroSection />
+          <HeroSection heroSectionData={heroSectionData} />
 
           <TrustBar stats={trustBar?.stats} />
 

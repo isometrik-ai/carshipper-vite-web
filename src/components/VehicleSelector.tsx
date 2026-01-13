@@ -26,56 +26,6 @@ import { Car, Hash, Loader2, Trash2, Check, ChevronsUpDown } from "lucide-react"
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// Popular vehicle makes with their models
-const VEHICLE_DATA: Record<string, string[]> = {
-  "Acura": ["ILX", "Integra", "MDX", "NSX", "RDX", "RLX", "TL", "TLX", "TSX"],
-  "Alfa Romeo": ["Giulia", "Stelvio", "4C", "Tonale"],
-  "Aston Martin": ["DB11", "DBS", "Vantage", "DBX"],
-  "Audi": ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "Q8", "e-tron", "RS3", "RS5", "RS6", "RS7", "S3", "S4", "S5", "TT"],
-  "Bentley": ["Bentayga", "Continental GT", "Flying Spur"],
-  "BMW": ["2 Series", "3 Series", "4 Series", "5 Series", "7 Series", "8 Series", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "Z4", "i3", "i4", "i7", "iX", "M2", "M3", "M4", "M5", "M8"],
-  "Buick": ["Enclave", "Encore", "Encore GX", "Envision"],
-  "Cadillac": ["CT4", "CT5", "Escalade", "Lyriq", "XT4", "XT5", "XT6"],
-  "Chevrolet": ["Blazer", "Bolt", "Camaro", "Colorado", "Corvette", "Equinox", "Malibu", "Silverado", "Suburban", "Tahoe", "Traverse", "Trailblazer", "Trax"],
-  "Chrysler": ["300", "Pacifica", "Voyager"],
-  "Dodge": ["Challenger", "Charger", "Durango", "Hornet"],
-  "Ferrari": ["296 GTB", "812", "F8", "Portofino", "Purosangue", "Roma", "SF90"],
-  "Fiat": ["500", "500X"],
-  "Ford": ["Bronco", "Bronco Sport", "Edge", "Escape", "Expedition", "Explorer", "F-150", "Maverick", "Mustang", "Mustang Mach-E", "Ranger", "Transit"],
-  "Genesis": ["G70", "G80", "G90", "GV60", "GV70", "GV80"],
-  "GMC": ["Acadia", "Canyon", "Hummer EV", "Sierra", "Terrain", "Yukon"],
-  "Honda": ["Accord", "Civic", "CR-V", "HR-V", "Insight", "Odyssey", "Passport", "Pilot", "Ridgeline"],
-  "Hyundai": ["Elantra", "Ioniq", "Kona", "Palisade", "Santa Fe", "Sonata", "Tucson", "Venue"],
-  "Infiniti": ["Q50", "Q60", "QX50", "QX55", "QX60", "QX80"],
-  "Jaguar": ["E-PACE", "F-PACE", "F-TYPE", "I-PACE", "XE", "XF"],
-  "Jeep": ["Cherokee", "Compass", "Gladiator", "Grand Cherokee", "Grand Wagoneer", "Renegade", "Wagoneer", "Wrangler"],
-  "Kia": ["Carnival", "EV6", "Forte", "K5", "Niro", "Seltos", "Sorento", "Soul", "Sportage", "Stinger", "Telluride"],
-  "Lamborghini": ["Huracan", "Urus", "Revuelto"],
-  "Land Rover": ["Defender", "Discovery", "Discovery Sport", "Range Rover", "Range Rover Evoque", "Range Rover Sport", "Range Rover Velar"],
-  "Lexus": ["ES", "GX", "IS", "LC", "LS", "LX", "NX", "RX", "RZ", "UX"],
-  "Lincoln": ["Aviator", "Corsair", "Nautilus", "Navigator"],
-  "Lucid": ["Air"],
-  "Maserati": ["Ghibli", "Grecale", "Levante", "MC20", "Quattroporte"],
-  "Mazda": ["CX-30", "CX-5", "CX-50", "CX-9", "CX-90", "Mazda3", "MX-5 Miata", "MX-30"],
-  "McLaren": ["570S", "720S", "Artura", "GT"],
-  "Mercedes-Benz": ["A-Class", "C-Class", "CLA", "CLS", "E-Class", "EQB", "EQE", "EQS", "G-Class", "GLA", "GLB", "GLC", "GLE", "GLS", "S-Class", "SL", "AMG GT"],
-  "Mini": ["Clubman", "Convertible", "Countryman", "Hardtop"],
-  "Mitsubishi": ["Eclipse Cross", "Mirage", "Outlander", "Outlander Sport"],
-  "Nissan": ["Altima", "Armada", "Frontier", "GT-R", "Kicks", "Leaf", "Maxima", "Murano", "Pathfinder", "Rogue", "Sentra", "Titan", "Versa", "Z"],
-  "Polestar": ["1", "2", "3"],
-  "Porsche": ["718 Boxster", "718 Cayman", "911", "Cayenne", "Macan", "Panamera", "Taycan"],
-  "Ram": ["1500", "2500", "3500", "ProMaster"],
-  "Rivian": ["R1S", "R1T"],
-  "Rolls-Royce": ["Cullinan", "Dawn", "Ghost", "Phantom", "Spectre", "Wraith"],
-  "Subaru": ["Ascent", "BRZ", "Crosstrek", "Forester", "Impreza", "Legacy", "Outback", "Solterra", "WRX"],
-  "Tesla": ["Model 3", "Model S", "Model X", "Model Y", "Cybertruck"],
-  "Toyota": ["4Runner", "Avalon", "bZ4X", "Camry", "Corolla", "Crown", "GR Supra", "GR86", "Highlander", "Land Cruiser", "Prius", "RAV4", "Sequoia", "Sienna", "Tacoma", "Tundra", "Venza"],
-  "Volkswagen": ["Arteon", "Atlas", "Golf", "ID.4", "Jetta", "Passat", "Taos", "Tiguan"],
-  "Volvo": ["C40", "S60", "S90", "V60", "V90", "XC40", "XC60", "XC90"],
-};
-
-const MAKES = Object.keys(VEHICLE_DATA).sort();
-
 // Generate years from current year + 1 down to 1980
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: currentYear - 1979 + 1 }, (_, i) => (currentYear + 1 - i).toString());
@@ -90,12 +40,17 @@ export interface Vehicle {
   vinLookupLoading: boolean;
 }
 
-interface VehicleSelectorProps {
+export interface VehicleSelectorProps {
   vehicle: Vehicle;
   index: number;
   showRemove: boolean;
   onUpdate: (updates: Partial<Vehicle>) => void;
   onRemove: () => void;
+  vinLookupLabel?: string;
+  vinPlaceholder?: string;
+  manualDividerText?: string;
+  makeModelPlaceholder?: string;
+  vehicleData?: Record<string, string[]>;
 }
 
 export const VehicleSelector = ({
@@ -104,14 +59,19 @@ export const VehicleSelector = ({
   showRemove,
   onUpdate,
   onRemove,
+  vinPlaceholder = "Enter 17-character VIN",
+  manualDividerText = "or select manually",
+  makeModelPlaceholder = "Search make & model...",
+  vehicleData = {},
 }: VehicleSelectorProps) => {
   const [makeModelOpen, setMakeModelOpen] = useState(false);
 
   // Build make/model options for combobox
   const makeModelOptions = useMemo(() => {
     const options: { value: string; label: string; make: string; model: string }[] = [];
+    const MAKES = Object.keys(vehicleData).sort();
     for (const make of MAKES) {
-      for (const model of VEHICLE_DATA[make]) {
+      for (const model of vehicleData[make]) {
         options.push({
           value: `${make}|${model}`,
           label: `${make} ${model}`,
@@ -162,15 +122,15 @@ export const VehicleSelector = ({
     }
   };
 
-  const selectedMakeModel = vehicle.make && vehicle.model 
-    ? `${vehicle.make}|${vehicle.model}` 
+  const selectedMakeModel = vehicle.make && vehicle.model
+    ? `${vehicle.make}|${vehicle.model}`
     : "";
 
   const displayValue = vehicle.year && vehicle.make && vehicle.model
     ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
     : vehicle.make && vehicle.model
-    ? `${vehicle.make} ${vehicle.model}`
-    : "";
+      ? `${vehicle.make} ${vehicle.model}`
+      : "";
 
   return (
     <div className="p-4 bg-muted/50 rounded-lg">
@@ -196,7 +156,7 @@ export const VehicleSelector = ({
         </Label>
         <div className="flex gap-2 mt-1">
           <Input
-            placeholder="Enter 17-character VIN"
+            placeholder={vinPlaceholder}
             value={vehicle.vin}
             onChange={(e) => onUpdate({ vin: e.target.value.toUpperCase() })}
             maxLength={17}
@@ -222,7 +182,7 @@ export const VehicleSelector = ({
 
       <div className="flex items-center gap-2 mb-4">
         <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground">or select manually</span>
+        <span className="text-xs text-muted-foreground">{manualDividerText}</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 
@@ -264,7 +224,7 @@ export const VehicleSelector = ({
               >
                 {selectedMakeModel
                   ? makeModelOptions.find((opt) => opt.value === selectedMakeModel)?.label
-                  : "Search make & model..."}
+                  : makeModelPlaceholder}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
