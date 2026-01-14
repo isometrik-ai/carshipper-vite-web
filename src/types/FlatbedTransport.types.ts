@@ -1,4 +1,13 @@
-import { CTASection, FaqSection, ProcessCard, ServiceCard, StatsBlock, TableData, TrailerOptions } from "./CaliforniaShipping.types";
+import {
+  CTASection,
+  FaqSection,
+  ProcessCard,
+  ServiceCard,
+  StatsBlock,
+  TableData,
+  TrailerOptions,
+} from "./common.types";
+import { StrapiResponseWrapper } from "./api.types";
 
 export interface FlatbedData {
     service_card: any;
@@ -18,14 +27,5 @@ export interface FlatbedData {
     stats: StatsBlock;
     table_data: TableData;
 }
-export interface FlatbedResponse {
-    data: {
-        id: number;
-        documentId: string;
-        createdAt: string;
-        updatedAt: string;
-        publishedAt: string;
-        data: FlatbedData;
-    };
-    meta: any;
-}
+export interface FlatbedResponse
+  extends StrapiResponseWrapper<FlatbedData> {}

@@ -1,13 +1,7 @@
-// Rich text structure from Strapi (blocks)
-export interface RichTextChild {
-    type: string;
-    text: string;
-}
+import { RichTextBlock, RichTextChild } from "./common.types";
 
-export interface RichTextBlock {
-    type: string;
-    children: RichTextChild[];
-}
+// Re-export for backward compatibility
+export type { RichTextBlock, RichTextChild };
 
 /* --------------------------------------------- */
 /* Footer Navigation (Top groups)                */

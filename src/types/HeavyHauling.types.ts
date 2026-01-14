@@ -6,52 +6,12 @@ import {
     CTASection,
     StatsBlock,
     TableData,
-} from "./CaliforniaShipping.types";
+    SecondarySection,
+    Compliance,
+} from "./common.types";
+import { StrapiResponseWrapper } from "./api.types";
 
-/* -------------------------------------------------------
-   Secondary Section Types
--------------------------------------------------------- */
-export interface SecondaryServiceItem {
-    id: number;
-    text: string;
-    icon_name: string | null;
-    href: string | null;
-    description: string | null;
-}
-
-export interface SecondarySection {
-    id: number;
-    hero_title: string;
-    hero_title_highlight: string | null;
-    description: string | null;
-    secondary_description: string | null;
-    hero_section_tagline: string | null;
-    icon_name: string | null;
-
-    services: SecondaryServiceItem[];
-
-    contact: any[]; // API returns empty arrays with no structure
-    Stats: any[];
-    features: any[];
-}
-
-/* -------------------------------------------------------
-   Compliance Types
--------------------------------------------------------- */
-export interface Compliance {
-    id: number;
-    hero_title: string;
-    hero_title_highlight: string | null;
-    description: string;
-    secondary_description: string | null;
-    hero_section_tagline: string | null;
-    icon_name: string | null;
-
-    services: any[];
-    contact: any[];
-    Stats: any[];
-    features: any[];
-}
+// SecondarySection and Compliance are now imported from common.types
 
 /* -------------------------------------------------------
    Main Heavy Hauling Types
@@ -100,14 +60,5 @@ export interface HeavyHaulingData {
 /* -------------------------------------------------------
    Heavy Hauling API Response
 -------------------------------------------------------- */
-export interface HeavyHaulingResponse {
-    data: {
-        id: number;
-        documentId: string;
-        createdAt: string;
-        updatedAt: string;
-        publishedAt: string;
-        data: HeavyHaulingData;
-    };
-    meta: any;
-}
+export interface HeavyHaulingResponse
+  extends StrapiResponseWrapper<HeavyHaulingData> {}

@@ -51,3 +51,5 @@ export const LOS_ANGELS_ENDPOINT = buildUrl('los-angeles-city', GENERIC_SEO_POPU
 export const FLATBED_TRANSPORT_ENDPOINT = buildUrl('flatbed-transport', GENERIC_SEO_POPULATE)
 
 export const HEAVY_HAULING_ENDPOINT = buildUrl('heavy-hauling', GENERIC_SEO_POPULATE)
+
+export const FLEET_TRANSPORT_ENDPOINT = buildUrl('fleet-transport', GENERIC_SEO_POPULATE)

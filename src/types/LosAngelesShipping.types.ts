@@ -4,7 +4,14 @@ import {
     ProcessCard,
     ServiceCard,
     TrailerOptions,
-} from "./CaliforniaShipping.types";
+    GenericServiceItem,
+    StatDisplay,
+    StatsBlock,
+    TableRow,
+    TableItem,
+    TableData,
+} from "./common.types";
+import { StrapiResponseWrapper } from "./api.types";
 
 export interface LosAngelesServiceItem {
     id: number;
@@ -20,21 +27,9 @@ export interface LosAngelesServiceCard {
     servieces: LosAngelesServiceItem[];
 }
 
-export interface LosAngelesNeighborhood {
-    id: number;
-    text: string;
-    icon_name: string | null;
-    href: string | null;
-    description: string | null;
-}
-
-export interface LosAngelesContactInfo {
-    id: number;
-    text: string;
-    icon_name: string | null;
-    href: string | null;
-    description: string | null;
-}
+// LosAngelesNeighborhood and LosAngelesContactInfo use GenericServiceItem structure
+export type LosAngelesNeighborhood = GenericServiceItem;
+export type LosAngelesContactInfo = GenericServiceItem;
 
 export interface LosAngelesSecondarySection {
     id: number;
@@ -64,15 +59,8 @@ export interface LosAngelesCompliance {
     features: any[];
 }
 
-export interface LosAngelesStatsEntry {
-    value: string;
-    title: string;
-}
-
-export interface LosAngelesStats {
-    id: number;
-    stats: LosAngelesStatsEntry[];
-}
+export type LosAngelesStatsEntry = StatDisplay;
+export type LosAngelesStats = StatsBlock;
 
 export interface LosAngelesSolutionService {
     id: number;
@@ -88,28 +76,9 @@ export interface LosAngelesSolutions {
     services: LosAngelesSolutionService[];
 }
 
-export interface LosAngelesTableHeader {
-    from: string;
-    to: string;
-    distance: string;
-    time: string;
-    cost: string;
-}
-
-export interface LosAngelesTableEntry {
-    id: number;
-    table_title: string;
-    table_sub_title: string;
-    table_header: string[];
-    table_cell_data: LosAngelesTableHeader[];
-}
-
-export interface LosAngelesTableData {
-    id: number;
-    title: string | null;
-    sub_title: string | null;
-    table: LosAngelesTableEntry[];
-}
+export type LosAngelesTableHeader = TableRow;
+export type LosAngelesTableEntry = TableItem;
+export type LosAngelesTableData = TableData;
 
 export interface LosAngelesData {
     id: number;
@@ -134,14 +103,5 @@ export interface LosAngelesData {
     table_data: LosAngelesTableData;
 }
 
-export interface LosAngelesDataResponse {
-    data: {
-        id: number;
-        documentId: string;
-        createdAt: string;
-        updatedAt: string;
-        publishedAt: string;
-        data: LosAngelesData;
-    };
-    meta: any;
-}
+export interface LosAngelesDataResponse
+  extends StrapiResponseWrapper<LosAngelesData> {}
