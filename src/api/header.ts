@@ -1,12 +1,12 @@
-import axios from "axios";
+import { apiClient } from "@/lib/axios";
 import { HeaderResponse } from "@/types/header.types";
 
-const baseUrl = import.meta.env.VITE_API_URL
+const ENDPOINT = "/api/global?populate[header][populate][navLinks][populate]=*";
 
 export const getHeader = async (): Promise<HeaderResponse> => {
     try {
-        const { data } = await axios.get<HeaderResponse>(
-            `${baseUrl}/api/global?populate[header][populate][navLinks][populate]=*`
+        const { data } = await apiClient.get<HeaderResponse>(
+            ENDPOINT
         );
         return data;
     } catch (error) {

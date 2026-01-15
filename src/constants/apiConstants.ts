@@ -53,3 +53,13 @@ export const FLATBED_TRANSPORT_ENDPOINT = buildUrl('flatbed-transport', GENERIC_
 export const HEAVY_HAULING_ENDPOINT = buildUrl('heavy-hauling', GENERIC_SEO_POPULATE)
 
 export const FLEET_TRANSPORT_ENDPOINT = buildUrl('fleet-transport', GENERIC_SEO_POPULATE)
+
+export const DEALERSHIP_ENDPOINT = buildUrl('dealership-delivery', GENERIC_SEO_POPULATE)
+
+export const AUTO_AUCTION_SHIPPING_ENDPOINT = buildUrl('auto-auction-shipping', GENERIC_SEO_POPULATE)
+
+export const RENTAL_CAR_LOGISTICS_ENDPOINT = buildUrl('rental-car-logistic', GENERIC_SEO_POPULATE)
+
+export const OEM_TRANSPORT_ENDPOINT = buildUrl('oem-transport', GENERIC_SEO_POPULATE)
+
+export const QUOTE_ENDPOINT = buildUrl('get-a-quote', GENERIC_SEO_POPULATE)

@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
 import { FleetTransportResponse, FleetTransportData } from "@/types/FleetTransport.types";
+import { FLEET_TRANSPORT_ENDPOINT } from "@/constants/apiConstants";
 
-const ENDPOINT = "/api/fleet-transport?populate=*";
 
 const fetchFleetTransport = async (): Promise<FleetTransportData> => {
-    const { data } = await apiClient.get<FleetTransportResponse>(ENDPOINT);
+    const { data } = await apiClient.get<FleetTransportResponse>(FLEET_TRANSPORT_ENDPOINT);
     return data.data.data;
 };
 

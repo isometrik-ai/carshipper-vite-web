@@ -3,12 +3,38 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
 import { motion } from "framer-motion";
-import { ArrowRight, Phone } from "lucide-react";
+import {
+  ArrowRight,
+  Phone,
+  Truck,
+  Shield,
+  Clock,
+  FileText,
+  Route,
+  Weight,
+  CheckCircle,
+  AlertTriangle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { useFleetTransport } from "@/hooks/api/useFleetTransport";
-import { getIcon } from "@/utils/getIcon";
 
+const ICONS: Record<string, any> = {
+  Truck,
+  Shield,
+  Clock,
+  FileText,
+  Route,
+  Weight,
+  CheckCircle,
+  Phone,
+  AlertTriangle,
+};
+
+const getIcon = (name?: string | null): React.ComponentType<any> => {
+  if (!name) return CheckCircle;
+  return ICONS[name] || CheckCircle;
+};
 const FleetTransport = () => {
   const { data: page, isLoading } = useFleetTransport();
 
@@ -18,6 +44,8 @@ const FleetTransport = () => {
   const features = page.service_cards?.[0]?.services ?? [];
   const stats = page.stats?.stats ?? [];
   const solutions = page.solutions?.services ?? [];
+
+  const PageIcon = getIcon(page.page_icon);
 
   return (
     <>
@@ -36,10 +64,10 @@ const FleetTransport = () => {
           <div className="container mx-auto px-4 relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 items-start">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <span className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-                  {page.page_icon && getIcon(page.page_icon)({ className: "w-4 h-4" })}
-                  {page.page_tagline}
-                </span>
+                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
+                  <PageIcon className="w-4 h-4" />
+                  <span>{page.page_tagline}</span>
+                </div>
 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
                   {page.title} <span className="text-primary">{page.title_highlight}</span>
@@ -93,9 +121,9 @@ const FleetTransport = () => {
             <div className="container mx-auto px-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 {stats.map((stat) => (
-                  <div key={stat.label} className="text-center">
+                  <div key={String(stat.label)} className="text-center">
                     <div className="text-3xl md:text-4xl font-bold mb-2">{stat.value}</div>
-                    <div className="text-primary-foreground/80 text-sm">{stat.label}</div>
+                    <div className="text-primary-foreground/80 text-sm">{String(stat.label)}</div>
                   </div>
                 ))}
               </div>

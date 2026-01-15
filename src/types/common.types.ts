@@ -3,6 +3,8 @@
  * Shared types used across multiple modules in the application
  */
 
+import { Key } from "react";
+
 /* ─────────────────────────────────────────────
  *  Rich Text Types (Strapi)
  * ───────────────────────────────────────────── */
@@ -76,6 +78,7 @@ export interface StatItem {
 }
 
 export interface StatDisplay {
+    label: Key;
     value: string;
     title: string;
 }
