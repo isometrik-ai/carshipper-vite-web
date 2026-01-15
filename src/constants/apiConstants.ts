@@ -63,3 +63,7 @@ export const RENTAL_CAR_LOGISTICS_ENDPOINT = buildUrl('rental-car-logistic', GEN
 export const OEM_TRANSPORT_ENDPOINT = buildUrl('oem-transport', GENERIC_SEO_POPULATE)
 
 export const QUOTE_ENDPOINT = buildUrl('get-a-quote', GENERIC_SEO_POPULATE)
+
+export const BLOG_ENDPOINT = buildUrl('blog', 'populate=*')
+
+export const TRACK_SHIPMENT_ENDPOINT = buildUrl('track-shipment', 'populate=*')
