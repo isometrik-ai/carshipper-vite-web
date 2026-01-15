@@ -16,7 +16,6 @@ import {
   TrendingUp,
   MapPin,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 import { useQuote } from "@/hooks/api/useQuote";
 
