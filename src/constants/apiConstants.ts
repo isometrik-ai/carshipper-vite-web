@@ -67,3 +67,5 @@ export const QUOTE_ENDPOINT = buildUrl('get-a-quote', GENERIC_SEO_POPULATE)
 export const BLOG_ENDPOINT = buildUrl('blog', 'populate=*')
 
 export const TRACK_SHIPMENT_ENDPOINT = buildUrl('track-shipment', 'populate=*')
+
+export const ENCLOSED_TRANSPORT_ENDPOINT = buildUrl('enclosed-transport', GENERIC_SEO_POPULATE)

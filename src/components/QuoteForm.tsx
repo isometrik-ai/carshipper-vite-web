@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { VehicleSelector, Vehicle, getVehicleDisplayName, isVehicleComplete } from "./VehicleSelector";
 import { useQuoteFormConfig } from "@/hooks/api/useQuoteFormConfig";
-import { StepConfig, FormOption } from "@/types/quote-form.types";
+import { StepConfig } from "@/types/quote-form.types";
 
 interface QuoteFormProps {
   defaultOrigin?: string;
