@@ -247,9 +247,40 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
 
           {currentStep === "contact" && (
             <div className="space-y-4">
-              <div><Label htmlFor="name">Full Name *</Label><Input id="name" value={contactInfo.name} onChange={(e) => setContactInfo({ ...contactInfo, name: e.target.value })} className="mt-1" required /></div>
-              <div><Label htmlFor="email">Email Address *</Label><Input id="email" type="email" value={contactInfo.email} onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })} className="mt-1" required /></div>
-              <div><Label htmlFor="phone">Phone Number</Label><Input id="phone" type="tel" value={contactInfo.phone} onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })} className="mt-1" /></div>
+              <div>
+                <Label htmlFor="name">Full Name *</Label>
+                <Input
+                  id="name"
+                  value={contactInfo.name}
+                  onChange={(e) => setContactInfo({ ...contactInfo, name: e.target.value })}
+                  placeholder={config.full_name_placeholder || "John Smith"}
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={contactInfo.email}
+                  onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
+                  placeholder={config.email_placeholder || "john@example.com"}
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={contactInfo.phone}
+                  onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
+                  placeholder={config.Phone_no_placehoder || "(555) 123-4567"}
+                  className="mt-1"
+                />
+              </div>
             </div>
           )}
         </motion.div>

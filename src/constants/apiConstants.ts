@@ -69,3 +69,5 @@ export const BLOG_ENDPOINT = buildUrl('blog', 'populate=*')
 export const TRACK_SHIPMENT_ENDPOINT = buildUrl('track-shipment', 'populate=*')
 
 export const ENCLOSED_TRANSPORT_ENDPOINT = buildUrl('enclosed-transport', GENERIC_SEO_POPULATE)
+
+export const QUOTE_FORM_CONFIG_ENDPOINT = buildUrl('quote-form-config', 'populate=*')

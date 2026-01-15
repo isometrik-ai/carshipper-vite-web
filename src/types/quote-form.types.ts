@@ -12,6 +12,8 @@ export interface FormOption {
 }
 
 export interface QuoteFormConfigData {
+    id: number;
+    documentId: string;
     banner_timer_text: string;
     privacy_lock_text: string;
     vin_lookup_label: string;
@@ -21,10 +23,17 @@ export interface QuoteFormConfigData {
     back_button_text: string;
     submit_button_text: string;
     make_model_placeholder: string;
+    full_name_placeholder: string;
+    email_placeholder: string;
+    Phone_no_placehoder: string; // Note: typo in API field name
     VEHICLE_DATA: Record<string, string[]>;
+    stepMeta: any | null;
     steps_config: StepConfig[];
     timeframe_options: FormOption[];
     transport_options: FormOption[];
+    createdAt: string;
+    updatedAt: string;
+    publishedAt: string;
 }
 
 export interface QuoteFormConfigResponse {
