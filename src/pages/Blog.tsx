@@ -5,88 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Search, Calendar, Clock, ArrowRight, Tag } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+import { useBlog } from "@/hooks/api/useBlog";
+
+const ICONS: Record<string, any> = {
+  Search,
+};
+
+const getIcon = (name?: string | null): React.ComponentType<any> => {
+  if (!name) return Search;
+  return ICONS[name] || Search;
+};
 
 const Blog = () => {
+  const { data: page, isLoading } = useBlog();
   const [searchQuery, setSearchQuery] = useState("");
-
-  const categories = [
-    "All Posts",
-    "Shipping Tips",
-    "Industry News",
-    "Guides",
-    "Cost Savings",
-    "Vehicle Care"
-  ];
-
   const [activeCategory, setActiveCategory] = useState("All Posts");
 
-  const blogPosts = [
-    {
-      id: 1,
-      title: "How to Prepare Your Car for Cross-Country Shipping",
-      excerpt: "A comprehensive checklist to ensure your vehicle is ready for safe transport across the country.",
-      category: "Shipping Tips",
-      date: "December 28, 2025",
-      readTime: "5 min read",
-      image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=600&h=400&fit=crop",
-      featured: true
-    },
-    {
-      id: 2,
-      title: "Open vs Enclosed Transport: Which is Right for You?",
-      excerpt: "Understanding the differences between transport types to make the best choice for your vehicle.",
-      category: "Guides",
-      date: "December 20, 2025",
-      readTime: "7 min read",
-      image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop",
-      featured: true
-    },
-    {
-      id: 3,
-      title: "5 Ways to Save Money on Car Shipping",
-      excerpt: "Insider tips from industry experts on reducing your auto transport costs without sacrificing quality.",
-      category: "Cost Savings",
-      date: "December 15, 2025",
-      readTime: "4 min read",
-      image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&h=400&fit=crop",
-      featured: false
-    },
-    {
-      id: 4,
-      title: "What Insurance Covers During Auto Transport",
-      excerpt: "Everything you need to know about cargo insurance and what happens if your vehicle is damaged.",
-      category: "Guides",
-      date: "December 10, 2025",
-      readTime: "6 min read",
-      image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&h=400&fit=crop",
-      featured: false
-    },
-    {
-      id: 5,
-      title: "Shipping a Classic Car: Special Considerations",
-      excerpt: "Protect your investment with these expert tips for transporting vintage and classic vehicles.",
-      category: "Vehicle Care",
-      date: "December 5, 2025",
-      readTime: "8 min read",
-      image: "https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?w=600&h=400&fit=crop",
-      featured: false
-    },
-    {
-      id: 6,
-      title: "2025 Auto Transport Industry Trends",
-      excerpt: "What's changing in the car shipping industry and how it affects your next transport.",
-      category: "Industry News",
-      date: "December 1, 2025",
-      readTime: "5 min read",
-      image: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=600&h=400&fit=crop",
-      featured: false
-    }
-  ];
+  if (isLoading || !page) return null;
+
+  const categories = page.categories ?? [];
+  const blogPosts = page.blogPosts ?? [];
 
   const filteredPosts = blogPosts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === "All Posts" || post.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
@@ -104,7 +48,7 @@ const Blog = () => {
 
       <div className="min-h-screen flex flex-col">
         <Header />
-        
+
         <main className="flex-1 pt-20">
           {/* Hero Section */}
           <section className="py-16 md:py-20 bg-gradient-to-b from-secondary/50 to-background">
@@ -116,17 +60,22 @@ const Blog = () => {
                 className="max-w-2xl mx-auto text-center"
               >
                 <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                  Car Shipping <span className="text-primary">Blog</span>
+                  {page.title} <span className="text-primary">{page.title_highlight}</span>
                 </h1>
-                <p className="text-lg text-muted-foreground mb-8">
-                  Expert tips, industry insights, and comprehensive guides to help you ship your car with confidence.
-                </p>
-                
+                {page.description ? (
+                  <p className="text-lg text-muted-foreground mb-8">
+                    {page.description}
+                  </p>
+                ) : null}
+
                 {/* Search */}
                 <div className="relative max-w-md mx-auto">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  {(() => {
+                    const SearchIcon = getIcon(page.search_bar_icon_name);
+                    return <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />;
+                  })()}
                   <Input
-                    placeholder="Search articles..."
+                    placeholder={page.search_bar_icon_placeholder || "Search articles..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-12 h-12"
@@ -158,7 +107,9 @@ const Blog = () => {
           {featuredPosts.length > 0 && (
             <section className="py-12">
               <div className="container mx-auto px-4">
-                <h2 className="text-2xl font-bold mb-8">Featured Articles</h2>
+                <h2 className="text-2xl font-bold mb-8">
+                  {page.featured_articles_title || "Featured Articles"}
+                </h2>
                 <div className="grid md:grid-cols-2 gap-8">
                   {featuredPosts.map((post, index) => (
                     <motion.article
@@ -170,8 +121,8 @@ const Blog = () => {
                       className="group bg-card rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-shadow"
                     >
                       <div className="aspect-video overflow-hidden">
-                        <img 
-                          src={post.image} 
+                        <img
+                          src={post.image}
                           alt={post.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
@@ -212,8 +163,12 @@ const Blog = () => {
           {/* Regular Posts */}
           <section className="py-12 bg-muted/30">
             <div className="container mx-auto px-4">
-              {featuredPosts.length > 0 && <h2 className="text-2xl font-bold mb-8">All Articles</h2>}
-              
+              {featuredPosts.length > 0 && (
+                <h2 className="text-2xl font-bold mb-8">
+                  {page.all_articles_title || "All Articles"}
+                </h2>
+              )}
+
               {regularPosts.length > 0 ? (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {regularPosts.map((post, index) => (
@@ -226,8 +181,8 @@ const Blog = () => {
                       className="group bg-card rounded-xl overflow-hidden border hover:shadow-lg transition-shadow"
                     >
                       <div className="aspect-video overflow-hidden">
-                        <img 
-                          src={post.image} 
+                        <img
+                          src={post.image}
                           alt={post.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
@@ -261,35 +216,39 @@ const Blog = () => {
           </section>
 
           {/* Newsletter CTA */}
-          <section className="py-16 bg-primary">
-            <div className="container mx-auto px-4 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="max-w-xl mx-auto"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground mb-4">
-                  Stay Updated
-                </h2>
-                <p className="text-primary-foreground/80 mb-6">
-                  Get the latest car shipping tips and industry news delivered to your inbox.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Input 
-                    placeholder="Enter your email" 
-                    className="bg-primary-foreground text-foreground"
-                  />
-                  <Button variant="secondary">
-                    Subscribe
-                  </Button>
-                </div>
-              </motion.div>
-            </div>
-          </section>
+          {page.blog_cta && (
+            <section className="py-16 bg-primary">
+              <div className="container mx-auto px-4 text-center">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="max-w-xl mx-auto"
+                >
+                  <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground mb-4">
+                    {page.blog_cta.title}
+                  </h2>
+                  {page.blog_cta.description ? (
+                    <p className="text-primary-foreground/80 mb-6">
+                      {page.blog_cta.description}
+                    </p>
+                  ) : null}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Input
+                      placeholder={page.blog_cta.input_field_placeholder || "Enter your email"}
+                      className="bg-primary-foreground text-foreground"
+                    />
+                    <Button variant="secondary">
+                      {page.blog_cta.submit_button_title || "Subscribe"}
+                    </Button>
+                  </div>
+                </motion.div>
+              </div>
+            </section>
+          )}
         </main>
-        
+
         <Footer />
       </div>
     </>

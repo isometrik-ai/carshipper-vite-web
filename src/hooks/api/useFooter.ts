@@ -1,14 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
+import { FOOTER_ENDPOINT } from "@/constants/apiConstants";
 
 interface FooterResponse {
   data: any;
 }
 
 const fetchFooter = async () => {
-  const { data } = await apiClient.get<FooterResponse>(
-    "/api/footer?populate[feature_items]=*&populate[socialLinks]=*&populate[footerColumn][populate]=*&populate[horizontalGroups][populate]=*&populate[bottom_bar]=*"
-  );
+  const { data } = await apiClient.get<FooterResponse>(FOOTER_ENDPOINT);
   return data;
 };
 

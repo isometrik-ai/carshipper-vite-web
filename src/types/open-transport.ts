@@ -1,23 +1,11 @@
-export interface GenericService {
-    id: number;
-    text: string;
-    icon_name: string;
-    href: string | null;
-}
+import {
+    GenericServiceItem,
+    GenericFeature,
+    StatItem,
+} from "./common.types";
 
-export interface GenericFeature {
-    id: number;
-    label: string;
-    value: string | null;
-    icon_name: string | null;
-}
-
-export interface GenericStat {
-    id: number;
-    label: string;
-    value: string | null;
-    icon_name: string | null;
-}
+export type GenericService = GenericServiceItem;
+export type GenericStat = StatItem;
 
 export interface HeroSection {
     id: number;
@@ -45,11 +33,9 @@ export interface GridSection {
     shipping_process: ShippingProcess[];
 }
 
-export interface FAQ {
-    id: number;
-    questions: string;
-    answer: string;
-}
+import { FAQItem } from "./common.types";
+
+export type FAQ = FAQItem;
 
 export interface Testimonial {
     text: string;

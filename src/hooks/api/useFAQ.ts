@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
+import { FAQ_ENDPOINT } from "@/constants/apiConstants";
 
 interface FAQResponse {
   data: {
@@ -15,9 +16,7 @@ interface FAQResponse {
 }
 
 const fetchFAQ = async () => {
-  const { data } = await apiClient.get<FAQResponse>(
-    "/api/faq?populate[FaqCategories][populate]=FAQS"
-  );
+  const { data } = await apiClient.get<FAQResponse>(FAQ_ENDPOINT);
   return data.data;
 };
 

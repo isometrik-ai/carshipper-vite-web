@@ -14,3 +14,4 @@ export { useHowItWorks } from "./useHowItWorks";
 export { usePrivacy } from "./usePrivacy";
 export { useTerms } from "./useTerms";
 export { useNotFound } from "./useNotFound";
+export { useChatWidget } from "./useChatWidget";

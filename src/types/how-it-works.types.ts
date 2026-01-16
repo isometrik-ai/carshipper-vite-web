@@ -40,14 +40,7 @@ export interface HowItWorksStep {
   icon: string | null;
 }
 
-// RICH TEXT (Strapi style)
-export interface RichTextBlock {
-  type: string;
-  children: RichTextChild[];
-}
+import { RichTextBlock, RichTextChild } from "./common.types";
 
-export interface RichTextChild {
-  type: string;
-  text: string;
-  bold?: boolean;
-}
+// Re-export for backward compatibility
+export type { RichTextBlock, RichTextChild };

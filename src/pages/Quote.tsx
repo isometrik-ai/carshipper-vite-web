@@ -3,74 +3,65 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
 import { motion } from "framer-motion";
-import { Shield, Clock, Truck, Star, Phone, CheckCircle, DollarSign, Car, Calculator, TrendingUp, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  Shield,
+  Clock,
+  Truck,
+  Star,
+  Phone,
+  CheckCircle,
+  DollarSign,
+  Car,
+  Calculator,
+  TrendingUp,
+  MapPin,
+} from "lucide-react";
+
+import { useQuote } from "@/hooks/api/useQuote";
+
+const ICONS: Record<string, any> = {
+  Truck,
+  Shield,
+  Clock,
+  CheckCircle,
+  Phone,
+  Calculator,
+  MapPin,
+  Car,
+  TrendingUp,
+  DollarSign,
+  Star,
+};
+
+const getIcon = (name?: string | null): React.ComponentType<any> => {
+  if (!name) return CheckCircle;
+  return ICONS[name] || CheckCircle;
+};
+
+const getChipColorClasses = (index: number) => {
+  const colors = [
+    "bg-success/10 text-success", // First chip - green
+    "bg-primary/10 text-primary", // Second chip - blue
+    "bg-warning/10 text-warning-foreground", // Third chip - yellow/gold
+  ];
+  return colors[index % colors.length] || "bg-primary/10 text-primary";
+};
 
 const Quote = () => {
-  const benefits = [
-    "Expert-verified quotes in 30 minutes",
-    "No hidden fees or surprise charges",
-    "Door-to-door service included",
-    "$1M+ cargo insurance coverage",
-    "Pay on delivery - no deposit required",
-    "24/7 customer support"
-  ];
+  const { data: page, isLoading } = useQuote();
 
-  const stats = [
-    { value: "50,000+", label: "Cars Shipped" },
-    { value: "4.8★", label: "Average Rating" },
-    { value: "30 min", label: "Quote Delivery" },
-    { value: "A+", label: "BBB Rating" }
-  ];
+  if (isLoading || !page) return null;
 
-  const costByDistance = [
-    { distance: "Less than 500 miles", openCost: "$450-$650", enclosedCost: "$700-$950" },
-    { distance: "500-1,000 miles", openCost: "$600-$850", enclosedCost: "$900-$1,200" },
-    { distance: "1,000-1,500 miles", openCost: "$750-$1,000", enclosedCost: "$1,100-$1,400" },
-    { distance: "1,500-2,000 miles", openCost: "$900-$1,150", enclosedCost: "$1,300-$1,600" },
-    { distance: "Over 2,000 miles", openCost: "$1,050-$1,400", enclosedCost: "$1,500-$1,900" },
-  ];
+  // The 3 key benefits with green checkmarks come from page.services
+  const keyBenefits = page.services ?? [];
+  // The 6 colored service chips come from page.service_card.servieces
+  const serviceChips = page.service_card?.servieces ?? [];
+  const stats = page.stats?.stats ?? [];
+  const costFactors = page.service_cards?.[0]?.services ?? [];
+  const processSteps = page.process_cards?.[0]?.features ?? [];
+  const tables = page.table_data?.table ?? [];
 
-  const costByVehicle = [
-    { type: "Sedan/Coupe", short: "$425-$550", medium: "$725-$900", long: "$925-$1,150" },
-    { type: "Compact SUV", short: "$455-$600", medium: "$775-$950", long: "$1,025-$1,250" },
-    { type: "Full-Size SUV", short: "$505-$675", medium: "$825-$1,050", long: "$1,075-$1,350" },
-    { type: "Pickup Truck", short: "$575-$750", medium: "$925-$1,150", long: "$1,275-$1,500" },
-    { type: "Motorcycle", short: "$275-$400", medium: "$400-$550", long: "$550-$750" },
-  ];
-
-  const costFactors = [
-    {
-      icon: MapPin,
-      title: "Distance",
-      desc: "Longer routes cost more but have a lower per-mile rate. Coast-to-coast shipping is often more economical per mile than short hauls."
-    },
-    {
-      icon: Car,
-      title: "Vehicle Size & Type",
-      desc: "Larger vehicles take up more carrier space and weight. SUVs and trucks cost 15-25% more than sedans."
-    },
-    {
-      icon: Truck,
-      title: "Carrier Type",
-      desc: "Open transport is 30-40% cheaper than enclosed. Enclosed is recommended for luxury, classic, or exotic vehicles."
-    },
-    {
-      icon: TrendingUp,
-      title: "Seasonal Demand",
-      desc: "Summer months and snowbird season (Jan-Mar) see higher demand and prices. Fall offers the best rates."
-    },
-    {
-      icon: Clock,
-      title: "Delivery Speed",
-      desc: "Expedited shipping costs 15-30% more. Flexible pickup dates can save you money."
-    },
-    {
-      icon: MapPin,
-      title: "Location Accessibility",
-      desc: "Rural areas or difficult access locations may incur additional fees. Major metro areas have the best rates."
-    },
-  ];
+  const PageIcon = getIcon(page.page_icon);
 
   return (
     <>
@@ -83,7 +74,7 @@ const Quote = () => {
 
       <div className="min-h-screen flex flex-col">
         <Header />
-        
+
         <main className="flex-1 pt-20">
           {/* Hero Section */}
           <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background">
@@ -95,45 +86,53 @@ const Quote = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-                    <Calculator className="w-4 h-4" />
-                    <span className="text-sm font-medium">Car Shipping Cost Calculator</span>
-                  </div>
+                  {page.page_tagline ? (
+                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
+                      <PageIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">{page.page_tagline}</span>
+                    </div>
+                  ) : null}
 
                   <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                    Calculate Your <span className="text-primary">Shipping Cost</span>
+                    {page.title} <span className="text-primary">{page.title_highlight}</span>
                   </h1>
-                  
-                  <p className="text-lg text-muted-foreground mb-6">
-                    Get an accurate car shipping quote in 30 minutes. Our experts verify every quote with 
-                    real-time carrier availability and current market rates. Average cost: <strong>$0.40-$2.00 per mile</strong>.
-                  </p>
 
-                  {/* Benefits */}
-                  <div className="space-y-3 mb-8">
-                    {benefits.map((benefit) => (
-                      <div key={benefit} className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
-                        <span>{benefit}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {page.description ? (
+                    <p className="text-lg text-muted-foreground mb-6">
+                      {page.description}
+                    </p>
+                  ) : null}
 
-                  {/* Trust Badges */}
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-full">
-                      <Shield className="w-4 h-4" />
-                      <span className="text-sm font-medium">Fully Insured</span>
+                  {/* Key Benefits - 3 items with green checkmarks */}
+                  {keyBenefits.length > 0 && (
+                    <div className="space-y-3 mb-8">
+                      {keyBenefits.map((benefit) => {
+                        const Icon = getIcon(benefit.icon_name);
+                        return (
+                          <div key={benefit.id} className="flex items-center gap-3">
+                            <Icon className="w-5 h-5 text-success flex-shrink-0" />
+                            <span>{benefit.label}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm font-medium">30-Min Quotes</span>
+                  )}
+
+                  {/* Service Chips - 6 colored badges */}
+                  {serviceChips.length > 0 && (
+                    <div className="flex flex-wrap gap-4">
+                      {serviceChips.map((chip, index) => {
+                        const Icon = getIcon(chip.icon_name);
+                        const colorClasses = getChipColorClasses(index);
+                        return (
+                          <div key={chip.id} className={`flex items-center gap-2 ${colorClasses} px-4 py-2 rounded-full`}>
+                            <Icon className="w-4 h-4" />
+                            <span className="text-sm font-medium">{chip.label}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="flex items-center gap-2 bg-warning/10 text-warning-foreground px-4 py-2 rounded-full">
-                      <Star className="w-4 h-4" />
-                      <span className="text-sm font-medium">A+ BBB Rated</span>
-                    </div>
-                  </div>
+                  )}
                 </motion.div>
 
                 {/* Quote Form */}
@@ -149,222 +148,230 @@ const Quote = () => {
           </section>
 
           {/* Stats Section */}
-          <section className="py-12 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                {stats.map((stat, index) => (
-                  <motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    className="text-center"
-                  >
-                    <div className="text-3xl md:text-4xl font-bold text-primary mb-2">{stat.value}</div>
-                    <div className="text-sm text-muted-foreground">{stat.label}</div>
-                  </motion.div>
-                ))}
+          {stats.length > 0 && (
+            <section className="py-12 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                  {stats.map((stat, index) => (
+                    <motion.div
+                      key={String(stat.label)}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      className="text-center"
+                    >
+                      <div className="text-3xl md:text-4xl font-bold text-primary mb-2">{stat.value}</div>
+                      <div className="text-sm text-muted-foreground">{String(stat.label)}</div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           {/* How Much Does It Cost */}
-          <section className="py-16">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                  How Much Does It Cost to Ship a Car?
-                </h2>
-                <p className="text-muted-foreground max-w-3xl mx-auto">
-                  The average car shipping cost is around <strong>$650-$1,200</strong> depending on distance. 
-                  Expect to pay between <strong>$0.40 to $2.00 per mile</strong> based on route, vehicle size, carrier type, and season.
-                </p>
-              </motion.div>
+          {page.table_data && (
+            <section className="py-16">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-center mb-12"
+                >
+                  <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                    {page.table_data.title ?? "How Much Does It Cost to Ship a Car?"}
+                  </h2>
+                  {page.table_data.sub_title ? (
+                    <p className="text-muted-foreground max-w-3xl mx-auto">
+                      {page.table_data.sub_title}
+                    </p>
+                  ) : null}
+                </motion.div>
 
-              {/* Cost by Distance Table */}
-              <div className="mb-12">
-                <h3 className="text-xl font-semibold mb-4">Average Cost by Distance</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm border border-border">
-                    <thead className="bg-primary text-primary-foreground">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Route Distance</th>
-                        <th className="px-4 py-3 text-left">Open Carrier</th>
-                        <th className="px-4 py-3 text-left">Enclosed Carrier</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {costByDistance.map((row, index) => (
-                        <tr key={index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
-                          <td className="px-4 py-3 font-medium">{row.distance}</td>
-                          <td className="px-4 py-3 text-primary">{row.openCost}</td>
-                          <td className="px-4 py-3 text-primary">{row.enclosedCost}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                {tables.map((table, tableIndex) => (
+                  <div key={table.id} className={tableIndex < tables.length - 1 ? "mb-12" : ""}>
+                    <h3 className="text-xl font-semibold mb-4">{table.table_title}</h3>
+                    {table.table_sub_title ? (
+                      <p className="text-muted-foreground mb-4">{table.table_sub_title}</p>
+                    ) : null}
+                    <div className="overflow-x-auto">
+                      <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm border border-border">
+                        <thead className="bg-primary text-primary-foreground">
+                          <tr>
+                            {table.table_header.map((header, headerIndex) => (
+                              <th key={headerIndex} className="px-4 py-3 text-left">
+                                {header}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {table.table_cell_data.map((row: any, rowIndex: number) => (
+                            <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-muted/50" : ""}>
+                              {table.table_header.map((header, headerIndex) => {
+                                const headerLower = header.toLowerCase();
+                                let cellValue = "";
 
-              {/* Cost by Vehicle Table */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Average Cost by Vehicle Type</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm border border-border">
-                    <thead className="bg-primary text-primary-foreground">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Vehicle Type</th>
-                        <th className="px-4 py-3 text-left">&lt;500 miles</th>
-                        <th className="px-4 py-3 text-left">500-2,500 miles</th>
-                        <th className="px-4 py-3 text-left">&gt;2,500 miles</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {costByVehicle.map((row, index) => (
-                        <tr key={index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
-                          <td className="px-4 py-3 font-medium">{row.type}</td>
-                          <td className="px-4 py-3 text-primary">{row.short}</td>
-                          <td className="px-4 py-3 text-primary">{row.medium}</td>
-                          <td className="px-4 py-3 text-primary">{row.long}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </section>
+                                // Map header to row property based on common patterns
+                                if (headerLower.includes("route") || headerLower.includes("distance")) {
+                                  cellValue = row.distance || "";
+                                } else if (headerLower.includes("open")) {
+                                  cellValue = row.openCost || "";
+                                } else if (headerLower.includes("enclosed")) {
+                                  cellValue = row.enclosedCost || "";
+                                } else if (headerLower.includes("vehicle") || headerLower.includes("type")) {
+                                  cellValue = row.type || "";
+                                } else if (headerLower.includes("<500") || (headerLower.includes("500") && !headerLower.includes("2500"))) {
+                                  cellValue = row.short || "";
+                                } else if (headerLower.includes("500-2,500") || headerLower.includes("500-2500")) {
+                                  cellValue = row.medium || "";
+                                } else if (headerLower.includes(">2,500") || headerLower.includes(">2500")) {
+                                  cellValue = row.long || "";
+                                } else {
+                                  // Fallback: try to find matching property
+                                  const key = Object.keys(row).find(
+                                    (k) => k.toLowerCase() === headerLower.replace(/\s+/g, "") ||
+                                      headerLower.includes(k.toLowerCase()) ||
+                                      k.toLowerCase().includes(headerLower.replace(/\s+/g, ""))
+                                  );
+                                  cellValue = key ? row[key] : "";
+                                }
 
-          {/* Cost Factors */}
-          <section className="py-16 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                  6 Factors That Impact Car Shipping Cost
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Understanding these factors helps you get the best rate for your shipment.
-                </p>
-              </motion.div>
-
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                {costFactors.map((factor, index) => (
-                  <motion.div
-                    key={factor.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-background p-6 rounded-xl border border-border"
-                  >
-                    <factor.icon className="w-8 h-8 text-primary mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">{factor.title}</h3>
-                    <p className="text-sm text-muted-foreground">{factor.desc}</p>
-                  </motion.div>
+                                return (
+                                  <td
+                                    key={headerIndex}
+                                    className={headerIndex === 0 ? "px-4 py-3 font-medium" : "px-4 py-3 text-primary"}
+                                  >
+                                    {cellValue}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-          </section>
+            </section>
+          )}
+
+          {/* Cost Factors */}
+          {costFactors.length > 0 && (
+            <section className="py-16 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-center mb-12"
+                >
+                  <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                    {page.service_cards?.[0]?.hero_title ?? "6 Factors That Impact Car Shipping Cost"}
+                  </h2>
+                  {page.service_cards?.[0]?.description ? (
+                    <p className="text-muted-foreground max-w-2xl mx-auto">
+                      {page.service_cards[0].description}
+                    </p>
+                  ) : null}
+                </motion.div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                  {costFactors.map((factor, index) => {
+                    const Icon = getIcon(factor.icon_name);
+                    return (
+                      <motion.div
+                        key={factor.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-background p-6 rounded-xl border border-border"
+                      >
+                        <Icon className="w-8 h-8 text-primary mb-4" />
+                        <h3 className="font-semibold text-lg mb-2">{factor.text}</h3>
+                        <p className="text-sm text-muted-foreground">{factor.description}</p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* How It Works */}
-          <section className="py-16">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                  How Our Quote Process Works
-                </h2>
-              </div>
+          {processSteps.length > 0 && (
+            <section className="py-16">
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-12">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                    {page.process_cards?.[0]?.hero_title ?? "How Our Quote Process Works"}
+                  </h2>
+                  {page.process_cards?.[0]?.description ? (
+                    <p className="text-muted-foreground max-w-2xl mx-auto">
+                      {page.process_cards[0].description}
+                    </p>
+                  ) : null}
+                </div>
 
-              <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                  {processSteps.map((step, index) => (
+                    <motion.div
+                      key={step.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="text-center"
+                    >
+                      <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                        {step.value}
+                      </div>
+                      <h3 className="font-semibold mb-2">{String(step.label)}</h3>
+                      <p className="text-sm text-muted-foreground">{step.descrption}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Call CTA */}
+          {page.cta && (
+            <section className="py-12 bg-primary">
+              <div className="container mx-auto px-4 text-center">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
-                  className="text-center"
                 >
-                  <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                    1
-                  </div>
-                  <h3 className="font-semibold mb-2">Enter Your Details</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Provide pickup/delivery locations, vehicle info, and preferred dates. Takes about 2 minutes.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="text-center"
-                >
-                  <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                    2
-                  </div>
-                  <h3 className="font-semibold mb-2">Expert Verification</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Our team verifies real-time carrier availability and calculates accurate pricing.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-center"
-                >
-                  <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                    3
-                  </div>
-                  <h3 className="font-semibold mb-2">Receive Your Quote</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Get your verified quote via email and text within 30 minutes. Book instantly online.
-                  </p>
+                  <h2 className="text-2xl font-bold text-primary-foreground mb-4">
+                    {page.cta.title}
+                  </h2>
+                  {page.cta.description ? (
+                    <p className="text-primary-foreground/80 mb-6">
+                      {page.cta.description}
+                    </p>
+                  ) : null}
+                  {page.cta.show_phone && page.cta.secondary_button_text && page.cta.secondary_button_link ? (
+                    <a
+                      href={page.cta.secondary_button_link}
+                      className="inline-flex items-center gap-2 text-xl font-bold text-primary-foreground hover:underline"
+                    >
+                      <Phone className="w-6 h-6" />
+                      {page.cta.secondary_button_text}
+                    </a>
+                  ) : null}
                 </motion.div>
               </div>
-            </div>
-          </section>
-
-          {/* Call CTA */}
-          <section className="py-12 bg-primary">
-            <div className="container mx-auto px-4 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-              >
-                <h2 className="text-2xl font-bold text-primary-foreground mb-4">
-                  Prefer to Talk to Someone?
-                </h2>
-                <p className="text-primary-foreground/80 mb-4">
-                  Our shipping advisors are available 24/7 to help you get the best rate.
-                </p>
-                <a 
-                  href="tel:+18885551234" 
-                  className="inline-flex items-center gap-2 text-xl font-bold text-primary-foreground hover:underline"
-                >
-                  <Phone className="w-6 h-6" />
-                  (888) 555-1234
-                </a>
-              </motion.div>
-            </div>
-          </section>
+            </section>
+          )}
         </main>
-        
+
         <Footer />
       </div>
     </>

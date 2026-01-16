@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
+import { NOT_FOUND_ENDPOINT } from "@/constants/apiConstants";
 
 interface HomeLink {
   id: number;
@@ -18,7 +19,7 @@ interface NotFoundResponse {
 }
 
 const fetchNotFound = async (): Promise<NotFoundData> => {
-  const { data } = await apiClient.get<NotFoundResponse>("/api/not-found?populate=*");
+  const { data } = await apiClient.get<NotFoundResponse>(NOT_FOUND_ENDPOINT);
   return data.data;
 };
 

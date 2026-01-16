@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
+import { HEADER_ENDPOINT } from "@/constants/apiConstants";
 
 interface HeaderResponse {
     data: {
@@ -21,7 +22,7 @@ interface HeaderResponse {
 }
 
 const fetchHeader = async () => {
-    const { data } = await apiClient.get<HeaderResponse>("/api/header?populate=*");
+    const { data } = await apiClient.get<HeaderResponse>(HEADER_ENDPOINT);
     return data;
 };
 

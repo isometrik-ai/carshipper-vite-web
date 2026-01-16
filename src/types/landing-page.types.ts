@@ -29,40 +29,22 @@ export interface Testimonial {
     verified: boolean;
 }
 
-export interface FAQItem {
-    id: number;
-    questions: string;
-    answer: string;
-}
+import {
+    FAQItem,
+    QuestionCTA,
+    CTASection,
+    StatItem,
+    FeatureItem,
+} from "./common.types";
 
-export interface QuestionCTA {
-    title: string;
-    description: string;
-    primary_button_text: string;
-    secondary_button_text: string;
-}
-
-export interface CTASection {
-    title: string;
-    description: string;
-    primary_button_text: string;
-    secondary_button_text: string;
-    trustBadges: string[];
-}
-
-export interface StatItem {
-    id: number;
-    label: string;
-    value: string | null;
-    icon_name: string | null;
-}
-
-export interface FeatureItem {
-    id: number;
-    label: string; // e.g., "30m", "10K+"
-    value: string; // e.g., "Expert Quotes"
-    icon_name: string | null;
-}
+// Re-export for backward compatibility
+export type {
+    FAQItem,
+    QuestionCTA,
+    CTASection,
+    StatItem,
+    FeatureItem,
+};
 
 export interface HeroSectionData {
     id: number;
