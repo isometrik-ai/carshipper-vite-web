@@ -39,10 +39,24 @@ export const HEADER_ENDPOINT = buildUrl("header", "populate=*");
 
 export const HOW_IT_WORKS_ENDPOINT = buildUrl(
     "how-it-work",
-    "populate[hero_section][populate]=*&populate[verifiedQuotes][populate]=*&populate[customerSay][populate]=*&populate[shipping][populate]=*"
+    "populate[hero_section][populate]=*&populate[verifiedQuotes][populate]=*&populate[customerSay][populate]=*&populate[shipping][populate]=*&populate[howItWorksCTA][populate]=*"
 );
 
-export const LANDING_PAGE_ENDPOINT = buildUrl("landing-page", "populate[FAQSection][populate]=*&populate[TestimonialsSection][populate]=*&populate[landingPageSeo][populate]=*&populate[FinalCTA][populate]=*&populate[trustBar][populate]=*&populate[why_choose_us][populate]=*&populate[pricing_section][populate]=*");
+export const LANDING_PAGE_ENDPOINT = buildUrl(
+    "landing-page",
+    "populate[FAQSection][populate]=*&populate[TestimonialsSection][populate]=*&populate[landingPageSeo][populate]=*&populate[FinalCTA][populate]=*&populate[trustBar][populate]=*&populate[why_choose_us][populate]=*&populate[pricing_section][populate]=*&populate[hero_section][populate]=*"
+);
+
+export const OPEN_TRANSPORT_ENDPOINT = buildUrl(
+    "open-transport",
+    "populate[heroSection][populate]=*&populate[openTransportSecondaryHeader][populate]=*&populate[featuresGrid][populate]=*&populate[benefits][populate]=*&populate[faqs][populate]=*&populate[testimonials][populate]=*&populate[safety][populate]=*&populate[CTA][populate]=*"
+);
+
+export const NOT_FOUND_ENDPOINT = buildUrl("not-found", "populate=*");
+
+export const PRIVACY_ENDPOINT = buildUrl("privacy", "populate=*");
+
+export const TERMS_ENDPOINT = buildUrl("terms-of-service", "populate=*");
 
 export const CALIFORNIA_ENDPOINT = buildUrl('california', GENERIC_SEO_POPULATE)
 
@@ -71,3 +85,5 @@ export const TRACK_SHIPMENT_ENDPOINT = buildUrl('track-shipment', 'populate=*')
 export const ENCLOSED_TRANSPORT_ENDPOINT = buildUrl('enclosed-transport', GENERIC_SEO_POPULATE)
 
 export const QUOTE_FORM_CONFIG_ENDPOINT = buildUrl('quote-form-config', 'populate=*')
+
+export const CHAT_WIDGET_ENDPOINT = buildUrl('chat-widget', 'populate=*')

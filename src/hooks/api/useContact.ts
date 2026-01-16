@@ -1,14 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
+import { CONTACT_ENDPOINT } from "@/constants/apiConstants";
 
 interface ContactResponse {
   data: any;
 }
 
 const fetchContact = async () => {
-  const { data } = await apiClient.get<ContactResponse>(
-    "/api/contact?populate[contact_methods]=*&populate[contact_form]=*&populate[business_info][populate]=*"
-  );
+  const { data } = await apiClient.get<ContactResponse>(CONTACT_ENDPOINT);
   return data.data;
 };
 

@@ -1,29 +1,51 @@
-import { useState } from "react";
-import { MessageCircle, X, Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { useChatWidget } from "@/hooks/api";
+import type { LucideIcon } from "lucide-react";
+
+// Helper to resolve dynamic icons from Lucide
+const getIcon = (name: string): LucideIcon => {
+  const Icon = (LucideIcons as any)[name];
+  return Icon || LucideIcons.HelpCircle;
+};
 
 const ChatWidget = () => {
+  const { data, isLoading } = useChatWidget();
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([
-    { text: "Hi! 👋 How can I help you with your car shipping today?", isUser: false },
-  ]);
+  const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
+
+  // Initialize messages with welcome message when data is loaded
+  useEffect(() => {
+    if (data && messages.length === 0) {
+      setMessages([{ text: data.welcome_message, isUser: false }]);
+    }
+  }, [data, messages.length]);
 
   const handleSend = () => {
-    if (!message.trim()) return;
-    
+    if (!message.trim() || !data) return;
+
     setMessages((prev) => [...prev, { text: message, isUser: true }]);
     setMessage("");
-    
+
     // Simulate response
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        { text: "Thanks for your message! Our team will get back to you shortly. For immediate assistance, call us at (888) 555-1234.", isUser: false },
+        { text: data.reply_message, isUser: false },
       ]);
     }, 1000);
   };
+
+  if (isLoading || !data) {
+    return null; // Don't render widget while loading
+  }
+
+  const ModalIcon = getIcon(data.modal_icon);
+  const CloseIcon = getIcon(data.modal_close_icon);
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -40,18 +62,18 @@ const ChatWidget = () => {
             <div className="bg-primary p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary-foreground/20 rounded-full flex items-center justify-center">
-                  <MessageCircle className="w-5 h-5 text-primary-foreground" />
+                  <ModalIcon className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-primary-foreground">CarShippers.ai</h3>
-                  <p className="text-xs text-primary-foreground/70">We typically reply instantly</p>
+                  <h3 className="font-semibold text-primary-foreground">{data.modal_title}</h3>
+                  <p className="text-xs text-primary-foreground/70">{data.modal_description}</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
               >
-                <X className="w-5 h-5" />
+                <CloseIcon className="w-5 h-5" />
               </button>
             </div>
 
@@ -63,11 +85,10 @@ const ChatWidget = () => {
                   className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${
-                      msg.isUser
+                    className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${msg.isUser
                         ? "bg-primary text-primary-foreground rounded-br-md"
                         : "bg-background border border-border rounded-bl-md"
-                    }`}
+                      }`}
                   >
                     {msg.text}
                   </div>
@@ -83,7 +104,7 @@ const ChatWidget = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  placeholder="Type your message..."
+                  placeholder={data.input_placehoder}
                   className="flex-1 bg-muted rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <Button
@@ -107,9 +128,9 @@ const ChatWidget = () => {
         className="w-14 h-14 bg-primary rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
       >
         {isOpen ? (
-          <X className="w-6 h-6 text-primary-foreground" />
+          <CloseIcon className="w-6 h-6 text-primary-foreground" />
         ) : (
-          <MessageCircle className="w-6 h-6 text-primary-foreground" />
+          <ModalIcon className="w-6 h-6 text-primary-foreground" />
         )}
       </motion.button>
     </div>

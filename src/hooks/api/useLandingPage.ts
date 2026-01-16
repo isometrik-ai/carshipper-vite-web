@@ -1,15 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
 import { LandingPageData } from "@/types/landing-page.types";
+import { LANDING_PAGE_ENDPOINT } from "@/constants/apiConstants";
 
 interface LandingPageResponse {
   data: LandingPageData;
 }
 
 const fetchLandingPage = async (): Promise<LandingPageData> => {
-  const { data } = await apiClient.get<LandingPageResponse>(
-    "/api/landing-page?populate[FAQSection][populate]=*&populate[TestimonialsSection][populate]=*&populate[landingPageSeo][populate]=*&populate[FinalCTA][populate]=*&populate[trustBar][populate]=*&populate[why_choose_us][populate]=*&populate[pricing_section][populate]=*&populate[hero_section][populate]=*"
-  );
+  const { data } = await apiClient.get<LandingPageResponse>(LANDING_PAGE_ENDPOINT);
   return data.data;
 };
 

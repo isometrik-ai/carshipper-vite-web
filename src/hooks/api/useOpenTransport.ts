@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
 import { OpenTransportResponse } from "@/types/open-transport";
+import { OPEN_TRANSPORT_ENDPOINT } from "@/constants/apiConstants";
 
 const fetchOpenTransport = async (): Promise<OpenTransportResponse> => {
-    const { data } = await apiClient.get<OpenTransportResponse>("/api/open-transport?populate[heroSection][populate]=*&populate[openTransportSecondaryHeader][populate]=*&populate[featuresGrid][populate]=*&populate[benefits][populate]=*&populate[faqs][populate]=*&populate[testimonials][populate]=*&populate[safety][populate]=*&populate[CTA][populate]=*");
+    const { data } = await apiClient.get<OpenTransportResponse>(OPEN_TRANSPORT_ENDPOINT);
     return data;
 };
 

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
+import { PRIVACY_ENDPOINT } from "@/constants/apiConstants";
 
 interface PrivacySeo {
   title: string;
@@ -29,7 +30,7 @@ interface PrivacyResponse {
 }
 
 const fetchPrivacy = async (): Promise<PrivacyData> => {
-  const { data } = await apiClient.get<PrivacyResponse>("/api/privacy?populate=*");
+  const { data } = await apiClient.get<PrivacyResponse>(PRIVACY_ENDPOINT);
   // Handle both Strapi v4 and v5 response formats
   const extractedData = (data.data as any).attributes || data.data;
   return extractedData;

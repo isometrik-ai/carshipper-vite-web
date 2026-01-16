@@ -1,15 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
 import { AboutData } from "@/types/about.types";
+import { ABOUT_ENDPOINT } from "@/constants/apiConstants";
 
 interface AboutResponse {
   data: AboutData;
 }
 
 const fetchAbout = async (): Promise<AboutData> => {
-  const { data } = await apiClient.get<AboutResponse>(
-    "/api/about?populate[StatsItems][populate]=*&populate[ValueItems][populate]=*&populate[Why30Items][populate]=*&populate[sharedCTA][populate]=*"
-  );
+  const { data } = await apiClient.get<AboutResponse>(ABOUT_ENDPOINT);
   return data.data;
 };
 

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
+import { TERMS_ENDPOINT } from "@/constants/apiConstants";
 
 interface TermsSeo {
   id: number;
@@ -28,7 +29,7 @@ interface TermsResponse {
 }
 
 const fetchTerms = async (): Promise<TermsData> => {
-  const { data } = await apiClient.get<TermsResponse>("/api/terms-of-service?populate=*");
+  const { data } = await apiClient.get<TermsResponse>(TERMS_ENDPOINT);
   return data.data;
 };
 

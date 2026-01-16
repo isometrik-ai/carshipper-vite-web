@@ -1,15 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/axios";
 import { HowItWorksResponse } from "@/types/how-it-works.types";
+import { HOW_IT_WORKS_ENDPOINT } from "@/constants/apiConstants";
 
 interface HowItWorksApiResponse {
   data: HowItWorksResponse;
 }
 
 const fetchHowItWorks = async (): Promise<HowItWorksResponse> => {
-  const { data } = await apiClient.get<HowItWorksApiResponse>(
-    "/api/how-it-work?populate[hero_section][populate]=*&populate[verifiedQuotes][populate]=*&populate[customerSay][populate]=*&populate[shipping][populate]=*&populate[howItWorksCTA][populate]=*"
-  );
+  const { data } = await apiClient.get<HowItWorksApiResponse>(HOW_IT_WORKS_ENDPOINT);
   return data.data;
 };
 
