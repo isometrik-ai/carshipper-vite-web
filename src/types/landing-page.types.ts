@@ -1,0 +1,134 @@
+export interface Feature {
+    text: string;
+    subtext: string;
+    positive: boolean | null;
+}
+
+export interface Comparison {
+    title: string;
+    highlight: boolean;
+    features: Feature[];
+}
+
+export interface ShippingRoute {
+    from: string;
+    to: string;
+    distance: string;
+    price: string;
+    timeline: string;
+    popular: boolean;
+}
+
+export interface Testimonial {
+    name: string;
+    location: string;
+    rating: number;
+    vehicle: string;
+    route: string;
+    quote: string;
+    verified: boolean;
+}
+
+import {
+    FAQItem,
+    QuestionCTA,
+    CTASection,
+    StatItem,
+    FeatureItem,
+} from "./common.types";
+
+// Re-export for backward compatibility
+export type {
+    FAQItem,
+    QuestionCTA,
+    CTASection,
+    StatItem,
+    FeatureItem,
+};
+
+export interface HeroSectionData {
+    id: number;
+    hero_title: string;
+    hero_title_highlight: string;
+    description: string;
+    secondary_description: string;
+    hero_section_tagline: string;
+    services: unknown[]; // Placeholder for future service objects
+    contact: unknown[];  // Placeholder for future contact objects
+    Stats: StatItem[];
+    features: FeatureItem[];
+}
+
+export interface LandingPageData {
+    landingPageSeo?: {
+        title: string;
+        content: string;
+    };
+    trustBar?: {
+        stats: Array<{ value: string; label: string }>;
+    };
+    why_choose_us?: {
+        comparions: Comparison[];
+    };
+    pricing_section?: {
+        title: string;
+        sub_title: string;
+        routes: ShippingRoute[];
+        button_label: string;
+        route_title: string;
+    };
+    TestimonialsSection?: {
+        testimonial_title: string;
+        testimonial_sub_title: string;
+        testimonial_reviews: string;
+        testimonials: Testimonial[];
+        testimonial_reviews_link: string;
+    };
+    FAQSection?: {
+        title: string;
+        sub_title: string;
+        FAQS: FAQItem[];
+        QuestionCTA: QuestionCTA;
+    };
+    FinalCTA?: CTASection[];
+
+    hero_section?: HeroSectionData
+}
+
+export interface TrustBarProps {
+    stats: Array<{ value: string; label: string }>;
+}
+
+export interface WhyChooseUsProps {
+    comparisons: Comparison[];
+}
+
+export interface PricingSectionProps {
+    title: string;
+    subTitle: string;
+    routes: ShippingRoute[];
+    buttonLabel: string;
+    routeTitle: string;
+}
+
+export interface TestimonialsSectionProps {
+    title: string;
+    subTitle: string;
+    testimonials: Testimonial[];
+    reviewsInfo: string;
+    testimonialsLink: string;
+}
+
+// landing-page.types.ts
+export interface FAQSectionProps {
+    data?: {
+        title: string;
+        sub_title: string;
+        FAQS: FAQItem[];
+        QuestionCTA: QuestionCTA;
+    };
+}
+
+export interface FinalCTAProps {
+    content?: CTASection;
+}

@@ -1,0 +1,89 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+const GENERIC_SEO_POPULATE = `populate[data][populate][service_cards][populate]=*&
+populate[data][populate][service_card][populate]=*&populate[data][populate][process_cards][populate]=*&populate[data][populate][trailer_options][populate]=*&populate[data][populate][faqs][populate]=*&populate[data][populate][cta][populate]=*&
+populate[data][populate][stats][populate]=*&populate[data][populate][services][populate]=*&populate[data][populate][solutions][populate]=*&populate[data][populate][secondary_section][populate]=*&populate[data][populate][compliance][populate]=*&populate[data][populate][table_data][populate]=*`
+
+/**
+ * Helper to build Strapi URLs with nested population logic.
+ * This keeps the endpoint definitions clean and readable.
+ */
+const buildUrl = (path: string, params?: string) => {
+    const query = params ? `?${params}` : "";
+    return `${API_BASE_URL}/api/${path}${query}`;
+};
+
+export const FAQ_ENDPOINT = buildUrl(
+    "faq",
+    "populate[FaqCategories][populate]=FAQS"
+);
+
+export const ABOUT_ENDPOINT = buildUrl(
+    "about",
+    "populate[StatsItems][populate]=*&populate[ValueItems][populate]=*&populate[Why30Items][populate]=*&populate[sharedCTA][populate]=*"
+);
+
+export const PRICING_ENDPOINT = buildUrl("pricing", "populate=*");
+
+export const CONTACT_ENDPOINT = buildUrl(
+    "contact",
+    "populate[contact_methods]=*&populate[contact_form]=*&populate[business_info][populate]=*"
+);
+
+export const FOOTER_ENDPOINT = buildUrl(
+    "footer",
+    "populate[feature_items]=*&populate[socialLinks]=*&populate[footerColumn][populate]=*&populate[horizontalGroups][populate]=*&populate[bottom_bar]=*"
+);
+
+export const HEADER_ENDPOINT = buildUrl("header", "populate=*");
+
+export const HOW_IT_WORKS_ENDPOINT = buildUrl(
+    "how-it-work",
+    "populate[hero_section][populate]=*&populate[verifiedQuotes][populate]=*&populate[customerSay][populate]=*&populate[shipping][populate]=*&populate[howItWorksCTA][populate]=*"
+);
+
+export const LANDING_PAGE_ENDPOINT = buildUrl(
+    "landing-page",
+    "populate[FAQSection][populate]=*&populate[TestimonialsSection][populate]=*&populate[landingPageSeo][populate]=*&populate[FinalCTA][populate]=*&populate[trustBar][populate]=*&populate[why_choose_us][populate]=*&populate[pricing_section][populate]=*&populate[hero_section][populate]=*"
+);
+
+export const OPEN_TRANSPORT_ENDPOINT = buildUrl(
+    "open-transport",
+    "populate[heroSection][populate]=*&populate[openTransportSecondaryHeader][populate]=*&populate[featuresGrid][populate]=*&populate[benefits][populate]=*&populate[faqs][populate]=*&populate[testimonials][populate]=*&populate[safety][populate]=*&populate[CTA][populate]=*"
+);
+
+export const NOT_FOUND_ENDPOINT = buildUrl("not-found", "populate=*");
+
+export const PRIVACY_ENDPOINT = buildUrl("privacy", "populate=*");
+
+export const TERMS_ENDPOINT = buildUrl("terms-of-service", "populate=*");
+
+export const CALIFORNIA_ENDPOINT = buildUrl('california', GENERIC_SEO_POPULATE)
+
+export const LOS_ANGELS_ENDPOINT = buildUrl('los-angeles-city', GENERIC_SEO_POPULATE)
+
+export const FLATBED_TRANSPORT_ENDPOINT = buildUrl('flatbed-transport', GENERIC_SEO_POPULATE)
+
+export const HEAVY_HAULING_ENDPOINT = buildUrl('heavy-hauling', GENERIC_SEO_POPULATE)
+
+export const FLEET_TRANSPORT_ENDPOINT = buildUrl('fleet-transport', GENERIC_SEO_POPULATE)
+
+export const DEALERSHIP_ENDPOINT = buildUrl('dealership-delivery', GENERIC_SEO_POPULATE)
+
+export const AUTO_AUCTION_SHIPPING_ENDPOINT = buildUrl('auto-auction-shipping', GENERIC_SEO_POPULATE)
+
+export const RENTAL_CAR_LOGISTICS_ENDPOINT = buildUrl('rental-car-logistic', GENERIC_SEO_POPULATE)
+
+export const OEM_TRANSPORT_ENDPOINT = buildUrl('oem-transport', GENERIC_SEO_POPULATE)
+
+export const QUOTE_ENDPOINT = buildUrl('get-a-quote', GENERIC_SEO_POPULATE)
+
+export const BLOG_ENDPOINT = buildUrl('blog', 'populate=*')
+
+export const TRACK_SHIPMENT_ENDPOINT = buildUrl('track-shipment', 'populate=*')
+
+export const ENCLOSED_TRANSPORT_ENDPOINT = buildUrl('enclosed-transport', GENERIC_SEO_POPULATE)
+
+export const QUOTE_FORM_CONFIG_ENDPOINT = buildUrl('quote-form-config', 'populate=*')
+
+export const CHAT_WIDGET_ENDPOINT = buildUrl('chat-widget', 'populate=*')
