@@ -1,137 +1,104 @@
-import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
-import { motion } from "framer-motion";
-import { Shield, Clock, Truck, Star, CheckCircle, MapPin, Phone, Car, DollarSign, Building2 } from "lucide-react";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { useLosAngelesShipping } from "@/api/losAngelesShipping";
+import { getIcon } from "@/lib/icons";
+import { MapPin, Phone, Building2, CheckCircle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import type { HeroSection, StatsBar, FAQDisplay, CallToAction } from "@/types/LandingPage.types";
+import type { RouteTable } from "@/types/CaliforniaShipping.types";
+import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
+import type { NeighborhoodsSection, RelatedPagesSection } from "@/types/LosAngelesShipping.types";
 
+/**
+ * Los Angeles Shipping page component
+ * 
+ * Fetches page content from Strapi CMS and renders sections with exact original layout.
+ * All content is managed through Strapi, including SEO metadata and page sections.
+ */
 const LosAngelesShipping = () => {
-  const shippingFromLA = [
-    { from: "Los Angeles", to: "New York", distance: "2,775 miles", time: "7-10 days", cost: "$1,350" },
-    { from: "Los Angeles", to: "Chicago", distance: "2,015 miles", time: "5-7 days", cost: "$1,125" },
-    { from: "Los Angeles", to: "Houston", distance: "1,545 miles", time: "4-6 days", cost: "$975" },
-    { from: "Los Angeles", to: "Phoenix", distance: "370 miles", time: "2-3 days", cost: "$550" },
-    { from: "Los Angeles", to: "Seattle", distance: "1,135 miles", time: "4-5 days", cost: "$925" },
-    { from: "Los Angeles", to: "Miami", distance: "2,750 miles", time: "7-10 days", cost: "$1,400" },
-    { from: "Los Angeles", to: "Las Vegas", distance: "270 miles", time: "1-2 days", cost: "$475" },
-    { from: "Los Angeles", to: "Denver", distance: "1,020 miles", time: "3-5 days", cost: "$875" },
-  ];
+  const { data, isLoading } = useLosAngelesShipping();
 
-  const shippingToLA = [
-    { from: "New York", to: "Los Angeles", distance: "2,775 miles", time: "7-10 days", cost: "$1,325" },
-    { from: "Chicago", to: "Los Angeles", distance: "2,015 miles", time: "5-7 days", cost: "$1,100" },
-    { from: "Dallas", to: "Los Angeles", distance: "1,435 miles", time: "4-6 days", cost: "$950" },
-    { from: "Atlanta", to: "Los Angeles", distance: "2,175 miles", time: "6-8 days", cost: "$1,175" },
-    { from: "Boston", to: "Los Angeles", distance: "2,985 miles", time: "8-10 days", cost: "$1,450" },
-    { from: "Detroit", to: "Los Angeles", distance: "2,300 miles", time: "6-8 days", cost: "$1,225" },
-  ];
+  // Extract components from page content
+  const pageData = useMemo(() => {
+    if (!data?.data?.page_content) return null;
 
-  const neighborhoods = [
-    "Downtown LA", "Hollywood", "Santa Monica", "Beverly Hills",
-    "Pasadena", "Long Beach", "Burbank", "Glendale",
-    "Culver City", "West Hollywood", "Malibu", "Venice"
-  ];
+    const content = data.data.page_content;
+    const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
+    const statsBar = content.find(c => c.__component === "shared.stats-bar") as StatsBar | undefined;
+    const neighborhoodsSection = content.find(c => c.__component === "shared.neighborhoods-section") as NeighborhoodsSection | undefined;
+    const routeTableFrom = content.find(c =>
+      c.__component === "shared.route-table" &&
+      (c as RouteTable).section_title?.includes("FROM Los Angeles")
+    ) as RouteTable | undefined;
+    const routeTableTo = content.find(c =>
+      c.__component === "shared.route-table" &&
+      (c as RouteTable).section_title?.includes("TO Los Angeles")
+    ) as RouteTable | undefined;
+    const serviceCards = content.find(c => c.__component === "shared.service-cards") as ServiceCards | undefined;
+    const faqDisplay = content.find(c => c.__component === "shared.faq-display") as FAQDisplay | undefined;
+    const relatedPages = content.find(c => c.__component === "shared.related-pages-section") as RelatedPagesSection | undefined;
+    const cta = content.find(c => c.__component === "shared.call-to-action") as CallToAction | undefined;
 
-  const faqs = [
-    {
-      q: "How much does it cost to ship a car to Los Angeles?",
-      a: "Car shipping to Los Angeles typically ranges from $475 for nearby cities like Las Vegas to $1,450 for cross-country routes from Boston. The average cost for a sedan is around $1,100-$1,300 from major East Coast cities."
-    },
-    {
-      q: "How long does car shipping to Los Angeles take?",
-      a: "Delivery times to LA vary by origin: 1-2 days from Las Vegas, 2-3 days from Phoenix, 5-7 days from Chicago, and 7-10 days from New York or Miami."
-    },
-    {
-      q: "Do you offer door-to-door service in Los Angeles?",
-      a: "Yes, we provide door-to-door pickup and delivery throughout Los Angeles County, including all neighborhoods from Downtown LA to Malibu. Some areas may require nearby location pickup due to traffic or access restrictions."
-    },
-    {
-      q: "What's the best time to ship a car to Los Angeles?",
-      a: "Fall and winter months (October-February) typically offer the best rates for shipping to LA. Summer months see higher demand, which can increase prices by 15-25%."
-    },
-    {
-      q: "Can you ship a car from the LA port?",
-      a: "Yes, we offer port pickup services from the Port of Los Angeles and Port of Long Beach for imported vehicles. We can transport your car directly from the port to any destination."
-    },
-  ];
+    return {
+      hero: heroSection,
+      stats: statsBar,
+      neighborhoods: neighborhoodsSection,
+      routeTableFrom,
+      routeTableTo,
+      serviceCards,
+      faq: faqDisplay,
+      relatedPages,
+      cta,
+    };
+  }, [data]);
+
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <>
+        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <div className="container mx-auto px-4 py-12 text-center">
+              <p className="text-muted-foreground">No content available.</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <Helmet>
-        <title>Los Angeles Car Shipping | LA Auto Transport Services | CarShippers.ai</title>
-        <meta 
-          name="description" 
-          content="Professional Los Angeles car shipping services. Door-to-door auto transport in LA, Hollywood, Santa Monica & all LA County. Get your free quote in 30 minutes!" 
-        />
-        <link rel="canonical" href="https://carshippers.ai/los-angeles-car-shipping" />
-        <meta name="keywords" content="Los Angeles car shipping, LA auto transport, ship car to Los Angeles, car transport Hollywood, Santa Monica vehicle shipping" />
-        
-        {/* Local Business Schema */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            "name": "CarShippers.ai - Los Angeles Auto Transport",
-            "description": "Professional car shipping services in Los Angeles, California",
-            "areaServed": {
-              "@type": "City",
-              "name": "Los Angeles",
-              "containedIn": {
-                "@type": "State",
-                "name": "California"
-              }
-            },
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": "Los Angeles",
-              "addressRegion": "CA",
-              "postalCode": "90001",
-              "addressCountry": "US"
-            },
-            "geo": {
-              "@type": "GeoCoordinates",
-              "latitude": "34.0522",
-              "longitude": "-118.2437"
-            },
-            "url": "https://carshippers.ai/los-angeles-car-shipping",
-            "telephone": "+1-888-555-1234",
-            "priceRange": "$475-$1,450",
-            "openingHoursSpecification": {
-              "@type": "OpeningHoursSpecification",
-              "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-              "opens": "00:00",
-              "closes": "23:59"
-            },
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.8",
-              "reviewCount": "5000"
-            }
-          })}
-        </script>
-        
-        {/* FAQPage Schema */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": faqs.map(faq => ({
-              "@type": "Question",
-              "name": faq.q,
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": faq.a
-              }
-            }))
-          })}
-        </script>
-      </Helmet>
+      <PageSEO seoMetadata={data?.data?.seo_metadata} />
 
       <div className="min-h-screen flex flex-col">
         <Header />
-        
+
         <main className="flex-1 pt-20">
           {/* Hero Section */}
           <section className="relative py-16 md:py-24 bg-gradient-to-br from-primary/10 via-background to-secondary/20 overflow-hidden">
@@ -142,45 +109,74 @@ const LosAngelesShipping = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-                    <Building2 className="w-4 h-4" />
-                    <span className="text-sm font-medium">Los Angeles Auto Transport</span>
-                  </div>
-                  
+                  {pageData.hero?.tagline ? (
+                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
+                      {pageData.hero.tagline_icon ? (
+                        (() => {
+                          const TaglineIcon = getIcon(pageData.hero.tagline_icon) as LucideIcon;
+                          return <TaglineIcon className="w-4 h-4" aria-hidden="true" />;
+                        })()
+                      ) : (
+                        <Building2 className="w-4 h-4" aria-hidden="true" />
+                      )}
+                      <span className="text-sm font-medium">{pageData.hero.tagline}</span>
+                    </div>
+                  ) : null}
+
                   <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                    Los Angeles Car Shipping <span className="text-primary">Services</span>
+                    {pageData.hero?.main_headline || "Los Angeles Car Shipping"}{" "}
+                    {pageData.hero?.highlighted_text ? (
+                      <span className="text-primary">{pageData.hero.highlighted_text}</span>
+                    ) : null}
                   </h1>
-                  
-                  <p className="text-lg text-muted-foreground mb-6">
-                    Professional auto transport to and from Los Angeles. From Hollywood to Santa Monica, 
-                    Downtown LA to Long Beach, we provide reliable door-to-door car shipping throughout LA County.
-                  </p>
 
-                  <div className="grid grid-cols-2 gap-4 mb-8">
-                    <div className="flex items-center gap-3">
-                      <Shield className="w-5 h-5 text-success" />
-                      <span className="text-sm">$1M+ Insurance</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Clock className="w-5 h-5 text-primary" />
-                      <span className="text-sm">30-Min Quotes</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Truck className="w-5 h-5 text-warning" />
-                      <span className="text-sm">Door-to-Door LA</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Star className="w-5 h-5 text-success" />
-                      <span className="text-sm">4.8★ Rating</span>
-                    </div>
-                  </div>
+                  {pageData.hero?.description ? (
+                    <p className="text-lg text-muted-foreground mb-6">
+                      {pageData.hero.description.split('\n\n').map((paragraph, index) => (
+                        <span key={index}>
+                          {paragraph}
+                          {index < pageData.hero.description.split('\n\n').length - 1 && <><br /><br /></>}
+                        </span>
+                      ))}
+                    </p>
+                  ) : null}
 
-                  <div className="flex flex-wrap gap-3">
-                    <a href="tel:+18885551234" className="inline-flex items-center gap-2 text-primary font-semibold hover:underline">
-                      <Phone className="w-5 h-5" />
-                      (888) 555-1234
-                    </a>
-                  </div>
+                  {pageData.hero?.trust_indicators && pageData.hero.trust_indicators.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                      {pageData.hero.trust_indicators.map((indicator) => {
+                        const IndicatorIcon = indicator.icon_name
+                          ? (getIcon(indicator.icon_name) as LucideIcon)
+                          : null;
+                        const iconColor = indicator.icon_name === "shield"
+                          ? "text-success"
+                          : indicator.icon_name === "clock"
+                            ? "text-primary"
+                            : indicator.icon_name === "truck"
+                              ? "text-warning"
+                              : indicator.icon_name === "checkCircle" || indicator.icon_name === "star"
+                                ? "text-success"
+                                : "text-primary";
+
+                        return (
+                          <div key={indicator.id} className="flex items-center gap-3">
+                            {IndicatorIcon ? (
+                              <IndicatorIcon className={`w-5 h-5 ${iconColor}`} aria-hidden="true" />
+                            ) : null}
+                            <span className="text-sm">{indicator.text}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+
+                  {pageData.hero?.phone_number ? (
+                    <div className="flex flex-wrap gap-3">
+                      <a href={`tel:${pageData.hero.phone_number.replace(/\D/g, '')}`} className="inline-flex items-center gap-2 text-primary font-semibold hover:underline">
+                        <Phone className="w-5 h-5" aria-hidden="true" />
+                        {pageData.hero.phone_number}
+                      </a>
+                    </div>
+                  ) : null}
                 </motion.div>
 
                 <motion.div
@@ -195,312 +191,337 @@ const LosAngelesShipping = () => {
           </section>
 
           {/* Trust Badges */}
-          <section className="py-8 bg-muted/30 border-y border-border">
-            <div className="container mx-auto px-4">
-              <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">15,000+</div>
-                  <div className="text-sm text-muted-foreground">LA Cars Shipped</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">4.8★</div>
-                  <div className="text-sm text-muted-foreground">Customer Rating</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">A+</div>
-                  <div className="text-sm text-muted-foreground">BBB Rating</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">24/7</div>
-                  <div className="text-sm text-muted-foreground">LA Support</div>
+          {pageData.stats && pageData.stats.statistics && pageData.stats.statistics.length > 0 ? (
+            <section className="py-8 bg-muted/30 border-y border-border">
+              <div className="container mx-auto px-4">
+                <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+                  {pageData.stats.statistics.map((stat) => (
+                    <div key={stat.id || stat.label} className="text-center">
+                      <div className="text-2xl font-bold text-primary">{stat.value}</div>
+                      <div className="text-sm text-muted-foreground">{stat.label}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* LA Service Areas */}
-          <section className="py-16 md:py-24">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  Car Shipping Throughout Los Angeles
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  We provide door-to-door auto transport to all neighborhoods and areas in Los Angeles County.
-                </p>
-              </motion.div>
+          {pageData.neighborhoods ? (
+            <section className="py-16 md:py-24">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-center mb-12"
+                >
+                  {pageData.neighborhoods.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.neighborhoods.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.neighborhoods.section_description ? (
+                    <p className="text-muted-foreground max-w-2xl mx-auto">
+                      {pageData.neighborhoods.section_description}
+                    </p>
+                  ) : null}
+                </motion.div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 max-w-4xl mx-auto">
-                {neighborhoods.map((area) => (
-                  <motion.div
-                    key={area}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg text-sm"
-                  >
-                    <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
-                    <span>{area}</span>
-                  </motion.div>
-                ))}
+                {pageData.neighborhoods.neighborhoods && pageData.neighborhoods.neighborhoods.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 max-w-4xl mx-auto">
+                    {pageData.neighborhoods.neighborhoods.map((area) => (
+                      <motion.div
+                        key={area.id || area.name}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg text-sm"
+                      >
+                        <MapPin className="w-3 h-3 text-primary flex-shrink-0" aria-hidden="true" />
+                        <span>{area.name}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* Shipping From LA Table */}
-          <section className="py-16 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="mb-8"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                  Shipping Your Car FROM Los Angeles - Cost & Delivery Estimates
-                </h2>
-                <p className="text-muted-foreground">
-                  Popular routes and estimated costs for shipping from Los Angeles.
-                </p>
-              </motion.div>
+          {pageData.routeTableFrom ? (
+            <section className="py-16 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="mb-8"
+                >
+                  {pageData.routeTableFrom.section_title ? (
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                      {pageData.routeTableFrom.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.routeTableFrom.section_description ? (
+                    <p className="text-muted-foreground">
+                      {pageData.routeTableFrom.section_description}
+                    </p>
+                  ) : null}
+                </motion.div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm">
-                  <thead className="bg-primary text-primary-foreground">
-                    <tr>
-                      <th className="px-4 py-3 text-left">From</th>
-                      <th className="px-4 py-3 text-left">To</th>
-                      <th className="px-4 py-3 text-left">Distance</th>
-                      <th className="px-4 py-3 text-left">Est. Time</th>
-                      <th className="px-4 py-3 text-left">Est. Cost</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shippingFromLA.map((route, index) => (
-                      <tr key={index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
-                        <td className="px-4 py-3">{route.from}</td>
-                        <td className="px-4 py-3">{route.to}</td>
-                        <td className="px-4 py-3">{route.distance}</td>
-                        <td className="px-4 py-3">{route.time}</td>
-                        <td className="px-4 py-3 font-semibold text-primary">{route.cost}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {pageData.routeTableFrom.routes && pageData.routeTableFrom.routes.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm">
+                      <thead className="bg-primary text-primary-foreground">
+                        <tr>
+                          <th className="px-4 py-3 text-left">From</th>
+                          <th className="px-4 py-3 text-left">To</th>
+                          <th className="px-4 py-3 text-left">Distance</th>
+                          <th className="px-4 py-3 text-left">Est. Time</th>
+                          <th className="px-4 py-3 text-left">Est. Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pageData.routeTableFrom.routes.map((route, index) => (
+                          <tr key={route.id || index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
+                            <td className="px-4 py-3">{route.from}</td>
+                            <td className="px-4 py-3">{route.to}</td>
+                            <td className="px-4 py-3">{route.distance}</td>
+                            <td className="px-4 py-3">{route.time}</td>
+                            <td className="px-4 py-3 font-semibold text-primary">{route.cost}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* Shipping To LA Table */}
-          <section className="py-16">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="mb-8"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                  Shipping Your Car TO Los Angeles - Cost & Delivery Estimates
-                </h2>
-                <p className="text-muted-foreground">
-                  Popular routes and estimated costs for shipping to Los Angeles.
-                </p>
-              </motion.div>
+          {pageData.routeTableTo ? (
+            <section className="py-16">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="mb-8"
+                >
+                  {pageData.routeTableTo.section_title ? (
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                      {pageData.routeTableTo.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.routeTableTo.section_description ? (
+                    <p className="text-muted-foreground">
+                      {pageData.routeTableTo.section_description}
+                    </p>
+                  ) : null}
+                </motion.div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm border border-border">
-                  <thead className="bg-primary text-primary-foreground">
-                    <tr>
-                      <th className="px-4 py-3 text-left">From</th>
-                      <th className="px-4 py-3 text-left">To</th>
-                      <th className="px-4 py-3 text-left">Distance</th>
-                      <th className="px-4 py-3 text-left">Est. Time</th>
-                      <th className="px-4 py-3 text-left">Est. Cost</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shippingToLA.map((route, index) => (
-                      <tr key={index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
-                        <td className="px-4 py-3">{route.from}</td>
-                        <td className="px-4 py-3">{route.to}</td>
-                        <td className="px-4 py-3">{route.distance}</td>
-                        <td className="px-4 py-3">{route.time}</td>
-                        <td className="px-4 py-3 font-semibold text-primary">{route.cost}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {pageData.routeTableTo.routes && pageData.routeTableTo.routes.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm border border-border">
+                      <thead className="bg-primary text-primary-foreground">
+                        <tr>
+                          <th className="px-4 py-3 text-left">From</th>
+                          <th className="px-4 py-3 text-left">To</th>
+                          <th className="px-4 py-3 text-left">Distance</th>
+                          <th className="px-4 py-3 text-left">Est. Time</th>
+                          <th className="px-4 py-3 text-left">Est. Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pageData.routeTableTo.routes.map((route, index) => (
+                          <tr key={route.id || index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
+                            <td className="px-4 py-3">{route.from}</td>
+                            <td className="px-4 py-3">{route.to}</td>
+                            <td className="px-4 py-3">{route.distance}</td>
+                            <td className="px-4 py-3">{route.time}</td>
+                            <td className="px-4 py-3 font-semibold text-primary">{route.cost}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* Why Choose Us for LA */}
-          <section className="py-16 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                  Why Choose Us for Los Angeles Car Shipping?
-                </h2>
-              </motion.div>
+          {pageData.serviceCards ? (
+            <section className="py-16 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-center mb-12"
+                >
+                  {pageData.serviceCards.section_title ? (
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                      {pageData.serviceCards.section_title}
+                    </h2>
+                  ) : null}
+                </motion.div>
 
-              <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                {[
-                  {
-                    icon: MapPin,
-                    title: "LA Traffic Experts",
-                    desc: "Our drivers know LA's streets, traffic patterns, and best pickup/delivery times to ensure efficient service."
-                  },
-                  {
-                    icon: Shield,
-                    title: "$1M+ Insurance Coverage",
-                    desc: "Full cargo insurance on every LA shipment protects your vehicle from pickup to delivery."
-                  },
-                  {
-                    icon: Building2,
-                    title: "All LA Neighborhoods",
-                    desc: "From Beverly Hills to Long Beach, we serve every neighborhood in Los Angeles County."
-                  },
-                  {
-                    icon: Truck,
-                    title: "Port Services Available",
-                    desc: "We offer pickup from Port of Los Angeles and Port of Long Beach for imported vehicles."
-                  },
-                  {
-                    icon: Car,
-                    title: "Luxury & Exotic Specialists",
-                    desc: "Enclosed transport available for high-value vehicles - perfect for LA's luxury car market."
-                  },
-                  {
-                    icon: Clock,
-                    title: "Flexible LA Scheduling",
-                    desc: "We work around your schedule with flexible pickup windows throughout Los Angeles."
-                  },
-                ].map((item, index) => (
-                  <motion.div
-                    key={item.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    className="text-center p-6 rounded-xl bg-background border border-border"
-                  >
-                    <item.icon className="w-10 h-10 text-primary mx-auto mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </motion.div>
-                ))}
+                {pageData.serviceCards.service_cards && pageData.serviceCards.service_cards.length > 0 ? (
+                  <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    {pageData.serviceCards.service_cards.map((item, index) => {
+                      const ItemIcon = item.icon_name
+                        ? (getIcon(item.icon_name) as LucideIcon)
+                        : null;
+
+                      return (
+                        <motion.div
+                          key={item.id || item.title}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: index * 0.1 }}
+                          className="text-center p-6 rounded-xl bg-background border border-border"
+                        >
+                          {ItemIcon ? (
+                            <ItemIcon className="w-10 h-10 text-primary mx-auto mb-4" aria-hidden="true" />
+                          ) : null}
+                          <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
+                          <p className="text-sm text-muted-foreground">{item.description}</p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* FAQs */}
-          <section className="py-16">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                  Los Angeles Car Shipping FAQs
-                </h2>
-              </motion.div>
+          {pageData.faq ? (
+            <section className="py-16">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-center mb-12"
+                >
+                  {pageData.faq.section_title ? (
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                      {pageData.faq.section_title}
+                    </h2>
+                  ) : null}
+                </motion.div>
 
-              <div className="max-w-3xl mx-auto space-y-4">
-                {faqs.map((faq, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-muted/30 rounded-lg p-6 border border-border"
-                  >
-                    <h3 className="font-semibold text-lg mb-2">{faq.q}</h3>
-                    <p className="text-muted-foreground">{faq.a}</p>
-                  </motion.div>
-                ))}
+                {pageData.faq.faq_items && pageData.faq.faq_items.length > 0 ? (
+                  <div className="max-w-3xl mx-auto space-y-4">
+                    {pageData.faq.faq_items.map((faq, index) => (
+                      <motion.div
+                        key={faq.id || index}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-muted/30 rounded-lg p-6 border border-border"
+                      >
+                        <h3 className="font-semibold text-lg mb-2">{faq.question}</h3>
+                        <p className="text-muted-foreground">{faq.answer}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* Related Pages */}
-          <section className="py-12 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="flex flex-wrap justify-center gap-4">
-                <Link 
-                  to="/california-car-shipping" 
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg hover:border-primary transition-colors"
-                >
-                  <MapPin className="w-4 h-4 text-primary" />
-                  California Shipping
-                </Link>
-                <Link 
-                  to="/open-transport" 
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg hover:border-primary transition-colors"
-                >
-                  <Truck className="w-4 h-4 text-primary" />
-                  Open Transport
-                </Link>
-                <Link 
-                  to="/enclosed-transport" 
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg hover:border-primary transition-colors"
-                >
-                  <Shield className="w-4 h-4 text-primary" />
-                  Enclosed Transport
-                </Link>
+          {pageData.relatedPages && pageData.relatedPages.links && pageData.relatedPages.links.length > 0 ? (
+            <section className="py-12 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <div className="flex flex-wrap justify-center gap-4">
+                  {pageData.relatedPages.links.map((link) => {
+                    const LinkIcon = link.icon_name
+                      ? (getIcon(link.icon_name) as LucideIcon)
+                      : null;
+
+                    return (
+                      <Link
+                        key={link.id || link.label}
+                        to={link.href}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg hover:border-primary transition-colors"
+                      >
+                        {LinkIcon ? (
+                          <LinkIcon className="w-4 h-4 text-primary" aria-hidden="true" />
+                        ) : null}
+                        {link.label}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* CTA */}
-          <section className="py-16 bg-primary">
-            <div className="container mx-auto px-4 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-              >
-                <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-                  Ship Your Car to or from Los Angeles Today
-                </h2>
-                <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-                  Get your free LA car shipping quote in 30 minutes or less.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="text-lg px-8"
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  >
-                    Get Your LA Quote
-                  </Button>
-                  <a 
-                    href="tel:+18885551234" 
-                    className="flex items-center gap-2 text-primary-foreground hover:text-primary-foreground/80"
-                  >
-                    <Phone className="w-5 h-5" />
-                    <span className="font-medium">(888) 555-1234</span>
-                  </a>
-                </div>
-              </motion.div>
-            </div>
-          </section>
+          {pageData.cta ? (
+            <section className="py-16 bg-primary">
+              <div className="container mx-auto px-4 text-center">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                >
+                  <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+                    {pageData.cta.headline || "Ship Your Car to or from Los Angeles Today"}
+                  </h2>
+                  {pageData.cta.description ? (
+                    <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+                      {pageData.cta.description}
+                    </p>
+                  ) : null}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    {pageData.cta.primary_button ? (
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        className="text-lg px-8"
+                        onClick={() => {
+                          if (pageData.cta.primary_button?.button_link) {
+                            window.location.href = pageData.cta.primary_button.button_link;
+                          } else {
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }
+                        }}
+                      >
+                        {pageData.cta.primary_button.button_text || "Get Your LA Quote"}
+                      </Button>
+                    ) : null}
+                    {pageData.cta.secondary_button ? (
+                      <a
+                        href={pageData.cta.secondary_button.button_link || "tel:+18885551234"}
+                        className="flex items-center gap-2 text-primary-foreground hover:text-primary-foreground/80"
+                      >
+                        {pageData.cta.secondary_button.icon_name ? (
+                          (() => {
+                            const PhoneIcon = getIcon(pageData.cta.secondary_button.icon_name) as LucideIcon;
+                            return <PhoneIcon className="w-5 h-5" aria-hidden="true" />;
+                          })()
+                        ) : (
+                          <Phone className="w-5 h-5" aria-hidden="true" />
+                        )}
+                        <span className="font-medium">{pageData.cta.secondary_button.button_text || "(888) 555-1234"}</span>
+                      </a>
+                    ) : null}
+                  </div>
+                </motion.div>
+              </div>
+            </section>
+          ) : null}
         </main>
-        
+
         <Footer />
       </div>
     </>

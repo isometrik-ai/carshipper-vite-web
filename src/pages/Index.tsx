@@ -1,54 +1,56 @@
-import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import HeroSection from "@/components/sections/HeroSection";
-import TrustBar from "@/components/sections/TrustBar";
-import HowItWorks from "@/components/sections/HowItWorks";
-import WhyChooseUs from "@/components/sections/WhyChooseUs";
-import PricingSection from "@/components/sections/PricingSection";
-import TestimonialsSection from "@/components/sections/TestimonialsSection";
-import FAQSection from "@/components/sections/FAQSection";
-import FinalCTA from "@/components/sections/FinalCTA";
 import ChatWidget from "@/components/ChatWidget";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { useLandingPage } from "@/api/landingPage";
+import { usePageContentRenderer } from "@/utils/componentMapper";
 
+/**
+ * Landing/Home page component
+ * 
+ * Fetches page content from Strapi CMS and renders dynamic sections.
+ * All content is managed through Strapi, including SEO metadata and page sections.
+ */
 const Index = () => {
+  const { data, isLoading } = useLandingPage();
+
+  // Extract page content components
+  const pageContent = useMemo(() => {
+    return data?.data?.page_content || [];
+  }, [data]);
+
+  // Render page content components
+  const renderedContent = usePageContentRenderer(pageContent);
+
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
-      <Helmet>
-        <title>CarShippers.ai | Ship Your Car in 30 Seconds | Instant Auto Transport Quotes</title>
-        <meta
-          name="description"
-          content="Get an instant car shipping quote in 30 seconds. Licensed carriers, door-to-door service, no hidden fees. Ship your car anywhere in the US with CarShippers.ai."
-        />
-        <meta name="keywords" content="car shipping, auto transport, vehicle shipping, car transport, ship my car" />
-        <link rel="canonical" href="https://carshippers.ai" />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content="CarShippers.ai | Instant Car Shipping Quotes" />
-        <meta property="og:description" content="Get an instant car shipping quote in 30 seconds. Licensed carriers, door-to-door service, no hidden fees." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://carshippers.ai" />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="CarShippers.ai | Instant Car Shipping Quotes" />
-        <meta name="twitter:description" content="Get an instant car shipping quote in 30 seconds. Licensed carriers, door-to-door service, no hidden fees." />
-      </Helmet>
+      <PageSEO seoMetadata={data?.data?.seo_metadata} />
 
       <div className="min-h-screen flex flex-col">
         <Header />
-        
-        <main className="flex-1">
-          <HeroSection />
-          <TrustBar />
-          <HowItWorks />
-          <WhyChooseUs />
-          <PricingSection />
-          <TestimonialsSection />
-          <FAQSection />
-          <FinalCTA />
+
+        <main className="flex-1" role="main" aria-label="Main content">
+          {renderedContent}
         </main>
-        
+
         <Footer />
         <ChatWidget />
       </div>

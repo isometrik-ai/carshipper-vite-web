@@ -1,105 +1,91 @@
-import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { useOpenTransport } from "@/api/openTransport";
+import { getIcon } from "@/lib/icons";
+import { Shield, Truck, Star, CheckCircle, ArrowRight } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { 
-  Shield, 
-  Truck, 
-  DollarSign, 
-  MapPin, 
-  Phone, 
-  FileCheck, 
-  Clock,
-  CheckCircle,
-  ArrowRight,
-  Star,
-  Headphones
-} from "lucide-react";
+import type { HeroSection, FAQDisplay, CallToAction, TestimonialsDisplay } from "@/types/LandingPage.types";
+import type { TextSection } from "@/types/AboutPage.types";
+import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
+import type { SafetyInfoSection } from "@/types/OpenTransport.types";
 
+/**
+ * Open Transport page component
+ * 
+ * Fetches page content from Strapi CMS and renders sections with exact original layout.
+ * All content is managed through Strapi, including SEO metadata and page sections.
+ */
 const OpenTransport = () => {
-  const features = [
-    {
-      icon: DollarSign,
-      title: "Cost-Effective",
-      description: "An open auto carrier is the most cost-effective shipping service available. When you're on a budget, open auto transport carriers are the right option for you.",
-    },
-    {
-      icon: MapPin,
-      title: "Door-to-Door",
-      description: "The driver will come as close as possible to your desired pickup and delivery spots. If the trucker cannot enter the exact location, the person releasing or accepting the vehicle might need to meet at a nearby location for safe loading and unloading.",
-    },
-    {
-      icon: Phone,
-      title: "Communication",
-      description: "Our trucking partners usually call 24 hours in advance to schedule the pickup and delivery of your vehicle. Upon arrival, the driver will notify the customer to complete inspections, acquire signatures, and accept payment.",
-    },
-    {
-      icon: FileCheck,
-      title: "Vehicle Inspection",
-      description: "Open auto carriers perform detailed inspections of all vehicles before pickup and delivery. All previous dings, dents, and damages will be noted for insurance purposes with a minimum coverage of $100,000.",
-    },
-  ];
+  const { data, isLoading } = useOpenTransport();
 
-  const benefits = [
-    {
-      icon: Clock,
-      title: "Efficient & Affordable",
-      description: "Instant quotes for efficient, affordable car shipping with the right car shipping calculator.",
-    },
-    {
-      icon: Truck,
-      title: "Reliable Car Shipping",
-      description: "We only work with reliable, experienced car carriers with full insurance coverage.",
-    },
-    {
-      icon: Headphones,
-      title: "Dedicated Customer Service",
-      description: "Complete shipping management for your open auto transport order from start to finish.",
-    },
-  ];
+  // Extract components from page content
+  const pageData = useMemo(() => {
+    if (!data?.data?.page_content) return null;
 
-  const faqs = [
-    {
-      question: "How many vehicles can a car hauler move at one time?",
-      answer: "Open car haulers typically transport anywhere from 5 to 10 vehicles at a time. Sometimes, these loads consist of multi-car shipments from one or two clients. Other times, a trucker is tasked with servicing 5 to 10 customers on the same route.",
-    },
-    {
-      question: "What is the difference between open and enclosed transport?",
-      answer: "Open carrier car transport utilizes a multiple-car storage system exposed to the elements. Usually, an open carrier can service up to ten vehicles at a time. An enclosed carrier offers less space and costs more yet shields your car from view, debris, and inclement weather.",
-    },
-    {
-      question: "Is open car shipping safe?",
-      answer: "Yes! We pride ourselves on our reputation for safe, secure, open transport services. Every open car transport carrier we work with adheres to all state and federal safety regulations for commercial transport. We vet all carriers for driving history, equipment quality, customer service, and active insurance policies.",
-    },
-    {
-      question: "What are the risks of open vehicle transport?",
-      answer: "The risks are minimal. Open carrier car shipping does expose your car to external factors. However, we only work with the safest auto transport carriers in the nation with the experience necessary to navigate all transport challenges. Every shipment includes comprehensive cargo insurance.",
-    },
-  ];
+    const content = data.data.page_content;
+    const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
+    const textSection = content.find(c => c.__component === "shared.text-section") as TextSection | undefined;
+    const specificsSection = content.find(c => c.__component === "shared.service-cards" && (c as ServiceCards).section_title === "Open Auto Transport Specifics") as ServiceCards | undefined;
+    const benefitsSection = content.find(c => c.__component === "shared.service-cards" && (c as ServiceCards).section_title === "Why Choose Our Open Carrier Services?") as ServiceCards | undefined;
+    const safetySection = content.find(c => c.__component === "shared.safety-info-section") as SafetyInfoSection | undefined;
+    const testimonialsSection = content.find(c => c.__component === "shared.testimonials-display") as TestimonialsDisplay | undefined;
+    const faqDisplay = content.find(c => c.__component === "shared.faq-display") as FAQDisplay | undefined;
+    const cta = content.find(c => c.__component === "shared.call-to-action") as CallToAction | undefined;
 
-  const testimonials = [
-    {
-      text: "I am very happy with the service. The employees were very quick to communicate and arrange for a delivery of my Audi S7 all the way from Iowa to New Jersey, and they also did an excellent job at keeping me updated with the progress of the pick and delivery. I would highly recommend!",
-      title: "Excellent, Efficient Service",
-    },
-    {
-      text: "I had an excellent experience and would recommend them highly. They transported my daughter's classic Miata that only has 35,000 miles on it. It was delivered in the exact same shape as it was picked up (From Southern California to Seattle) even through rough weather!!! Can't say enough good things!",
-      title: "Rough Weather, No Problem",
-    },
-  ];
+    return {
+      hero: heroSection,
+      textSection,
+      specifics: specificsSection,
+      benefits: benefitsSection,
+      safety: safetySection,
+      testimonials: testimonialsSection,
+      faq: faqDisplay,
+      cta,
+    };
+  }, [data]);
+
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <>
+        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <div className="container mx-auto px-4 py-12 text-center">
+              <p className="text-muted-foreground">No content available.</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <Helmet>
-        <title>Open Auto Transport | Affordable Car Shipping | CarShippers.ai</title>
-        <meta
-          name="description"
-          content="Open auto carrier shipping is the easiest and most affordable method to ship any car, truck, or van across the United States. Secure and fully insured transport."
-        />
-        <link rel="canonical" href="https://carshippers.ai/open-transport" />
-      </Helmet>
+      <PageSEO seoMetadata={data?.data?.seo_metadata} />
 
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -115,48 +101,56 @@ const OpenTransport = () => {
                   transition={{ duration: 0.5 }}
                 >
                   <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                    Open <span className="text-primary">Auto Transport</span>
+                    {pageData.hero?.main_headline || "Open"}{" "}
+                    {pageData.hero?.highlighted_text ? (
+                      <span className="text-primary">{pageData.hero.highlighted_text}</span>
+                    ) : null}
                   </h1>
-                  <p className="text-lg md:text-xl text-muted-foreground mb-6">
-                    Open auto carrier shipping is the easiest and most affordable method to ship any car, truck, or van across the United States. Open car hauling is both secure and fully insured against all accidental damages.
-                  </p>
+                  {pageData.hero?.description ? (
+                    <p className="text-lg md:text-xl text-muted-foreground mb-6">
+                      {pageData.hero.description}
+                    </p>
+                  ) : null}
                   
-                  <div className="flex flex-wrap gap-4 mb-6">
-                    <div className="flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-full">
-                      <Shield className="w-4 h-4" />
-                      <span className="text-sm font-medium">High Value Insurance</span>
+                  {pageData.hero?.trust_indicators && pageData.hero.trust_indicators.length > 0 ? (
+                    <div className="flex flex-wrap gap-4 mb-6">
+                      {pageData.hero.trust_indicators.map((indicator) => {
+                        const IndicatorIcon = indicator.icon_name
+                          ? (getIcon(indicator.icon_name) as LucideIcon)
+                          : null;
+                        const bgColor = indicator.icon_name === "shield" 
+                          ? "bg-success/10 text-success"
+                          : indicator.icon_name === "truck"
+                          ? "bg-primary/10 text-primary"
+                          : indicator.icon_name === "star"
+                          ? "bg-warning/10 text-warning-foreground"
+                          : "bg-primary/10 text-primary";
+                        
+                        return (
+                          <div key={indicator.id} className={`flex items-center gap-2 ${bgColor} px-4 py-2 rounded-full`}>
+                            {IndicatorIcon ? (
+                              <IndicatorIcon className="w-4 h-4" aria-hidden="true" />
+                            ) : null}
+                            <span className="text-sm font-medium">{indicator.text}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full">
-                      <Truck className="w-4 h-4" />
-                      <span className="text-sm font-medium">Rapid Transport</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-warning/10 text-warning-foreground px-4 py-2 rounded-full">
-                      <Star className="w-4 h-4" />
-                      <span className="text-sm font-medium">A+ Service</span>
-                    </div>
-                  </div>
+                  ) : null}
 
                   {/* Quick Points - Below left text */}
-                  <div className="bg-card/50 backdrop-blur rounded-xl p-4 border">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-2 text-xs">
-                        <CheckCircle className="w-3 h-3 text-success flex-shrink-0" />
-                        <span>Most affordable option</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <CheckCircle className="w-3 h-3 text-success flex-shrink-0" />
-                        <span>Faster pickup availability</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <CheckCircle className="w-3 h-3 text-success flex-shrink-0" />
-                        <span>Ideal for 95% of vehicles</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <CheckCircle className="w-3 h-3 text-success flex-shrink-0" />
-                        <span>$100K+ insurance coverage</span>
+                  {pageData.hero?.quick_points && pageData.hero.quick_points.length > 0 ? (
+                    <div className="bg-card/50 backdrop-blur rounded-xl p-4 border">
+                      <div className="grid grid-cols-2 gap-2">
+                        {pageData.hero.quick_points.map((point: any) => (
+                          <div key={point.id || point.text} className="flex items-center gap-2 text-xs">
+                            <CheckCircle className="w-3 h-3 text-success flex-shrink-0" aria-hidden="true" />
+                            <span>{point.text}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
+                  ) : null}
                 </motion.div>
 
                 <motion.div
@@ -170,256 +164,326 @@ const OpenTransport = () => {
             </div>
           </section>
 
-          {/* What is Open Transport - Moved from hero */}
-          <section className="py-16 md:py-20 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-card rounded-2xl p-8 border border-border shadow-lg"
-                >
-                  <h2 className="text-2xl font-bold mb-4">What is Open Transport?</h2>
-                  <p className="text-muted-foreground mb-4">
-                    Open auto transport is the most popular car shipping method in the United States. You may even have seen some of our auto transport carriers on the highway.
-                  </p>
-                  <p className="text-muted-foreground mb-4">
-                    Multiple vehicles are secured on an open trailer, allowing an average open car carrier capacity of <strong>8-10 cars</strong>. Your car is exposed to the elements during open car shipping, yet it's rare to sustain even minor cosmetic damage.
-                  </p>
-                  <div className="grid sm:grid-cols-2 gap-3 mt-6">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                      <span>Most affordable shipping option</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                      <span>Faster pickup availability</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                      <span>Ideal for 95% of vehicles</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                      <span>Fully insured with $100K+ coverage</span>
-                    </div>
-                  </div>
-                </motion.div>
+          {/* What is Open Transport */}
+          {pageData.textSection ? (
+            <section className="py-16 md:py-20 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <div className="max-w-4xl mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-card rounded-2xl p-8 border border-border shadow-lg"
+                  >
+                    {pageData.textSection.section_title ? (
+                      <h2 className="text-2xl font-bold mb-4">{pageData.textSection.section_title}</h2>
+                    ) : null}
+                    {pageData.textSection.paragraphs ? (
+                      <div className="text-muted-foreground mb-4">
+                        {pageData.textSection.paragraphs.split('\n\n').map((paragraph, index) => (
+                          <p key={index} className={index > 0 ? "mt-4" : ""}>
+                            {paragraph}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
+                    {pageData.textSection.bullet_points && pageData.textSection.bullet_points.length > 0 ? (
+                      <div className="grid sm:grid-cols-2 gap-3 mt-6">
+                        {pageData.textSection.bullet_points.map((point: any) => (
+                          <div key={point.id || point.text} className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
+                            <span>{point.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </motion.div>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* Features Grid */}
-          <section className="py-16 md:py-24 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">Open Auto Transport Specifics</h2>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                  Everything you need to know about our open carrier services
-                </p>
-              </motion.div>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                {features.map((feature, index) => (
-                  <motion.div
-                    key={feature.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="bg-card p-6 rounded-2xl border border-border"
-                  >
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                      <feature.icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-muted-foreground">{feature.description}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Benefits */}
-          <section className="py-16 md:py-24">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose Our Open Carrier Services?</h2>
-              </motion.div>
-
-              <div className="grid md:grid-cols-3 gap-8">
-                {benefits.map((benefit, index) => (
-                  <motion.div
-                    key={benefit.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="text-center"
-                  >
-                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <benefit.icon className="w-8 h-8 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">{benefit.title}</h3>
-                    <p className="text-muted-foreground">{benefit.description}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Safety Section */}
-          <section className="py-16 md:py-24 bg-secondary/50">
-            <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto">
+          {pageData.specifics ? (
+            <section className="py-16 md:py-24 bg-muted/30">
+              <div className="container mx-auto px-4">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
-                  className="bg-card rounded-3xl p-8 md:p-12 border border-border"
+                  className="text-center mb-12"
                 >
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 bg-success/10 rounded-2xl flex items-center justify-center">
-                      <Shield className="w-7 h-7 text-success" />
-                    </div>
-                    <h2 className="text-2xl md:text-3xl font-bold">Is Open Auto Transport Safe?</h2>
-                  </div>
-                  
-                  <p className="text-muted-foreground mb-6">
-                    We pride ourselves on our reputation for safe, secure, open transport services. Every open car transport carrier we work with adheres to all state and federal safety regulations for commercial transport. We vet all open auto carriers for driving history, equipment quality, customer service, and active insurance policies.
-                  </p>
-                  
-                  <p className="text-muted-foreground mb-6">
-                    The risks of an open car hauler are minimal. Open carrier car shipping does expose your car to external factors. However, we only work with the safest auto transport carriers in the nation with the experience necessary to navigate all transport challenges.
-                  </p>
-
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    <div className="bg-muted/50 rounded-xl p-4 text-center">
-                      <div className="text-2xl font-bold text-primary mb-1">4.3★</div>
-                      <div className="text-sm text-muted-foreground">5,157 Reviews</div>
-                    </div>
-                    <div className="bg-muted/50 rounded-xl p-4 text-center">
-                      <div className="text-2xl font-bold text-primary mb-1">4.6★</div>
-                      <div className="text-sm text-muted-foreground">1,973 Reviews</div>
-                    </div>
-                    <div className="bg-muted/50 rounded-xl p-4 text-center">
-                      <div className="text-2xl font-bold text-primary mb-1">A+</div>
-                      <div className="text-sm text-muted-foreground">BBB Rated</div>
-                    </div>
-                  </div>
+                  {pageData.specifics.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">{pageData.specifics.section_title}</h2>
+                  ) : null}
+                  {pageData.specifics.section_subtitle ? (
+                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                      {pageData.specifics.section_subtitle}
+                    </p>
+                  ) : null}
                 </motion.div>
+
+                {pageData.specifics.service_cards && pageData.specifics.service_cards.length > 0 ? (
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {pageData.specifics.service_cards.map((feature: any, index: number) => {
+                      const FeatureIcon = feature.icon_name
+                        ? (getIcon(feature.icon_name) as LucideIcon)
+                        : null;
+
+                      return (
+                        <motion.div
+                          key={feature.id || feature.title}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          className="bg-card p-6 rounded-2xl border border-border"
+                        >
+                          {FeatureIcon ? (
+                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                              <FeatureIcon className="w-6 h-6 text-primary" aria-hidden="true" />
+                            </div>
+                          ) : null}
+                          <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                          <p className="text-muted-foreground">{feature.description}</p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
+
+          {/* Benefits */}
+          {pageData.benefits ? (
+            <section className="py-16 md:py-24">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center mb-12"
+                >
+                  {pageData.benefits.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">{pageData.benefits.section_title}</h2>
+                  ) : null}
+                </motion.div>
+
+                {pageData.benefits.service_cards && pageData.benefits.service_cards.length > 0 ? (
+                  <div className="grid md:grid-cols-3 gap-8">
+                    {pageData.benefits.service_cards.map((benefit: any, index: number) => {
+                      const BenefitIcon = benefit.icon_name
+                        ? (getIcon(benefit.icon_name) as LucideIcon)
+                        : null;
+
+                      return (
+                        <motion.div
+                          key={benefit.id || benefit.title}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          className="text-center"
+                        >
+                          {BenefitIcon ? (
+                            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                              <BenefitIcon className="w-8 h-8 text-primary" aria-hidden="true" />
+                            </div>
+                          ) : null}
+                          <h3 className="text-xl font-semibold mb-2">{benefit.title}</h3>
+                          <p className="text-muted-foreground">{benefit.description}</p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
+
+          {/* Safety Section */}
+          {pageData.safety ? (
+            <section className="py-16 md:py-24 bg-secondary/50">
+              <div className="container mx-auto px-4">
+                <div className="max-w-4xl mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-card rounded-3xl p-8 md:p-12 border border-border"
+                  >
+                    <div className="flex items-center gap-4 mb-6">
+                      {pageData.safety.icon_name ? (
+                        (() => {
+                          const SafetyIcon = getIcon(pageData.safety.icon_name) as LucideIcon;
+                          return (
+                            <div className="w-14 h-14 bg-success/10 rounded-2xl flex items-center justify-center">
+                              <SafetyIcon className="w-7 h-7 text-success" aria-hidden="true" />
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        <div className="w-14 h-14 bg-success/10 rounded-2xl flex items-center justify-center">
+                          <Shield className="w-7 h-7 text-success" aria-hidden="true" />
+                        </div>
+                      )}
+                      {pageData.safety.section_title ? (
+                        <h2 className="text-2xl md:text-3xl font-bold">{pageData.safety.section_title}</h2>
+                      ) : null}
+                    </div>
+                    
+                    {pageData.safety.paragraphs ? (
+                      <div className="text-muted-foreground mb-6">
+                        {pageData.safety.paragraphs.split('\n\n').map((paragraph, index) => (
+                          <p key={index} className={index > 0 ? "mt-4" : ""}>
+                            {paragraph}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {pageData.safety.statistics && pageData.safety.statistics.length > 0 ? (
+                      <div className="grid sm:grid-cols-3 gap-4">
+                        {pageData.safety.statistics.map((stat: any) => (
+                          stat.value && stat.label ? (
+                            <div key={stat.id} className="bg-muted/50 rounded-xl p-4 text-center">
+                              <div className="text-2xl font-bold text-primary mb-1">{stat.value}</div>
+                              <div className="text-sm text-muted-foreground">{stat.label}</div>
+                            </div>
+                          ) : null
+                        ))}
+                      </div>
+                    ) : null}
+                  </motion.div>
+                </div>
+              </div>
+            </section>
+          ) : null}
 
           {/* Testimonials */}
-          <section className="py-16 md:py-24">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">What Our Customers Say</h2>
-              </motion.div>
+          {pageData.testimonials && pageData.testimonials.testimonials && pageData.testimonials.testimonials.length > 0 ? (
+            <section className="py-16 md:py-24">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center mb-12"
+                >
+                  {pageData.testimonials.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">{pageData.testimonials.section_title}</h2>
+                  ) : null}
+                </motion.div>
 
-              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {testimonials.map((testimonial, index) => (
-                  <motion.div
-                    key={testimonial.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="bg-card p-6 rounded-2xl border border-border"
-                  >
-                    <div className="flex gap-1 mb-4">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 fill-warning text-warning" />
-                      ))}
-                    </div>
-                    <h3 className="text-lg font-semibold mb-3">{testimonial.title}</h3>
-                    <p className="text-muted-foreground">{testimonial.text}</p>
-                  </motion.div>
-                ))}
+                <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                  {pageData.testimonials.testimonials.map((testimonial: any, index: number) => (
+                    <motion.div
+                      key={testimonial.id || index}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="bg-card p-6 rounded-2xl border border-border"
+                    >
+                      <div className="flex gap-1 mb-4">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-5 h-5 fill-warning text-warning" aria-hidden="true" />
+                        ))}
+                      </div>
+                      {testimonial.title ? (
+                        <h3 className="text-lg font-semibold mb-3">{testimonial.title}</h3>
+                      ) : null}
+                      {testimonial.quote_text ? (
+                        <p className="text-muted-foreground">{testimonial.quote_text}</p>
+                      ) : null}
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* FAQs */}
-          <section className="py-16 md:py-24 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
-              </motion.div>
+          {pageData.faq ? (
+            <section className="py-16 md:py-24 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center mb-12"
+                >
+                  {pageData.faq.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">{pageData.faq.section_title}</h2>
+                  ) : null}
+                </motion.div>
 
-              <div className="max-w-3xl mx-auto space-y-6">
-                {faqs.map((faq, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="bg-card p-6 rounded-xl border border-border"
-                  >
-                    <h3 className="text-lg font-semibold mb-3">{faq.question}</h3>
-                    <p className="text-muted-foreground">{faq.answer}</p>
-                  </motion.div>
-                ))}
+                {pageData.faq.faq_items && pageData.faq.faq_items.length > 0 ? (
+                  <div className="max-w-3xl mx-auto space-y-6">
+                    {pageData.faq.faq_items.map((faq: any, index: number) => (
+                      <motion.div
+                        key={faq.id || index}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        className="bg-card p-6 rounded-xl border border-border"
+                      >
+                        <h3 className="text-lg font-semibold mb-3">{faq.question}</h3>
+                        <p className="text-muted-foreground">{faq.answer}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* CTA */}
-          <section className="py-16 md:py-24 bg-primary">
-            <div className="container mx-auto px-4 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-              >
-                <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-                  How much will my open auto transport cost?
-                </h2>
-                <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-                  Get affordable prices for open auto transport from our moving experts.
-                </p>
-                <Button
-                  variant="secondary"
-                  size="xl"
-                  onClick={() => window.location.href = "/#quote-form"}
+          {pageData.cta ? (
+            <section className="py-16 md:py-24 bg-primary">
+              <div className="container mx-auto px-4 text-center">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
                 >
-                  Get Your Free Quote
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </motion.div>
-            </div>
-          </section>
+                  <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+                    {pageData.cta.headline || "How much will my open auto transport cost?"}
+                  </h2>
+                  {pageData.cta.description ? (
+                    <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+                      {pageData.cta.description}
+                    </p>
+                  ) : null}
+                  {pageData.cta.primary_button ? (
+                    <Button
+                      variant="secondary"
+                      size="xl"
+                      onClick={() => {
+                        if (pageData.cta.primary_button?.button_link) {
+                          window.location.href = pageData.cta.primary_button.button_link;
+                        } else {
+                          window.location.href = "/#quote-form";
+                        }
+                      }}
+                    >
+                      {pageData.cta.primary_button.button_text || "Get Your Free Quote"}
+                      <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                    </Button>
+                  ) : null}
+                </motion.div>
+              </div>
+            </section>
+          ) : null}
         </main>
         
         <Footer />

@@ -1,15 +1,27 @@
-import { Helmet } from "react-helmet-async";
+import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { useContact } from "@/api/contact";
+import { getIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { motion } from "framer-motion";
-import { Phone, Mail, MapPin, Clock, MessageSquare } from "lucide-react";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import type { LucideIcon } from "lucide-react";
+import type { HeroSection } from "@/types/LandingPage.types";
+import type { ContactMethods, ContactForm, BusinessInfo } from "@/types/Contact.types";
 
+/**
+ * Contact page component
+ * 
+ * Fetches page content from Strapi CMS and renders sections with exact original layout.
+ * All content is managed through Strapi, including SEO metadata and page sections.
+ */
 const Contact = () => {
+  const { data, isLoading } = useContact();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
@@ -19,49 +31,76 @@ const Contact = () => {
     message: "",
   });
 
+  // Extract components from page content
+  const pageData = useMemo(() => {
+    if (!data?.data?.page_content) return null;
+
+    const content = data.data.page_content;
+    const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
+    const contactMethods = content.find(c => c.__component === "shared.contact-methods") as ContactMethods | undefined;
+    const contactForm = content.find(c => c.__component === "shared.contact-form") as ContactForm | undefined;
+    const businessInfo = content.find(c => c.__component === "shared.business-info") as BusinessInfo | undefined;
+
+    return {
+      hero: heroSection,
+      contactMethods,
+      contactForm,
+      businessInfo,
+    };
+  }, [data]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Message Sent!",
-      description: "We'll get back to you within 24 hours.",
-    });
+    if (pageData?.contactForm) {
+      toast({
+        title: pageData.contactForm.success_message_title || "Message Sent!",
+        description: pageData.contactForm.success_message_description || "We'll get back to you within 24 hours.",
+      });
+    } else {
+      toast({
+        title: "Message Sent!",
+        description: "We'll get back to you within 24 hours.",
+      });
+    }
     setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
   };
 
-  const contactMethods = [
-    {
-      icon: Phone,
-      title: "Call Us",
-      value: "(888) 555-1234",
-      description: "Available 24/7",
-      href: "tel:+18885551234",
-    },
-    {
-      icon: Mail,
-      title: "Email Us",
-      value: "support@carshippers.ai",
-      description: "Response within 24 hours",
-      href: "mailto:support@carshippers.ai",
-    },
-    {
-      icon: MessageSquare,
-      title: "Live Chat",
-      value: "Chat Now",
-      description: "Available 8am-10pm EST",
-      href: "#chat",
-    },
-  ];
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <>
+        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <div className="container mx-auto px-4 py-12 text-center">
+              <p className="text-muted-foreground">No content available.</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <Helmet>
-        <title>Contact CarShippers.ai | 24/7 Support | (888) 555-1234</title>
-        <meta
-          name="description"
-          content="Contact CarShippers.ai for car shipping quotes and support. Call (888) 555-1234, available 24/7. Email support@carshippers.ai for questions."
-        />
-        <link rel="canonical" href="https://carshippers.ai/contact" />
-      </Helmet>
+      <PageSEO seoMetadata={data?.data?.seo_metadata} />
 
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -77,135 +116,189 @@ const Contact = () => {
                 className="max-w-3xl mx-auto text-center"
               >
                 <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                  Get in <span className="text-primary">Touch</span>
+                  {pageData.hero?.main_headline || "Get in"}{" "}
+                  {pageData.hero?.highlighted_text ? (
+                    <span className="text-primary">{pageData.hero.highlighted_text}</span>
+                  ) : null}
                 </h1>
-                <p className="text-lg md:text-xl text-muted-foreground">
-                  Have questions about shipping your car? Our team is here to help 24/7.
-                </p>
+                {pageData.hero?.description ? (
+                  <p className="text-lg md:text-xl text-muted-foreground">
+                    {pageData.hero.description}
+                  </p>
+                ) : null}
               </motion.div>
             </div>
           </section>
 
           {/* Contact Methods */}
-          <section className="py-12">
-            <div className="container mx-auto px-4">
-              <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                {contactMethods.map((method, index) => (
-                  <motion.a
-                    key={method.title}
-                    href={method.href}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="bg-card p-6 rounded-2xl border border-border hover:border-primary/50 hover:shadow-lg transition-all text-center"
-                  >
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                      <method.icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="font-semibold mb-1">{method.title}</h3>
-                    <p className="text-primary font-medium mb-1">{method.value}</p>
-                    <p className="text-sm text-muted-foreground">{method.description}</p>
-                  </motion.a>
-                ))}
+          {pageData.contactMethods && pageData.contactMethods.methods && pageData.contactMethods.methods.length > 0 ? (
+            <section className="py-12">
+              <div className="container mx-auto px-4">
+                <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                  {pageData.contactMethods.methods.map((method, index) => {
+                    const MethodIcon = method.icon_name
+                      ? (getIcon(method.icon_name) as LucideIcon)
+                      : null;
+
+                    return (
+                      <motion.a
+                        key={method.id || method.title}
+                        href={method.href}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        className="bg-card p-6 rounded-2xl border border-border hover:border-primary/50 hover:shadow-lg transition-all text-center"
+                      >
+                        {MethodIcon ? (
+                          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <MethodIcon className="w-6 h-6 text-primary" aria-hidden="true" />
+                          </div>
+                        ) : null}
+                        <h3 className="font-semibold mb-1">{method.title}</h3>
+                        <p className="text-primary font-medium mb-1">{method.value}</p>
+                        <p className="text-sm text-muted-foreground">{method.description}</p>
+                      </motion.a>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* Contact Form */}
-          <section className="py-16 md:py-24">
-            <div className="container mx-auto px-4">
-              <div className="max-w-2xl mx-auto">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">
-                    Send Us a Message
-                  </h2>
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Name</label>
-                        <Input
-                          placeholder="Your name"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          required
-                        />
+          {pageData.contactForm ? (
+            <section className="py-16 md:py-24">
+              <div className="container mx-auto px-4">
+                <div className="max-w-2xl mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {pageData.contactForm.form_title ? (
+                      <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">
+                        {pageData.contactForm.form_title}
+                      </h2>
+                    ) : null}
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          {pageData.contactForm.name_label ? (
+                            <label className="block text-sm font-medium mb-2">
+                              {pageData.contactForm.name_label}
+                            </label>
+                          ) : null}
+                          <Input
+                            placeholder={pageData.contactForm.name_placeholder || "Your name"}
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required={pageData.contactForm.name_required}
+                          />
+                        </div>
+                        <div>
+                          {pageData.contactForm.email_label ? (
+                            <label className="block text-sm font-medium mb-2">
+                              {pageData.contactForm.email_label}
+                            </label>
+                          ) : null}
+                          <Input
+                            type="email"
+                            placeholder={pageData.contactForm.email_placeholder || "you@example.com"}
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            required={pageData.contactForm.email_required}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          {pageData.contactForm.phone_label ? (
+                            <label className="block text-sm font-medium mb-2">
+                              {pageData.contactForm.phone_label}
+                            </label>
+                          ) : null}
+                          <Input
+                            type="tel"
+                            placeholder={pageData.contactForm.phone_placeholder || "(555) 555-5555"}
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            required={pageData.contactForm.phone_required}
+                          />
+                        </div>
+                        <div>
+                          {pageData.contactForm.subject_label ? (
+                            <label className="block text-sm font-medium mb-2">
+                              {pageData.contactForm.subject_label}
+                            </label>
+                          ) : null}
+                          <Input
+                            placeholder={pageData.contactForm.subject_placeholder || "How can we help?"}
+                            value={formData.subject}
+                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                            required={pageData.contactForm.subject_required}
+                          />
+                        </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Email</label>
-                        <Input
-                          type="email"
-                          placeholder="you@example.com"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          required
+                        {pageData.contactForm.message_label ? (
+                          <label className="block text-sm font-medium mb-2">
+                            {pageData.contactForm.message_label}
+                          </label>
+                        ) : null}
+                        <Textarea
+                          placeholder={pageData.contactForm.message_placeholder || "Tell us more about your question..."}
+                          rows={5}
+                          value={formData.message}
+                          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                          required={pageData.contactForm.message_required}
                         />
                       </div>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Phone</label>
-                        <Input
-                          type="tel"
-                          placeholder="(555) 555-5555"
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Subject</label>
-                        <Input
-                          placeholder="How can we help?"
-                          value={formData.subject}
-                          onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Message</label>
-                      <Textarea
-                        placeholder="Tell us more about your question..."
-                        rows={5}
-                        value={formData.message}
-                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" variant="hero" size="lg" className="w-full">
-                      Send Message
-                    </Button>
-                  </form>
-                </motion.div>
+                      <Button type="submit" variant="hero" size="lg" className="w-full">
+                        {pageData.contactForm.submit_button_text || "Send Message"}
+                      </Button>
+                    </form>
+                  </motion.div>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* Business Info */}
-          <section className="py-16 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="max-w-2xl mx-auto text-center">
-                <h2 className="text-2xl font-bold mb-8">Business Information</h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="flex items-center justify-center gap-3 text-muted-foreground">
-                    <MapPin className="w-5 h-5 text-primary" />
-                    <span>Licensed & Bonded Nationwide</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-3 text-muted-foreground">
-                    <Clock className="w-5 h-5 text-primary" />
-                    <span>24/7 Phone Support</span>
-                  </div>
+          {pageData.businessInfo ? (
+            <section className="py-16 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <div className="max-w-2xl mx-auto text-center">
+                  {pageData.businessInfo.section_title ? (
+                    <h2 className="text-2xl font-bold mb-8">{pageData.businessInfo.section_title}</h2>
+                  ) : null}
+                  {pageData.businessInfo.info_items && pageData.businessInfo.info_items.length > 0 ? (
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {pageData.businessInfo.info_items.map((item) => {
+                        const ItemIcon = item.icon_name
+                          ? (getIcon(item.icon_name) as LucideIcon)
+                          : null;
+
+                        return (
+                          <div key={item.id || item.text} className="flex items-center justify-center gap-3 text-muted-foreground">
+                            {ItemIcon ? (
+                              <ItemIcon className="w-5 h-5 text-primary" aria-hidden="true" />
+                            ) : null}
+                            <span>{item.text}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  {pageData.businessInfo.license_info ? (
+                    <p className="mt-6 text-muted-foreground">
+                      {pageData.businessInfo.license_info}
+                    </p>
+                  ) : null}
                 </div>
-                <p className="mt-6 text-muted-foreground">
-                  MC #XXXXXX | DOT #XXXXXX
-                </p>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
         </main>
         
         <Footer />

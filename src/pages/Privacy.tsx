@@ -1,18 +1,149 @@
-import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { usePrivacy } from "@/api/privacy";
+import type { PrivacySection } from "@/types/Privacy.types";
 
+/**
+ * Privacy Policy page component
+ * 
+ * Fetches page content from Strapi CMS and renders sections with exact original layout.
+ * All content is managed through Strapi, including SEO metadata and policy sections.
+ */
 const Privacy = () => {
+  const { data, isLoading } = usePrivacy();
+  const pageData = data?.data;
+
+  // Parse section content - extract paragraphs and bullet points
+  // This hook must be called unconditionally (before any early returns)
+  const parseSectionContent = useMemo(() => {
+    return (section: PrivacySection | undefined) => {
+      if (!section || !section.paragraphs) {
+        return { paragraphs: [], bulletPoints: [] };
+      }
+
+      const text = section.paragraphs;
+      const hasStrapiBulletPoints = section.bullet_points && section.bullet_points.length > 0;
+      
+      if (hasStrapiBulletPoints) {
+        // When we have Strapi bullet points, we need to:
+        // 1. Extract paragraphs (intro and closing text)
+        // 2. Match bullet point labels with their descriptions from the text
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        const paragraphs: string[] = [];
+        const bulletPointsWithDescriptions: Array<{ label: string; description: string }> = [];
+        
+        // Match each bullet point label with its description
+        section.bullet_points.forEach((bullet) => {
+          const labelLower = bullet.text.toLowerCase();
+          
+          // Find the line that describes this bullet point
+          // Look for lines that contain keywords related to the label
+          let description = '';
+          
+          if (labelLower.includes('carrier')) {
+            description = lines.find(l => l.toLowerCase().includes('pickup') || l.toLowerCase().includes('delivery')) || '';
+          } else if (labelLower.includes('service')) {
+            description = lines.find(l => l.toLowerCase().includes('third-party') || l.toLowerCase().includes('payment')) || '';
+          } else if (labelLower.includes('legal')) {
+            description = lines.find(l => l.toLowerCase().includes('required by law') || l.toLowerCase().includes('disclose')) || '';
+          }
+          
+          if (description) {
+            bulletPointsWithDescriptions.push({ label: bullet.text, description });
+          } else {
+            bulletPointsWithDescriptions.push({ label: bullet.text, description: '' });
+          }
+        });
+        
+        // Extract paragraphs (lines that are not bullet point descriptions)
+        const descriptionLines = bulletPointsWithDescriptions.map(bp => bp.description).filter(d => d.length > 0);
+        lines.forEach(line => {
+          const isDescription = descriptionLines.some(desc => desc === line || line.includes(desc.substring(0, 20)));
+          if (!isDescription && line.length > 10) {
+            paragraphs.push(line);
+          }
+        });
+        
+        return { paragraphs, bulletPoints: bulletPointsWithDescriptions };
+      } else {
+        // No Strapi bullet points - parse from text
+        const chunks = text.split('\n\n').map(c => c.trim()).filter(c => c.length > 0);
+        const paragraphs: string[] = [];
+        const bulletPoints: string[] = [];
+        
+        for (const chunk of chunks) {
+          const lines = chunk.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+          
+          // Check if chunk is mostly bullet points (short lines without colons)
+          const bulletLines = lines.filter(line => {
+            const trimmed = line.trim();
+            return trimmed.startsWith('•') || 
+                   trimmed.startsWith('-') || 
+                   trimmed.match(/^\d+\./) ||
+                   (trimmed.length < 100 && !trimmed.includes(':') && trimmed.length > 0);
+          });
+          
+          if (bulletLines.length > 0 && bulletLines.length >= lines.length / 2) {
+            // This chunk is mostly bullet points
+            bulletLines.forEach(line => {
+              const cleaned = line.replace(/^[•\-\d+\.]\s*/, '').trim();
+              if (cleaned.length > 0) {
+                bulletPoints.push(cleaned);
+              }
+            });
+          } else {
+            // This chunk is a paragraph
+            const paragraphText = lines.join(' ');
+            if (paragraphText.length > 0) {
+              paragraphs.push(paragraphText);
+            }
+          }
+        }
+        
+        return { paragraphs, bulletPoints };
+      }
+    };
+  }, [pageData]);
+
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <>
+        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <div className="container mx-auto px-4 py-12 text-center">
+              <p className="text-muted-foreground">No content available.</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
-      <Helmet>
-        <title>Privacy Policy | CarShippers.ai</title>
-        <meta
-          name="description"
-          content="CarShippers.ai Privacy Policy. Learn how we collect, use, and protect your personal information."
-        />
-        <link rel="canonical" href="https://carshippers.ai/privacy" />
-      </Helmet>
+      <PageSEO seoMetadata={pageData.seo_metadata} />
 
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -20,100 +151,45 @@ const Privacy = () => {
         <main className="flex-1 pt-20">
           <div className="container mx-auto px-4 py-16 md:py-24">
             <div className="max-w-3xl mx-auto prose prose-lg">
-              <h1>Privacy Policy</h1>
-              <p className="text-muted-foreground">Last updated: December 2024</p>
+              <h1>{pageData.page_title || "Privacy Policy"}</h1>
+              {pageData.last_updated ? (
+                <p className="text-muted-foreground">{pageData.last_updated}</p>
+              ) : null}
 
-              <h2>1. Information We Collect</h2>
-              <p>
-                We collect information you provide directly to us when requesting a quote 
-                or using our services, including:
-              </p>
-              <ul>
-                <li>Name and contact information (email, phone number)</li>
-                <li>Vehicle information (year, make, model, VIN)</li>
-                <li>Pickup and delivery addresses</li>
-                <li>Payment information (processed securely by third-party providers)</li>
-              </ul>
-
-              <h2>2. How We Use Your Information</h2>
-              <p>We use the information we collect to:</p>
-              <ul>
-                <li>Provide car shipping quotes and services</li>
-                <li>Communicate with you about your shipment</li>
-                <li>Send updates via email and SMS (with your consent)</li>
-                <li>Improve our services and customer experience</li>
-                <li>Comply with legal obligations</li>
-              </ul>
-
-              <h2>3. Information Sharing</h2>
-              <p>
-                We share your information only as necessary to provide our services:
-              </p>
-              <ul>
-                <li><strong>Carriers:</strong> We share pickup/delivery details with assigned transport carriers</li>
-                <li><strong>Service Providers:</strong> We use third-party services for payment processing, communications, and analytics</li>
-                <li><strong>Legal Requirements:</strong> We may disclose information if required by law</li>
-              </ul>
-              <p>
-                We do not sell your personal information to third parties for marketing purposes.
-              </p>
-
-              <h2>4. Data Security</h2>
-              <p>
-                We implement appropriate security measures to protect your personal information, 
-                including encryption, secure servers, and access controls. However, no method of 
-                transmission over the internet is 100% secure.
-              </p>
-
-              <h2>5. Your Rights</h2>
-              <p>You have the right to:</p>
-              <ul>
-                <li>Access the personal information we hold about you</li>
-                <li>Request correction of inaccurate information</li>
-                <li>Request deletion of your information (subject to legal requirements)</li>
-                <li>Opt out of marketing communications</li>
-              </ul>
-
-              <h2>6. Cookies</h2>
-              <p>
-                We use cookies and similar technologies to improve your experience on our website, 
-                analyze traffic, and personalize content. You can control cookie settings through 
-                your browser preferences.
-              </p>
-
-              <h2>7. SMS/Text Messages</h2>
-              <p>
-                By providing your phone number, you consent to receive SMS messages related to 
-                your shipment, including quotes, booking confirmations, and delivery updates. 
-                You can opt out at any time by replying STOP.
-              </p>
-
-              <h2>8. Third-Party Links</h2>
-              <p>
-                Our website may contain links to third-party websites. We are not responsible 
-                for the privacy practices of these external sites.
-              </p>
-
-              <h2>9. Children's Privacy</h2>
-              <p>
-                Our services are not intended for individuals under 18 years of age. We do not 
-                knowingly collect information from children.
-              </p>
-
-              <h2>10. Changes to This Policy</h2>
-              <p>
-                We may update this Privacy Policy periodically. We will notify you of significant 
-                changes by posting the new policy on our website with an updated effective date.
-              </p>
-
-              <h2>11. Contact Us</h2>
-              <p>
-                If you have questions about this Privacy Policy or our data practices, please contact us:
-              </p>
-              <ul>
-                <li>Email: privacy@carshippers.ai</li>
-                <li>Phone: (888) 555-1234</li>
-              </ul>
+              {pageData.sections && pageData.sections.length > 0 ? (
+                pageData.sections.map((section) => {
+                  const { paragraphs, bulletPoints } = parseSectionContent(section);
+                  const hasStrapiBulletPoints = section.bullet_points && section.bullet_points.length > 0;
+                  
+                  return (
+                    <div key={section.id}>
+                      <h2>{section.section_heading}</h2>
+                      
+                      {/* Render paragraphs */}
+                      {paragraphs.map((paragraph, index) => (
+                        <p key={index}>{paragraph}</p>
+                      ))}
+                      
+                      {/* Render bullet points */}
+                      {hasStrapiBulletPoints && Array.isArray(bulletPoints) && bulletPoints.length > 0 && typeof bulletPoints[0] === 'object' ? (
+                        <ul>
+                          {(bulletPoints as Array<{ label: string; description: string }>).map((bullet, index) => (
+                            <li key={section.bullet_points?.[index]?.id || index}>
+                              <strong>{bullet.label}:</strong> {bullet.description}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : Array.isArray(bulletPoints) && bulletPoints.length > 0 && typeof bulletPoints[0] === 'string' ? (
+                        <ul>
+                          {(bulletPoints as string[]).map((bullet, index) => (
+                            <li key={index}>{bullet}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  );
+                })
+              ) : null}
             </div>
           </div>
         </main>

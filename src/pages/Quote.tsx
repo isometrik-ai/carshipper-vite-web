@@ -1,89 +1,138 @@
-import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
-import { motion } from "framer-motion";
-import { Shield, Clock, Truck, Star, Phone, CheckCircle, DollarSign, Car, Calculator, TrendingUp, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { useQuote } from "@/api/quote";
+import { getIcon } from "@/lib/icons";
+import { Shield, Clock, Star, Phone, CheckCircle, Info } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { HeroSection, StatsBar, CallToAction } from "@/types/LandingPage.types";
+import type { SectionIntro, ComparisonTable, SimpleStepsSection } from "@/types/Quote.types";
+import type { PricingFactorsSection } from "@/types/Pricing.types";
 
+/**
+ * Quote page component
+ * 
+ * Fetches page content from Strapi CMS and renders sections with exact original layout.
+ * All content is managed through Strapi, including SEO metadata and page sections.
+ */
 const Quote = () => {
-  const benefits = [
-    "Expert-verified quotes in 30 minutes",
-    "No hidden fees or surprise charges",
-    "Door-to-door service included",
-    "$1M+ cargo insurance coverage",
-    "Pay on delivery - no deposit required",
-    "24/7 customer support"
-  ];
+  const { data, isLoading } = useQuote();
 
-  const stats = [
-    { value: "50,000+", label: "Cars Shipped" },
-    { value: "4.8★", label: "Average Rating" },
-    { value: "30 min", label: "Quote Delivery" },
-    { value: "A+", label: "BBB Rating" }
-  ];
+  // Extract components from page content
+  const pageData = useMemo(() => {
+    if (!data?.data?.page_content) return null;
 
-  const costByDistance = [
-    { distance: "Less than 500 miles", openCost: "$450-$650", enclosedCost: "$700-$950" },
-    { distance: "500-1,000 miles", openCost: "$600-$850", enclosedCost: "$900-$1,200" },
-    { distance: "1,000-1,500 miles", openCost: "$750-$1,000", enclosedCost: "$1,100-$1,400" },
-    { distance: "1,500-2,000 miles", openCost: "$900-$1,150", enclosedCost: "$1,300-$1,600" },
-    { distance: "Over 2,000 miles", openCost: "$1,050-$1,400", enclosedCost: "$1,500-$1,900" },
-  ];
+    const content = data.data.page_content;
+    const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
+    const statsBar = content.find(c => c.__component === "shared.stats-bar") as StatsBar | undefined;
+    const sectionIntro = content.find(c => c.__component === "shared.section-intro") as SectionIntro | undefined;
+    const distanceTable = content.find(c => 
+      c.__component === "shared.comparison-table" && 
+      (c as ComparisonTable).section_title === "Average Cost by Distance"
+    ) as ComparisonTable | undefined;
+    const vehicleTable = content.find(c => 
+      c.__component === "shared.comparison-table" && 
+      (c as ComparisonTable).section_title === "Average Cost by Vehicle Type"
+    ) as ComparisonTable | undefined;
+    const pricingFactors = content.find(c => c.__component === "shared.pricing-factors-section") as PricingFactorsSection | undefined;
+    const simpleSteps = content.find(c => c.__component === "shared.simple-steps-section") as SimpleStepsSection | undefined;
+    const cta = content.find(c => c.__component === "shared.call-to-action") as CallToAction | undefined;
 
-  const costByVehicle = [
-    { type: "Sedan/Coupe", short: "$425-$550", medium: "$725-$900", long: "$925-$1,150" },
-    { type: "Compact SUV", short: "$455-$600", medium: "$775-$950", long: "$1,025-$1,250" },
-    { type: "Full-Size SUV", short: "$505-$675", medium: "$825-$1,050", long: "$1,075-$1,350" },
-    { type: "Pickup Truck", short: "$575-$750", medium: "$925-$1,150", long: "$1,275-$1,500" },
-    { type: "Motorcycle", short: "$275-$400", medium: "$400-$550", long: "$550-$750" },
-  ];
+    return {
+      hero: heroSection,
+      stats: statsBar,
+      sectionIntro,
+      distanceTable,
+      vehicleTable,
+      pricingFactors,
+      simpleSteps,
+      cta,
+    };
+  }, [data]);
 
-  const costFactors = [
-    {
-      icon: MapPin,
-      title: "Distance",
-      desc: "Longer routes cost more but have a lower per-mile rate. Coast-to-coast shipping is often more economical per mile than short hauls."
-    },
-    {
-      icon: Car,
-      title: "Vehicle Size & Type",
-      desc: "Larger vehicles take up more carrier space and weight. SUVs and trucks cost 15-25% more than sedans."
-    },
-    {
-      icon: Truck,
-      title: "Carrier Type",
-      desc: "Open transport is 30-40% cheaper than enclosed. Enclosed is recommended for luxury, classic, or exotic vehicles."
-    },
-    {
-      icon: TrendingUp,
-      title: "Seasonal Demand",
-      desc: "Summer months and snowbird season (Jan-Mar) see higher demand and prices. Fall offers the best rates."
-    },
-    {
-      icon: Clock,
-      title: "Delivery Speed",
-      desc: "Expedited shipping costs 15-30% more. Flexible pickup dates can save you money."
-    },
-    {
-      icon: MapPin,
-      title: "Location Accessibility",
-      desc: "Rural areas or difficult access locations may incur additional fees. Major metro areas have the best rates."
-    },
-  ];
+  // Hardcoded pricing data for comparison tables (since cells aren't in the JSON)
+  // These should ideally come from Strapi, but for now we'll use the original data structure
+  const distanceTableData = useMemo(() => {
+    if (!pageData?.distanceTable) return [];
+    
+    const pricingMap: Record<string, { open: string; enclosed: string }> = {
+      "Less than 500 miles": { open: "$450-$650", enclosed: "$700-$950" },
+      "500-1,000 miles": { open: "$600-$850", enclosed: "$900-$1,200" },
+      "1,000-1,500 miles": { open: "$750-$1,000", enclosed: "$1,100-$1,400" },
+      "1,500-2,000 miles": { open: "$900-$1,150", enclosed: "$1,300-$1,600" },
+      "Over 2,000 miles": { open: "$1,050-$1,400", enclosed: "$1,500-$1,900" },
+    };
+
+    return pageData.distanceTable.rows.map(row => ({
+      ...row,
+      openCost: pricingMap[row.feature]?.open || "",
+      enclosedCost: pricingMap[row.feature]?.enclosed || "",
+    }));
+  }, [pageData?.distanceTable]);
+
+  const vehicleTableData = useMemo(() => {
+    if (!pageData?.vehicleTable) return [];
+    
+    const pricingMap: Record<string, { short: string; medium: string; long: string }> = {
+      "Sedan/Coupe": { short: "$425-$550", medium: "$725-$900", long: "$925-$1,150" },
+      "Compact SUV": { short: "$455-$600", medium: "$775-$950", long: "$1,025-$1,250" },
+      "Full-Size SUV": { short: "$505-$675", medium: "$825-$1,050", long: "$1,075-$1,350" },
+      "Pickup Truck": { short: "$575-$750", medium: "$925-$1,150", long: "$1,275-$1,500" },
+      "Motorcycle": { short: "$275-$400", medium: "$400-$550", long: "$550-$750" },
+    };
+
+    return pageData.vehicleTable.rows.map(row => ({
+      ...row,
+      short: pricingMap[row.feature]?.short || "",
+      medium: pricingMap[row.feature]?.medium || "",
+      long: pricingMap[row.feature]?.long || "",
+    }));
+  }, [pageData?.vehicleTable]);
+
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <>
+        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <div className="container mx-auto px-4 py-12 text-center">
+              <p className="text-muted-foreground">No content available.</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <Helmet>
-        <title>Car Shipping Cost Calculator | Auto Transport Quotes 2025 | CarShippers.ai</title>
-        <meta name="description" content="Calculate your car shipping cost instantly. Get accurate auto transport quotes based on distance, vehicle type, and carrier. Average cost: $0.40-$2.00 per mile." />
-        <link rel="canonical" href="https://carshippers.ai/quote" />
-        <meta name="keywords" content="car shipping cost calculator, auto transport quote, vehicle shipping cost, car transport price, shipping car cost" />
-      </Helmet>
+      <PageSEO seoMetadata={data?.data?.seo_metadata} />
 
       <div className="min-h-screen flex flex-col">
         <Header />
-        
+
         <main className="flex-1 pt-20">
           {/* Hero Section */}
           <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background">
@@ -95,45 +144,69 @@ const Quote = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-                    <Calculator className="w-4 h-4" />
-                    <span className="text-sm font-medium">Car Shipping Cost Calculator</span>
-                  </div>
+                  {pageData.hero?.tagline ? (
+                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
+                      {pageData.hero.tagline_icon ? (
+                        (() => {
+                          const TaglineIcon = getIcon(pageData.hero.tagline_icon) as LucideIcon;
+                          return <TaglineIcon className="w-4 h-4" aria-hidden="true" />;
+                        })()
+                      ) : null}
+                      <span className="text-sm font-medium">{pageData.hero.tagline}</span>
+                    </div>
+                  ) : null}
 
                   <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                    Calculate Your <span className="text-primary">Shipping Cost</span>
+                    {pageData.hero?.main_headline || "Calculate Your"}{" "}
+                    {pageData.hero?.highlighted_text ? (
+                      <span className="text-primary">{pageData.hero.highlighted_text}</span>
+                    ) : null}
                   </h1>
-                  
-                  <p className="text-lg text-muted-foreground mb-6">
-                    Get an accurate car shipping quote in 30 minutes. Our experts verify every quote with 
-                    real-time carrier availability and current market rates. Average cost: <strong>$0.40-$2.00 per mile</strong>.
-                  </p>
+
+                  {pageData.hero?.description ? (
+                    <p className="text-lg text-muted-foreground mb-6">
+                      {pageData.hero.description}
+                    </p>
+                  ) : null}
 
                   {/* Benefits */}
-                  <div className="space-y-3 mb-8">
-                    {benefits.map((benefit) => (
-                      <div key={benefit} className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
-                        <span>{benefit}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {pageData.hero?.quick_points && pageData.hero.quick_points.length > 0 ? (
+                    <div className="space-y-3 mb-8">
+                      {pageData.hero.quick_points.map((benefit: any) => (
+                        <div key={benefit.id || benefit.text} className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-success flex-shrink-0" aria-hidden="true" />
+                          <span>{benefit.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
 
                   {/* Trust Badges */}
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-full">
-                      <Shield className="w-4 h-4" />
-                      <span className="text-sm font-medium">Fully Insured</span>
+                  {pageData.hero?.trust_indicators && pageData.hero.trust_indicators.length > 0 ? (
+                    <div className="flex flex-wrap gap-4">
+                      {pageData.hero.trust_indicators.map((indicator) => {
+                        const IndicatorIcon = indicator.icon_name
+                          ? (getIcon(indicator.icon_name) as LucideIcon)
+                          : null;
+                        const bgColor = indicator.icon_name === "shield" 
+                          ? "bg-success/10 text-success"
+                          : indicator.icon_name === "clock"
+                          ? "bg-primary/10 text-primary"
+                          : indicator.icon_name === "star"
+                          ? "bg-warning/10 text-warning-foreground"
+                          : "bg-primary/10 text-primary";
+                        
+                        return (
+                          <div key={indicator.id} className={`flex items-center gap-2 ${bgColor} px-4 py-2 rounded-full`}>
+                            {IndicatorIcon ? (
+                              <IndicatorIcon className="w-4 h-4" aria-hidden="true" />
+                            ) : null}
+                            <span className="text-sm font-medium">{indicator.text}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm font-medium">30-Min Quotes</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-warning/10 text-warning-foreground px-4 py-2 rounded-full">
-                      <Star className="w-4 h-4" />
-                      <span className="text-sm font-medium">A+ BBB Rated</span>
-                    </div>
-                  </div>
+                  ) : null}
                 </motion.div>
 
                 {/* Quote Form */}
@@ -149,222 +222,252 @@ const Quote = () => {
           </section>
 
           {/* Stats Section */}
-          <section className="py-12 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                {stats.map((stat, index) => (
-                  <motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    className="text-center"
-                  >
-                    <div className="text-3xl md:text-4xl font-bold text-primary mb-2">{stat.value}</div>
-                    <div className="text-sm text-muted-foreground">{stat.label}</div>
-                  </motion.div>
-                ))}
+          {pageData.stats && pageData.stats.statistics && pageData.stats.statistics.length > 0 ? (
+            <section className="py-12 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                  {pageData.stats.statistics.map((stat: any, index: number) => (
+                    <motion.div
+                      key={stat.id || stat.label}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      className="text-center"
+                    >
+                      <div className="text-3xl md:text-4xl font-bold text-primary mb-2">{stat.value}</div>
+                      <div className="text-sm text-muted-foreground">{stat.label}</div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* How Much Does It Cost */}
-          <section className="py-16">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                  How Much Does It Cost to Ship a Car?
-                </h2>
-                <p className="text-muted-foreground max-w-3xl mx-auto">
-                  The average car shipping cost is around <strong>$650-$1,200</strong> depending on distance. 
-                  Expect to pay between <strong>$0.40 to $2.00 per mile</strong> based on route, vehicle size, carrier type, and season.
-                </p>
-              </motion.div>
+          {pageData.sectionIntro ? (
+            <section className="py-16">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-center mb-12"
+                >
+                  {pageData.sectionIntro.section_title ? (
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                      {pageData.sectionIntro.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.sectionIntro.section_description ? (
+                    <p className="text-muted-foreground max-w-3xl mx-auto">
+                      {pageData.sectionIntro.section_description}
+                    </p>
+                  ) : null}
+                </motion.div>
 
-              {/* Cost by Distance Table */}
-              <div className="mb-12">
-                <h3 className="text-xl font-semibold mb-4">Average Cost by Distance</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm border border-border">
-                    <thead className="bg-primary text-primary-foreground">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Route Distance</th>
-                        <th className="px-4 py-3 text-left">Open Carrier</th>
-                        <th className="px-4 py-3 text-left">Enclosed Carrier</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {costByDistance.map((row, index) => (
-                        <tr key={index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
-                          <td className="px-4 py-3 font-medium">{row.distance}</td>
-                          <td className="px-4 py-3 text-primary">{row.openCost}</td>
-                          <td className="px-4 py-3 text-primary">{row.enclosedCost}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                {/* Cost by Distance Table */}
+                {pageData.distanceTable ? (
+                  <div className="mb-12">
+                    {pageData.distanceTable.section_title ? (
+                      <h3 className="text-xl font-semibold mb-4">{pageData.distanceTable.section_title}</h3>
+                    ) : null}
+                    <div className="overflow-x-auto">
+                      <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm border border-border">
+                        <thead className="bg-primary text-primary-foreground">
+                          <tr>
+                            {pageData.distanceTable.column_headers && pageData.distanceTable.column_headers.length > 0 ? (
+                              pageData.distanceTable.column_headers.map((header) => (
+                                <th key={header.id} className="px-4 py-3 text-left">
+                                  {header.header_text}
+                                </th>
+                              ))
+                            ) : null}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {distanceTableData.map((row: any, index: number) => (
+                            <tr key={row.id || index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
+                              <td className="px-4 py-3 font-medium">{row.feature}</td>
+                              <td className="px-4 py-3 text-primary">{row.openCost}</td>
+                              <td className="px-4 py-3 text-primary">{row.enclosedCost}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : null}
 
-              {/* Cost by Vehicle Table */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Average Cost by Vehicle Type</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm border border-border">
-                    <thead className="bg-primary text-primary-foreground">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Vehicle Type</th>
-                        <th className="px-4 py-3 text-left">&lt;500 miles</th>
-                        <th className="px-4 py-3 text-left">500-2,500 miles</th>
-                        <th className="px-4 py-3 text-left">&gt;2,500 miles</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {costByVehicle.map((row, index) => (
-                        <tr key={index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
-                          <td className="px-4 py-3 font-medium">{row.type}</td>
-                          <td className="px-4 py-3 text-primary">{row.short}</td>
-                          <td className="px-4 py-3 text-primary">{row.medium}</td>
-                          <td className="px-4 py-3 text-primary">{row.long}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                {/* Cost by Vehicle Table */}
+                {pageData.vehicleTable ? (
+                  <div>
+                    {pageData.vehicleTable.section_title ? (
+                      <h3 className="text-xl font-semibold mb-4">{pageData.vehicleTable.section_title}</h3>
+                    ) : null}
+                    <div className="overflow-x-auto">
+                      <table className="w-full bg-background rounded-lg overflow-hidden shadow-sm border border-border">
+                        <thead className="bg-primary text-primary-foreground">
+                          <tr>
+                            {pageData.vehicleTable.column_headers && pageData.vehicleTable.column_headers.length > 0 ? (
+                              pageData.vehicleTable.column_headers.map((header) => (
+                                <th key={header.id} className="px-4 py-3 text-left">
+                                  {header.header_text}
+                                </th>
+                              ))
+                            ) : null}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {vehicleTableData.map((row: any, index: number) => (
+                            <tr key={row.id || index} className={index % 2 === 0 ? "bg-muted/50" : ""}>
+                              <td className="px-4 py-3 font-medium">{row.feature}</td>
+                              <td className="px-4 py-3 text-primary">{row.short}</td>
+                              <td className="px-4 py-3 text-primary">{row.medium}</td>
+                              <td className="px-4 py-3 text-primary">{row.long}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : null}
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* Cost Factors */}
-          <section className="py-16 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                  6 Factors That Impact Car Shipping Cost
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Understanding these factors helps you get the best rate for your shipment.
-                </p>
-              </motion.div>
+          {pageData.pricingFactors ? (
+            <section className="py-16 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-center mb-12"
+                >
+                  {pageData.pricingFactors.section_title ? (
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                      {pageData.pricingFactors.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.pricingFactors.section_description ? (
+                    <p className="text-muted-foreground max-w-2xl mx-auto">
+                      {pageData.pricingFactors.section_description}
+                    </p>
+                  ) : null}
+                </motion.div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                {costFactors.map((factor, index) => (
-                  <motion.div
-                    key={factor.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-background p-6 rounded-xl border border-border"
-                  >
-                    <factor.icon className="w-8 h-8 text-primary mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">{factor.title}</h3>
-                    <p className="text-sm text-muted-foreground">{factor.desc}</p>
-                  </motion.div>
-                ))}
+                {pageData.pricingFactors.factors && pageData.pricingFactors.factors.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    {pageData.pricingFactors.factors.map((factor: any, index: number) => {
+                      const FactorIcon = factor.icon_name
+                        ? (getIcon(factor.icon_name) as LucideIcon)
+                        : null;
+
+                      return (
+                        <motion.div
+                          key={factor.id || factor.factor_name}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: index * 0.1 }}
+                          className="bg-background p-6 rounded-xl border border-border"
+                        >
+                          {FactorIcon ? (
+                            <FactorIcon className="w-8 h-8 text-primary mb-4" aria-hidden="true" />
+                          ) : null}
+                          <h3 className="font-semibold text-lg mb-2">{factor.factor_name}</h3>
+                          <p className="text-sm text-muted-foreground">{factor.description}</p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           {/* How It Works */}
-          <section className="py-16">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                  How Our Quote Process Works
-                </h2>
-              </div>
+          {pageData.simpleSteps ? (
+            <section className="py-16">
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-12">
+                  {pageData.simpleSteps.section_title ? (
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                      {pageData.simpleSteps.section_title}
+                    </h2>
+                  ) : null}
+                </div>
 
-              <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                {pageData.simpleSteps.steps && pageData.simpleSteps.steps.length > 0 ? (
+                  <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    {pageData.simpleSteps.steps.map((step: any, index: number) => (
+                      <motion.div
+                        key={step.id || step.title}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        className="text-center"
+                      >
+                        {step.step_number ? (
+                          <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                            {step.step_number}
+                          </div>
+                        ) : null}
+                        <h3 className="font-semibold mb-2">{step.title}</h3>
+                        {step.description ? (
+                          <p className="text-sm text-muted-foreground">{step.description.trim()}</p>
+                        ) : null}
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
+
+          {/* Call CTA */}
+          {pageData.cta ? (
+            <section className="py-12 bg-primary">
+              <div className="container mx-auto px-4 text-center">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
-                  className="text-center"
                 >
-                  <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                    1
-                  </div>
-                  <h3 className="font-semibold mb-2">Enter Your Details</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Provide pickup/delivery locations, vehicle info, and preferred dates. Takes about 2 minutes.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="text-center"
-                >
-                  <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                    2
-                  </div>
-                  <h3 className="font-semibold mb-2">Expert Verification</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Our team verifies real-time carrier availability and calculates accurate pricing.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-center"
-                >
-                  <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                    3
-                  </div>
-                  <h3 className="font-semibold mb-2">Receive Your Quote</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Get your verified quote via email and text within 30 minutes. Book instantly online.
-                  </p>
+                  <h2 className="text-2xl font-bold text-primary-foreground mb-4">
+                    {pageData.cta.headline || "Prefer to Talk to Someone?"}
+                  </h2>
+                  {pageData.cta.description ? (
+                    <p className="text-primary-foreground/80 mb-4">
+                      {pageData.cta.description}
+                    </p>
+                  ) : null}
+                  {pageData.cta.phone_number ? (
+                    <a
+                      href={pageData.cta.phone_href || `tel:${pageData.cta.phone_number.replace(/\D/g, '')}`}
+                      className="inline-flex items-center gap-2 text-xl font-bold text-primary-foreground hover:underline"
+                    >
+                      {pageData.cta.icon_name ? (
+                        (() => {
+                          const PhoneIcon = getIcon(pageData.cta.icon_name) as LucideIcon;
+                          return <PhoneIcon className="w-6 h-6" aria-hidden="true" />;
+                        })()
+                      ) : (
+                        <Phone className="w-6 h-6" aria-hidden="true" />
+                      )}
+                      {pageData.cta.phone_number}
+                    </a>
+                  ) : null}
                 </motion.div>
               </div>
-            </div>
-          </section>
-
-          {/* Call CTA */}
-          <section className="py-12 bg-primary">
-            <div className="container mx-auto px-4 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-              >
-                <h2 className="text-2xl font-bold text-primary-foreground mb-4">
-                  Prefer to Talk to Someone?
-                </h2>
-                <p className="text-primary-foreground/80 mb-4">
-                  Our shipping advisors are available 24/7 to help you get the best rate.
-                </p>
-                <a 
-                  href="tel:+18885551234" 
-                  className="inline-flex items-center gap-2 text-xl font-bold text-primary-foreground hover:underline"
-                >
-                  <Phone className="w-6 h-6" />
-                  (888) 555-1234
-                </a>
-              </motion.div>
-            </div>
-          </section>
+            </section>
+          ) : null}
         </main>
-        
+
         <Footer />
       </div>
     </>

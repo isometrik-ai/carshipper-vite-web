@@ -1,18 +1,156 @@
-import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { useTerms } from "@/api/terms";
+import type { PrivacySection } from "@/types/Privacy.types";
 
+/**
+ * Terms of Service page component
+ * 
+ * Fetches page content from Strapi CMS and renders sections with exact original layout.
+ * All content is managed through Strapi, including SEO metadata and policy sections.
+ */
 const Terms = () => {
+  const { data, isLoading } = useTerms();
+  const pageData = data?.data;
+
+  // Parse section content - extract paragraphs and bullet points
+  // This hook must be called unconditionally (before any early returns)
+  const parseSectionContent = useMemo(() => {
+    return (section: PrivacySection | undefined) => {
+      if (!section || !section.paragraphs) {
+        return { paragraphs: [], bulletPoints: [] };
+      }
+
+      const text = section.paragraphs;
+      const hasStrapiBulletPoints = section.bullet_points && section.bullet_points.length > 0;
+      
+      if (hasStrapiBulletPoints) {
+        // When we have Strapi bullet points, we need to:
+        // 1. Extract paragraphs (intro and closing text)
+        // 2. Match bullet point labels with their descriptions from the text
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        const paragraphs: string[] = [];
+        const bulletPointsWithDescriptions: Array<{ label: string; description: string }> = [];
+        
+        // Match each bullet point label with its description
+        // The descriptions are in the paragraphs text, ordered to match the bullet points
+        section.bullet_points.forEach((bullet, index) => {
+          const labelLower = bullet.text.toLowerCase().replace(/[:\s]+$/, ''); // Remove trailing colon and spaces
+          
+          // Find description by matching keywords or by position
+          let description = '';
+          
+          // Try to find by keyword matching
+          if (labelLower.includes('before') && labelLower.includes('dispatch')) {
+            description = lines.find(l => l.toLowerCase().includes('free')) || '';
+          } else if (labelLower.includes('after') && labelLower.includes('dispatch')) {
+            description = lines.find(l => l.toLowerCase().includes('fee') || l.toLowerCase().includes('$100')) || '';
+          } else if (labelLower.includes('no-show') || labelLower.includes('pickup')) {
+            description = lines.find(l => l.toLowerCase().includes('full') || l.toLowerCase().includes('quoted')) || '';
+          }
+          
+          // If not found by keyword, try by position (assume same order)
+          if (!description && index < lines.length) {
+            description = lines[index];
+          }
+          
+          if (description) {
+            bulletPointsWithDescriptions.push({ label: bullet.text.replace(/:\s*$/, ''), description });
+          } else {
+            bulletPointsWithDescriptions.push({ label: bullet.text.replace(/:\s*$/, ''), description: '' });
+          }
+        });
+        
+        // Extract paragraphs (lines that are not bullet point descriptions)
+        const descriptionLines = bulletPointsWithDescriptions.map(bp => bp.description).filter(d => d.length > 0);
+        lines.forEach(line => {
+          const isDescription = descriptionLines.some(desc => desc === line || line.includes(desc.substring(0, 20)));
+          const isLabel = section.bullet_points.some(bp => line.toLowerCase().includes(bp.text.toLowerCase()));
+          if (!isDescription && !isLabel && line.length > 10) {
+            paragraphs.push(line);
+          }
+        });
+        
+        return { paragraphs, bulletPoints: bulletPointsWithDescriptions };
+      } else {
+        // No Strapi bullet points - parse from text
+        const chunks = text.split('\n\n').map(c => c.trim()).filter(c => c.length > 0);
+        const paragraphs: string[] = [];
+        const bulletPoints: string[] = [];
+        
+        for (const chunk of chunks) {
+          const lines = chunk.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+          
+          // Check if chunk is mostly bullet points (short lines without colons)
+          const bulletLines = lines.filter(line => {
+            const trimmed = line.trim();
+            return trimmed.startsWith('•') || 
+                   trimmed.startsWith('-') || 
+                   trimmed.match(/^\d+\./) ||
+                   (trimmed.length < 100 && !trimmed.includes(':') && trimmed.length > 0);
+          });
+          
+          if (bulletLines.length > 0 && bulletLines.length >= lines.length / 2) {
+            // This chunk is mostly bullet points
+            bulletLines.forEach(line => {
+              const cleaned = line.replace(/^[•\-\d+\.]\s*/, '').trim();
+              if (cleaned.length > 0) {
+                bulletPoints.push(cleaned);
+              }
+            });
+          } else {
+            // This chunk is a paragraph
+            const paragraphText = lines.join(' ');
+            if (paragraphText.length > 0) {
+              paragraphs.push(paragraphText);
+            }
+          }
+        }
+        
+        return { paragraphs, bulletPoints };
+      }
+    };
+  }, [pageData]);
+
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <>
+        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <div className="container mx-auto px-4 py-12 text-center">
+              <p className="text-muted-foreground">No content available.</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
-      <Helmet>
-        <title>Terms of Service | CarShippers.ai</title>
-        <meta
-          name="description"
-          content="CarShippers.ai Terms of Service. Read our terms and conditions for using our car shipping brokerage services."
-        />
-        <link rel="canonical" href="https://carshippers.ai/terms" />
-      </Helmet>
+      <PageSEO seoMetadata={pageData.seo_metadata} />
 
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -20,117 +158,45 @@ const Terms = () => {
         <main className="flex-1 pt-20">
           <div className="container mx-auto px-4 py-16 md:py-24">
             <div className="max-w-3xl mx-auto prose prose-lg">
-              <h1>Terms of Service</h1>
-              <p className="text-muted-foreground">Last updated: December 2024</p>
+              <h1>{pageData.page_title || "Terms of Service"}</h1>
+              {pageData.last_updated ? (
+                <p className="text-muted-foreground">{pageData.last_updated}</p>
+              ) : null}
 
-              <h2>1. Agreement to Terms</h2>
-              <p>
-                By accessing or using CarShippers.ai ("we," "our," or "us"), you agree to be 
-                bound by these Terms of Service. If you do not agree, please do not use our services.
-              </p>
-
-              <h2>2. Our Services</h2>
-              <p>
-                CarShippers.ai is a licensed auto transport broker (MC #XXXXXX, DOT #XXXXXX). 
-                We connect customers with licensed and insured motor carriers to transport vehicles. 
-                We do not own or operate transport trucks; we arrange transportation services.
-              </p>
-
-              <h2>3. Quotes and Pricing</h2>
-              <ul>
-                <li>Quotes are estimates based on current market conditions and carrier availability</li>
-                <li>Final pricing is confirmed at the time of booking</li>
-                <li>Prices may vary based on vehicle condition, modifications, or special requirements not disclosed during quote request</li>
-                <li>Quotes are valid for 7 days unless otherwise specified</li>
-              </ul>
-
-              <h2>4. Booking and Payment</h2>
-              <ul>
-                <li>Bookings are confirmed upon acceptance of terms and carrier assignment</li>
-                <li>Payment is due upon delivery unless otherwise agreed</li>
-                <li>Accepted payment methods: cash, credit card, debit card, Zelle, Venmo</li>
-                <li>We do not require deposits for standard bookings</li>
-              </ul>
-
-              <h2>5. Cancellation Policy</h2>
-              <ul>
-                <li><strong>Before carrier dispatch:</strong> Free cancellation</li>
-                <li><strong>After carrier dispatch:</strong> Cancellation fee may apply (typically $100-200)</li>
-                <li><strong>No-show at pickup:</strong> Full quoted amount may be charged</li>
-              </ul>
-
-              <h2>6. Customer Responsibilities</h2>
-              <p>You agree to:</p>
-              <ul>
-                <li>Provide accurate vehicle and contact information</li>
-                <li>Ensure the vehicle is in safe, operable condition (or disclose if non-running)</li>
-                <li>Remove personal items exceeding 100 lbs or disclose additional items</li>
-                <li>Disable alarms and provide necessary keys/fobs</li>
-                <li>Be present (or have an authorized representative) for pickup and delivery</li>
-                <li>Inspect and sign the Bill of Lading at both ends</li>
-              </ul>
-
-              <h2>7. Insurance and Liability</h2>
-              <ul>
-                <li>All carriers in our network maintain cargo insurance (minimum $1,000,000)</li>
-                <li>Damage claims must be noted on the Bill of Lading at delivery</li>
-                <li>Personal items shipped inside the vehicle are NOT covered by carrier insurance</li>
-                <li>We are not liable for delays caused by weather, mechanical issues, or circumstances beyond our control</li>
-              </ul>
-
-              <h2>8. Damage Claims</h2>
-              <p>If your vehicle is damaged during transport:</p>
-              <ul>
-                <li>Document damage with photos immediately upon delivery</li>
-                <li>Note all damage on the Bill of Lading before signing</li>
-                <li>Contact us within 24 hours of delivery</li>
-                <li>Claims are handled directly with the carrier's insurance</li>
-              </ul>
-
-              <h2>9. Prohibited Items</h2>
-              <p>The following items may not be shipped inside the vehicle:</p>
-              <ul>
-                <li>Hazardous materials, explosives, or flammables</li>
-                <li>Illegal items or contraband</li>
-                <li>Firearms or ammunition</li>
-                <li>Perishable goods</li>
-                <li>Items exceeding 100 lbs total weight</li>
-              </ul>
-
-              <h2>10. Limitation of Liability</h2>
-              <p>
-                To the maximum extent permitted by law, CarShippers.ai's liability is limited 
-                to the amount paid for services. We are not liable for indirect, incidental, 
-                or consequential damages.
-              </p>
-
-              <h2>11. Dispute Resolution</h2>
-              <p>
-                Any disputes arising from these terms will be resolved through binding arbitration 
-                in accordance with the rules of the American Arbitration Association. This does 
-                not prevent you from filing complaints with the FMCSA.
-              </p>
-
-              <h2>12. Modifications to Terms</h2>
-              <p>
-                We reserve the right to modify these terms at any time. Continued use of our 
-                services after changes constitutes acceptance of the new terms.
-              </p>
-
-              <h2>13. Governing Law</h2>
-              <p>
-                These terms are governed by federal transportation law and the laws of the 
-                State of California, without regard to conflict of law principles.
-              </p>
-
-              <h2>14. Contact Information</h2>
-              <p>
-                For questions about these Terms of Service:
-              </p>
-              <ul>
-                <li>Email: legal@carshippers.ai</li>
-                <li>Phone: (888) 555-1234</li>
-              </ul>
+              {pageData.sections && pageData.sections.length > 0 ? (
+                pageData.sections.map((section) => {
+                  const { paragraphs, bulletPoints } = parseSectionContent(section);
+                  const hasStrapiBulletPoints = section.bullet_points && section.bullet_points.length > 0;
+                  
+                  return (
+                    <div key={section.id}>
+                      <h2>{section.section_heading}</h2>
+                      
+                      {/* Render paragraphs */}
+                      {paragraphs.map((paragraph, index) => (
+                        <p key={index}>{paragraph}</p>
+                      ))}
+                      
+                      {/* Render bullet points */}
+                      {hasStrapiBulletPoints && Array.isArray(bulletPoints) && bulletPoints.length > 0 && typeof bulletPoints[0] === 'object' ? (
+                        <ul>
+                          {(bulletPoints as Array<{ label: string; description: string }>).map((bullet, index) => (
+                            <li key={section.bullet_points?.[index]?.id || index}>
+                              <strong>{bullet.label}:</strong> {bullet.description}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : Array.isArray(bulletPoints) && bulletPoints.length > 0 && typeof bulletPoints[0] === 'string' ? (
+                        <ul>
+                          {(bulletPoints as string[]).map((bullet, index) => (
+                            <li key={index}>{bullet}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  );
+                })
+              ) : null}
             </div>
           </div>
         </main>
