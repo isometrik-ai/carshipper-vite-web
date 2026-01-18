@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useHeader } from "@/api/header";
 import { getIcon, DEFAULT_ICON } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
-import type { NavigationLink } from "@/types/Header.types";
+import type { HeaderData, NavLink } from "@/types/Header.types";
 
 // Constants
 const DEFAULT_LOGO_TEXT = "CarShippers";
@@ -15,7 +15,7 @@ const DEFAULT_PHONE = "(888) 555-1234";
 const DEFAULT_PHONE_HREF = "tel:+18885551234";
 const DEFAULT_CTA_TEXT = "Get Instant Quote";
 
-const FALLBACK_NAV_LINKS: NavigationLink[] = [
+const FALLBACK_NAV_LINKS: NavLink[] = [
   { id: 1, label: "How It Works", href: "/how-it-works", icon_name: null },
   { id: 2, label: "Pricing", href: "/pricing", icon_name: null },
   { id: 3, label: "About", href: "/about", icon_name: null },
@@ -46,7 +46,7 @@ const Logo = ({ logoText, logoHighlight, logoIcon: LogoIcon }: LogoProps) => (
 );
 
 interface NavigationProps {
-  links: NavigationLink[];
+  links: NavLink[];
   onLinkClick?: () => void;
   isMobile?: boolean;
 }
@@ -76,7 +76,7 @@ const Navigation = ({ links, onLinkClick, isMobile = false }: NavigationProps) =
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  navLinks: NavigationLink[];
+  navLinks: NavLink[];
   phoneNumber: string;
   phoneHref: string;
   ctaButtonText: string;
@@ -136,7 +136,7 @@ const Header = () => {
 
   // Memoize header data extraction to avoid recalculation on every render
   const headerData = useMemo(() => {
-    const rawData = data?.data;
+    const rawData = data?.data?.header as HeaderData;
     return {
       logoText: rawData?.logo_text || DEFAULT_LOGO_TEXT,
       logoHighlight: rawData?.logo_highlight || DEFAULT_LOGO_HIGHLIGHT,
