@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-import { Send } from "lucide-react";
+import { MessageCircle, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useChatWidget } from "@/api/chatWidget";
-import type { LucideIcon } from "lucide-react";
-
-// Helper to resolve dynamic icons from Lucide
-const getIcon = (name: string): LucideIcon => {
-  const Icon = (LucideIcons as any)[name];
-  return Icon || LucideIcons.HelpCircle;
-};
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ChatWidget = () => {
   const { data, isLoading } = useChatWidget();
@@ -21,10 +14,10 @@ const ChatWidget = () => {
   // Extract chat widget data from API response
   const chatData = data?.data;
 
-  // Initialize messages with welcome message when data is loaded
+  // Initialize messages with initial message when data is loaded
   useEffect(() => {
     if (chatData && messages.length === 0) {
-      setMessages([{ text: chatData.welcome_message, isUser: false }]);
+      setMessages([{ text: chatData.initial_message, isUser: false }]);
     }
   }, [chatData, messages.length]);
 
@@ -34,21 +27,23 @@ const ChatWidget = () => {
     setMessages((prev) => [...prev, { text: message, isUser: true }]);
     setMessage("");
 
-    // Simulate response
+    // Simulate response with auto_response from API
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        { text: chatData.reply_message, isUser: false },
+        { text: chatData.auto_response, isUser: false },
       ]);
     }, 1000);
   };
 
+  // Show skeleton while loading
   if (isLoading || !chatData) {
-    return null; // Don't render widget while loading
+    return (
+      <div className="fixed bottom-6 right-6 z-50">
+        <Skeleton className="w-14 h-14 rounded-full" />
+      </div>
+    );
   }
-
-  const ModalIcon = getIcon(chatData.modal_icon);
-  const CloseIcon = getIcon(chatData.modal_close_icon);
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -65,18 +60,19 @@ const ChatWidget = () => {
             <div className="bg-primary p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary-foreground/20 rounded-full flex items-center justify-center">
-                  <ModalIcon className="w-5 h-5 text-primary-foreground" />
+                  <MessageCircle className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-primary-foreground">{chatData.modal_title}</h3>
-                  <p className="text-xs text-primary-foreground/70">{chatData.modal_description}</p>
+                  <h3 className="font-semibold text-primary-foreground">{chatData.widget_title}</h3>
+                  <p className="text-xs text-primary-foreground/70">{chatData.widget_subtitle}</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                aria-label="Close chat"
               >
-                <CloseIcon className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -107,13 +103,15 @@ const ChatWidget = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  placeholder={chatData.input_placehoder}
+                  placeholder={chatData.placeholder_text}
                   className="flex-1 bg-muted rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  aria-label="Type your message"
                 />
                 <Button
                   size="icon"
                   onClick={handleSend}
                   className="rounded-full"
+                  aria-label="Send message"
                 >
                   <Send className="w-4 h-4" />
                 </Button>
@@ -129,11 +127,12 @@ const ChatWidget = () => {
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
         className="w-14 h-14 bg-primary rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+        aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? (
-          <CloseIcon className="w-6 h-6 text-primary-foreground" />
+          <X className="w-6 h-6 text-primary-foreground" />
         ) : (
-          <ModalIcon className="w-6 h-6 text-primary-foreground" />
+          <MessageCircle className="w-6 h-6 text-primary-foreground" />
         )}
       </motion.button>
     </div>
