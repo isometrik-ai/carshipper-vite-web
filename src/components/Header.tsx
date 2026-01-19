@@ -136,7 +136,7 @@ const Header = () => {
 
   // Memoize header data extraction to avoid recalculation on every render
   const headerData = useMemo(() => {
-    const rawData = data?.data?.header as HeaderData;
+    const rawData = data?.data;
     return {
       logoText: rawData?.logo_text || DEFAULT_LOGO_TEXT,
       logoHighlight: rawData?.logo_highlight || DEFAULT_LOGO_HIGHLIGHT,

@@ -105,9 +105,9 @@ const Contact = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         
-        <main className="flex-1 pt-20">
-          {/* Hero */}
-          <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background">
+        <main className="flex-1 pt-20" role="main" aria-label="Contact page main content">
+          {/* Hero Section - Contains the ONLY H1 on the page */}
+          <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background" aria-labelledby="contact-hero-heading">
             <div className="container mx-auto px-4">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -115,7 +115,7 @@ const Contact = () => {
                 transition={{ duration: 0.5 }}
                 className="max-w-3xl mx-auto text-center"
               >
-                <h1 className="text-4xl md:text-5xl font-bold mb-6">
+                <h1 id="contact-hero-heading" className="text-4xl md:text-5xl font-bold mb-6">
                   {pageData.hero?.main_headline || "Get in"}{" "}
                   {pageData.hero?.highlighted_text ? (
                     <span className="text-primary">{pageData.hero.highlighted_text}</span>
@@ -130,34 +130,34 @@ const Contact = () => {
             </div>
           </section>
 
-          {/* Contact Methods */}
+          {/* Contact Methods Section - No section heading, just contact method cards */}
           {pageData.contactMethods && pageData.contactMethods.methods && pageData.contactMethods.methods.length > 0 ? (
-            <section className="py-12">
+            <section className="py-12" aria-label="Contact methods">
               <div className="container mx-auto px-4">
-                <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto" role="list" aria-label="Contact methods">
                   {pageData.contactMethods.methods.map((method, index) => {
                     const MethodIcon = method.icon_name
                       ? (getIcon(method.icon_name) as LucideIcon)
                       : null;
 
                     return (
-                      <motion.a
+                      <motion.article
                         key={method.id || method.title}
-                        href={method.href}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: index * 0.1 }}
                         className="bg-card p-6 rounded-2xl border border-border hover:border-primary/50 hover:shadow-lg transition-all text-center"
+                        role="listitem"
                       >
                         {MethodIcon ? (
-                          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                            <MethodIcon className="w-6 h-6 text-primary" aria-hidden="true" />
+                          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                            <MethodIcon className="w-6 h-6 text-primary" />
                           </div>
                         ) : null}
-                        <h3 className="font-semibold mb-1">{method.title}</h3>
+                        <p className="font-semibold mb-1 text-lg">{method.title}</p>
                         <p className="text-primary font-medium mb-1">{method.value}</p>
                         <p className="text-sm text-muted-foreground">{method.description}</p>
-                      </motion.a>
+                      </motion.article>
                     );
                   })}
                 </div>
@@ -165,9 +165,9 @@ const Contact = () => {
             </section>
           ) : null}
 
-          {/* Contact Form */}
+          {/* Contact Form Section */}
           {pageData.contactForm ? (
-            <section className="py-16 md:py-24">
+            <section className="py-16 md:py-24" aria-labelledby="contact-form-heading">
               <div className="container mx-auto px-4">
                 <div className="max-w-2xl mx-auto">
                   <motion.div
@@ -177,7 +177,7 @@ const Contact = () => {
                     transition={{ duration: 0.5 }}
                   >
                     {pageData.contactForm.form_title ? (
-                      <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">
+                      <h2 id="contact-form-heading" className="text-2xl md:text-3xl font-bold mb-8 text-center">
                         {pageData.contactForm.form_title}
                       </h2>
                     ) : null}
@@ -264,13 +264,13 @@ const Contact = () => {
             </section>
           ) : null}
 
-          {/* Business Info */}
+          {/* Business Info Section */}
           {pageData.businessInfo ? (
-            <section className="py-16 bg-muted/30">
+            <section className="py-16 bg-muted/30" aria-labelledby="business-info-heading">
               <div className="container mx-auto px-4">
                 <div className="max-w-2xl mx-auto text-center">
                   {pageData.businessInfo.section_title ? (
-                    <h2 className="text-2xl font-bold mb-8">{pageData.businessInfo.section_title}</h2>
+                    <h2 id="business-info-heading" className="text-2xl font-bold mb-8">{pageData.businessInfo.section_title}</h2>
                   ) : null}
                   {pageData.businessInfo.info_items && pageData.businessInfo.info_items.length > 0 ? (
                     <div className="grid md:grid-cols-2 gap-6">

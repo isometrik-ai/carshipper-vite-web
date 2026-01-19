@@ -1,8 +1,5 @@
 export interface HeaderResponse {
-  data: {
-    id: number;
-    header: HeaderData;
-  };
+  data: HeaderData;
 }
 
 export interface NavLink {
