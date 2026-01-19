@@ -1,79 +1,100 @@
-import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
-import { motion } from "framer-motion";
-import {
-  Gavel,
-  Shield,
-  Clock,
-  CheckCircle,
-  Truck,
-  Phone,
-  ArrowRight,
-  MapPin,
-  Users,
-  Zap,
-  FileText,
-  Route,
-  Weight,
-  AlertTriangle,
-  MessageSquare,
-  BarChart3,
-} from "lucide-react";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { useAutoAuctionShipping } from "@/api/autoAuctionShipping";
+import { getIcon } from "@/lib/icons";
+import { CheckCircle, Clock } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { ProcessSection, HeroSection, TestimonialsDisplay } from "@/types/LandingPage.types";
+import type { ServiceList, ServiceCards, AlertWarning } from "@/types/AutoAuctionShipping.types";
 
-import { useAutoAuctionShipping } from "@/hooks/api/useAutoAuctionShipping";
-
-const ICONS: Record<string, any> = {
-  Truck,
-  Shield,
-  Clock,
-  FileText,
-  Route,
-  Weight,
-  CheckCircle,
-  Phone,
-  AlertTriangle,
-  Gavel,
-  MessageSquare,
-  MapPin,
-  BarChart3,
-  Zap,
-  Users,
-  ArrowRight,
-};
-
-const getIcon = (name?: string | null): React.ComponentType<any> => {
-  if (!name) return CheckCircle;
-  return ICONS[name] || CheckCircle;
-};
-
+/**
+ * Auto Auction Shipping page component
+ * 
+ * Fetches page content from Strapi CMS and renders sections with exact original layout.
+ * All content is managed through Strapi, including SEO metadata and page sections.
+ */
 const AutoAuctionShipping = () => {
-  const { data: page, isLoading } = useAutoAuctionShipping();
+  const { data, isLoading } = useAutoAuctionShipping();
 
-  if (isLoading || !page) return null;
+  // Extract components from page content
+  const pageData = useMemo(() => {
+    if (!data?.data?.page_content) return null;
 
-  const auctionServices = page.service_card?.servieces ?? [];
-  const services = page.secondary_section?.services ?? [];
-  const features = page.trailer_options?.services ?? [];
-  const processSteps = page.process_cards?.[0]?.Stats ?? [];
+    const content = data.data.page_content;
+    const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
+    const serviceList = content.find(c => c.__component === "shared.service-list") as ServiceList | undefined;
+    const serviceCards = content.find(c => c.__component === "shared.service-cards") as ServiceCards | undefined;
+    const featuresSection = content.find(c =>
+      c.__component === "shared.process-section" &&
+      (c as ProcessSection).section_title === "Why Auction Buyers Trust Us"
+    ) as ProcessSection | undefined;
+    const processSection = content.find(c =>
+      c.__component === "shared.process-section" &&
+      (c as ProcessSection).section_title === "From Winning Bid to Delivery"
+    ) as ProcessSection | undefined;
+    const testimonials = content.find(c => c.__component === "shared.testimonials-display") as TestimonialsDisplay | undefined;
+    const alertWarning = content.find(c => c.__component === "shared.alert-warning") as AlertWarning | undefined;
 
-  const PageIcon = getIcon(page.page_icon);
+    return {
+      hero: heroSection,
+      serviceList,
+      serviceCards,
+      features: featuresSection,
+      process: processSection,
+      testimonials,
+      alertWarning,
+    };
+  }, [data]);
+
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <>
+        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1" role="main" aria-label="Main content">
+            <div className="container mx-auto px-4 py-12 text-center">
+              <p className="text-muted-foreground">No content available.</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <Helmet>
-        <title>
-          {page.title} {page.title_highlight}
-        </title>
-        <meta name="description" content={page.description} />
-      </Helmet>
+      <PageSEO seoMetadata={data?.data?.seo_metadata} />
 
       <Header />
 
       <main>
         {/* Hero Section with Quote Form */}
         <section className="relative pt-32 pb-20 bg-gradient-to-br from-primary/10 via-background to-accent/5 overflow-hidden">
+          <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+
           <div className="container mx-auto px-4 relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 items-start">
               <motion.div
@@ -81,18 +102,30 @@ const AutoAuctionShipping = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-                  <PageIcon className="w-4 h-4" />
-                  <span>{page.page_tagline}</span>
-                </div>
+                {pageData.hero?.tagline ? (
+                  <span className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+                    {pageData.hero.tagline_icon ? (
+                      (() => {
+                        const TaglineIcon = getIcon(pageData.hero.tagline_icon) as LucideIcon;
+                        return <TaglineIcon className="w-4 h-4" aria-hidden="true" />;
+                      })()
+                    ) : null}
+                    {pageData.hero.tagline}
+                  </span>
+                ) : null}
 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-                  {page.title} <span className="text-primary">{page.title_highlight}</span>
+                  {pageData.hero?.main_headline || "Auto Auction"}{" "}
+                  {pageData.hero?.highlighted_text ? (
+                    <span className="text-primary">{pageData.hero.highlighted_text}</span>
+                  ) : null}
                 </h1>
 
-                <p className="text-xl text-muted-foreground mb-8 max-w-xl">
-                  {page.description}
-                </p>
+                {pageData.hero?.description ? (
+                  <p className="text-xl text-muted-foreground mb-8 max-w-xl">
+                    {pageData.hero.description.trim()}
+                  </p>
+                ) : null}
               </motion.div>
 
               <motion.div
@@ -107,7 +140,7 @@ const AutoAuctionShipping = () => {
         </section>
 
         {/* Auction Services */}
-        {auctionServices.length > 0 && (
+        {pageData.serviceList ? (
           <section className="py-16 bg-muted/30">
             <div className="container mx-auto px-4">
               <div className="max-w-4xl mx-auto">
@@ -118,168 +151,221 @@ const AutoAuctionShipping = () => {
                   transition={{ duration: 0.5 }}
                   className="bg-card rounded-2xl shadow-lg p-8 border"
                 >
-                  <h3 className="text-2xl font-semibold mb-6 text-center">
-                    {page.service_card?.title ?? "Auction Services"}
-                  </h3>
-                  <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    {auctionServices.map((service) => {
-                      const Icon = getIcon(service.icon_name);
-                      return (
-                        <div key={service.id} className="flex items-center gap-2 text-sm">
-                          <Icon className="w-4 h-4 text-primary flex-shrink-0" />
-                          <span>{service.label}</span>
+                  {pageData.serviceList.section_title ? (
+                    <h3 className="text-2xl font-semibold mb-6 text-center">
+                      {pageData.serviceList.section_title}
+                    </h3>
+                  ) : null}
+                  {pageData.serviceList.services && pageData.serviceList.services.length > 0 ? (
+                    <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4" role="list">
+                      {pageData.serviceList.services.map((service: any) => (
+                        <div key={service.id || service.text} className="flex items-center gap-2 text-sm" role="listitem">
+                          <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+                          <span>{service.text}</span>
                         </div>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Two-Way Service */}
-        {services.length > 0 && (
-          <section className="py-20 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  {page.secondary_section?.hero_title ?? "We Work with Auto Auctions Two Ways"}
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  {page.secondary_section?.description}
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {services.map((service, index) => {
-                  const Icon = getIcon(service.icon_name);
-                  return (
-                    <motion.div
-                      key={service.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      viewport={{ once: true }}
-                      className="bg-card rounded-xl p-8 shadow-lg border"
-                    >
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                        <Icon className="w-6 h-6 text-primary" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-3">{service.text}</h3>
-                      <p className="text-muted-foreground">{service.description}</p>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Features Section */}
-        {features.length > 0 && (
-          <section className="py-20">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  {page.trailer_options?.hero_title ?? "Why Auction Buyers Trust Us"}
-                </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  {page.trailer_options?.description}
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {features.map((feature, index) => {
-                  const Icon = getIcon(feature.icon_name);
-                  return (
-                    <motion.div
-                      key={feature.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      viewport={{ once: true }}
-                      className="bg-card rounded-xl p-6 shadow-lg border hover:shadow-xl transition-shadow"
-                    >
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                        <Icon className="w-6 h-6 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2">{feature.text}</h3>
-                      <p className="text-muted-foreground">{feature.description}</p>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Process Section */}
-        {processSteps.length > 0 && (
-          <section className="py-20 bg-primary text-primary-foreground">
-            <div className="container mx-auto px-4">
-              <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-                {page.process_cards?.[0]?.hero_title ?? "From Winning Bid to Delivery"}
-              </h2>
-
-              <div className="flex flex-wrap justify-center gap-4">
-                {processSteps.map((step, index) => (
-                  <motion.div
-                    key={step.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    className="bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-6 text-center w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(20%-1rem)]"
-                  >
-                    <div className="w-10 h-10 bg-primary-foreground text-primary rounded-full flex items-center justify-center mx-auto mb-3 text-lg font-bold">
-                      {step.value}
+                      ))}
                     </div>
-                    <h3 className="font-semibold mb-2">{String(step.label)}</h3>
-                    <p className="text-primary-foreground/80 text-sm">{step.descrption}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Testimonial */}
-        {page.manager_msg && (
-          <section className="py-20 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="max-w-3xl mx-auto text-center">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  viewport={{ once: true }}
-                >
-                  <p className="text-xl italic text-muted-foreground mb-6">{page.manager_msg}</p>
-                  {page.manager_name ? (
-                    <p className="font-semibold">{page.manager_name}</p>
                   ) : null}
                 </motion.div>
               </div>
             </div>
           </section>
-        )}
+        ) : null}
+
+        {/* Two-Way Service */}
+        {pageData.serviceCards ? (
+          <section className="py-20 bg-muted/30">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-12">
+                {pageData.serviceCards.section_title ? (
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                    {pageData.serviceCards.section_title}
+                  </h2>
+                ) : null}
+                {pageData.serviceCards.section_subtitle ? (
+                  <p className="text-muted-foreground max-w-2xl mx-auto">
+                    {pageData.serviceCards.section_subtitle}
+                  </p>
+                ) : null}
+              </div>
+
+              {pageData.serviceCards.service_cards && pageData.serviceCards.service_cards.length > 0 ? (
+                <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto" role="list">
+                  {pageData.serviceCards.service_cards.map((service: any, index: number) => {
+                    const ServiceIcon = service.icon_name
+                      ? (getIcon(service.icon_name) as LucideIcon)
+                      : null;
+
+                    return (
+                      <motion.div
+                        key={service.id || service.title}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        viewport={{ once: true }}
+                        className="bg-card rounded-xl p-8 shadow-lg border"
+                        role="listitem"
+                      >
+                        {ServiceIcon ? (
+                          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                            <ServiceIcon className="w-6 h-6 text-primary" aria-hidden="true" />
+                          </div>
+                        ) : null}
+                        <h3 className="text-xl font-semibold mb-3">{service.title}</h3>
+                        <p className="text-muted-foreground">{service.description}</p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {/* Features Section */}
+        {pageData.features ? (
+          <section className="py-20">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-12">
+                {pageData.features.section_title ? (
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                    {pageData.features.section_title}
+                  </h2>
+                ) : null}
+                {pageData.features.section_subtitle ? (
+                  <p className="text-muted-foreground max-w-2xl mx-auto">
+                    {pageData.features.section_subtitle}
+                  </p>
+                ) : null}
+              </div>
+
+              {pageData.features.steps && pageData.features.steps.length > 0 ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8" role="list">
+                  {pageData.features.steps.map((feature: any, index: number) => {
+                    const FeatureIcon = feature.icon_name
+                      ? (getIcon(feature.icon_name) as LucideIcon)
+                      : null;
+
+                    return (
+                      <motion.div
+                        key={feature.id || feature.title}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        viewport={{ once: true }}
+                        className="bg-card rounded-xl p-6 shadow-lg border hover:shadow-xl transition-shadow"
+                        role="listitem"
+                      >
+                        {FeatureIcon ? (
+                          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                            <FeatureIcon className="w-6 h-6 text-primary" aria-hidden="true" />
+                          </div>
+                        ) : null}
+                        <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                        <p className="text-muted-foreground">{feature.description}</p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {/* Process Section */}
+        {pageData.process ? (
+          <section className="py-20 bg-primary text-primary-foreground">
+            <div className="container mx-auto px-4">
+              {pageData.process.section_title ? (
+                <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+                  {pageData.process.section_title}
+                </h2>
+              ) : null}
+
+              {pageData.process.steps && pageData.process.steps.length > 0 ? (
+                <div className="flex flex-wrap justify-center gap-4" role="list">
+                  {pageData.process.steps.map((item: any, index: number) => (
+                    <motion.div
+                      key={item.id || item.step_number}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      className="bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-6 text-center w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(20%-1rem)]"
+                      role="listitem"
+                    >
+                      {item.step_number ? (
+                        <div className="w-10 h-10 bg-primary-foreground text-primary rounded-full flex items-center justify-center mx-auto mb-3 text-lg font-bold">
+                          {item.step_number}
+                        </div>
+                      ) : null}
+                      <h3 className="font-semibold mb-2">{item.title}</h3>
+                      <p className="text-primary-foreground/80 text-sm">{item.description}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {/* Testimonial */}
+        {pageData.testimonials && pageData.testimonials.testimonials && pageData.testimonials.testimonials.length > 0 ? (
+          <section className="py-20 bg-muted/30">
+            <div className="container mx-auto px-4">
+              <div className="max-w-3xl mx-auto text-center">
+                {pageData.testimonials.testimonials.map((testimonial: any, index: number) => (
+                  <motion.div
+                    key={testimonial.id || index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    viewport={{ once: true }}
+                  >
+                    {testimonial.quote_text ? (
+                      <p className="text-xl italic text-muted-foreground mb-6">
+                        {testimonial.quote_text}
+                      </p>
+                    ) : null}
+                    {testimonial.customer_name ? (
+                      <p className="font-semibold">{testimonial.customer_name}</p>
+                    ) : null}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         {/* Storage Fee Warning */}
-        {page.compliance && (
+        {pageData.alertWarning ? (
           <section className="py-12 bg-accent/10">
             <div className="container mx-auto px-4">
               <div className="flex items-start gap-4 max-w-4xl mx-auto">
-                <Clock className="w-8 h-8 text-accent flex-shrink-0 mt-1" />
+                {pageData.alertWarning.icon_name ? (
+                  (() => {
+                    const AlertIcon = getIcon(pageData.alertWarning.icon_name) as LucideIcon;
+                    return <AlertIcon className="w-8 h-8 text-accent flex-shrink-0 mt-1" aria-hidden="true" />;
+                  })()
+                ) : (
+                  <Clock className="w-8 h-8 text-accent flex-shrink-0 mt-1" aria-hidden="true" />
+                )}
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">{page.compliance.hero_title}</h3>
-                  <p className="text-muted-foreground">{page.compliance.description}</p>
+                  {pageData.alertWarning.title ? (
+                    <h3 className="text-lg font-semibold mb-2">
+                      {pageData.alertWarning.title}
+                    </h3>
+                  ) : null}
+                  {pageData.alertWarning.message ? (
+                    <p className="text-muted-foreground">
+                      {pageData.alertWarning.message}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </div>
           </section>
-        )}
-
+        ) : null}
       </main>
 
       <Footer />

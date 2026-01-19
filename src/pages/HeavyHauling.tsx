@@ -1,228 +1,336 @@
-import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
-import { motion } from "framer-motion";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { useHeavyHauling } from "@/api/heavyHauling";
+import { getIcon } from "@/lib/icons";
+import { Weight, CheckCircle, AlertTriangle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { HeroSection, ProcessSection } from "@/types/LandingPage.types";
+import type { ServiceList, ServiceCards, AlertWarning } from "@/types/AutoAuctionShipping.types";
+import type { TrailerTypes } from "@/types/EnclosedTransport.types";
 
-import {
-  Truck,
-  Shield,
-  Clock,
-  FileText,
-  Route,
-  Weight,
-  CheckCircle,
-  AlertTriangle,
-  Phone,
-} from "lucide-react";
-
-import { useHeavyHauling } from "@/hooks/api/useHeavyHauling";
-
-const ICONS: Record<string, any> = {
-  Truck,
-  Shield,
-  Clock,
-  FileText,
-  Route,
-  Weight,
-  CheckCircle,
-  Phone,
-  AlertTriangle,
-};
-
-const getIcon = (name?: string | null): React.ComponentType<any> => {
-  if (!name) return CheckCircle;
-  return ICONS[name] || CheckCircle;
-};
-
-
+/**
+ * Heavy Hauling page component
+ * 
+ * Fetches page content from Strapi CMS and renders sections with exact original layout.
+ * All content is managed through Strapi, including SEO metadata and page sections.
+ */
 const HeavyHauling = () => {
-  const { data: page, isLoading } = useHeavyHauling();
+  const { data, isLoading } = useHeavyHauling();
 
-  if (isLoading || !page) return null;
+  // Extract components from page content
+  const pageData = useMemo(() => {
+    if (!data?.data?.page_content) return null;
 
-  const heroSection = page.service_cards?.[0];
-  const equipmentList = page.service_card?.servieces || [];
-  const secondaryEquipment = page.secondary_section?.services || [];
-  const processSteps = page.process_cards?.[0]?.features || [];
-  const trailers = page.trailer_options?.services || [];
+    const content = data.data.page_content;
+    const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
+    const serviceList = content.find(c => c.__component === "shared.service-list") as ServiceList | undefined;
+    const serviceCards = content.find(c => c.__component === "shared.service-cards") as ServiceCards | undefined;
+    const processSection = content.find(c => c.__component === "shared.process-section") as ProcessSection | undefined;
+    const trailerTypes = content.find(c => c.__component === "shared.trailer-types") as TrailerTypes | undefined;
+    const alertWarning = content.find(c => c.__component === "shared.alert-warning") as AlertWarning | undefined;
 
-  const PageIcon = getIcon(page.page_icon);
+    return {
+      hero: heroSection,
+      equipmentList: serviceList,
+      features: serviceCards,
+      process: processSection,
+      trailers: trailerTypes,
+      compliance: alertWarning,
+    };
+  }, [data]);
+
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <>
+        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <div className="container mx-auto px-4 py-12 text-center">
+              <p className="text-muted-foreground">No content available.</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <Helmet>
-        <title>
-          {page.title} {page.title_highlight}
-        </title>
-        <meta name="description" content={page.description} />
-      </Helmet>
+      <PageSEO seoMetadata={data?.data?.seo_metadata} />
 
-      <Header />
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        
+        <main>
+          {/* Hero Section with Quote Form */}
+          <section className="relative pt-32 pb-20 bg-gradient-to-br from-primary/10 via-background to-accent/5 overflow-hidden">
+            <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+            
+            <div className="container mx-auto px-4 relative z-10">
+              <div className="grid lg:grid-cols-2 gap-12 items-start">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  {pageData.hero?.tagline ? (
+                    <span className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+                      {pageData.hero.tagline_icon ? (
+                        (() => {
+                          const TaglineIcon = getIcon(pageData.hero.tagline_icon) as LucideIcon;
+                          return <TaglineIcon className="w-4 h-4" aria-hidden="true" />;
+                        })()
+                      ) : (
+                        <Weight className="w-4 h-4" aria-hidden="true" />
+                      )}
+                      {pageData.hero.tagline}
+                    </span>
+                  ) : null}
+                  
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+                    {pageData.hero?.main_headline || "Heavy Hauling &"}{" "}
+                    {pageData.hero?.highlighted_text ? (
+                      <span className="text-primary">{pageData.hero.highlighted_text}</span>
+                    ) : null}
+                  </h1>
+                  
+                  {pageData.hero?.description ? (
+                    <p className="text-xl text-muted-foreground mb-6 max-w-xl">
+                      {pageData.hero.description}
+                    </p>
+                  ) : null}
 
-      <main>
-        {/* HERO */}
-        <section className="relative pt-32 pb-20 bg-gradient-to-br from-primary/10 via-background to-accent/5 overflow-hidden">
-          <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-2 gap-12 items-start">
-              {/* Left Section */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-                  <PageIcon className="w-4 h-4" />
-                  <span>{page.page_tagline}</span>
+                  {/* Equipment Types - Below left text */}
+                  {pageData.equipmentList?.services && pageData.equipmentList.services.length > 0 ? (
+                    <div className="bg-card/50 backdrop-blur rounded-xl p-4 border">
+                      <h3 className="text-sm font-semibold mb-3">Equipment We Transport</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        {pageData.equipmentList.services.slice(0, 6).map((service: any) => (
+                          <div key={service.id || service.text} className="flex items-center gap-2 text-xs">
+                            <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" aria-hidden="true" />
+                            <span>{service.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  <QuoteForm />
+                </motion.div>
+              </div>
+            </div>
+          </section>
+
+          {/* Additional Equipment Types */}
+          {pageData.equipmentList?.services && pageData.equipmentList.services.length > 0 ? (
+            <section className="py-12 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <div className="max-w-4xl mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-card rounded-2xl shadow-lg p-8 border"
+                  >
+                    {pageData.equipmentList.section_title ? (
+                      <h3 className="text-2xl font-semibold mb-6 text-center">{pageData.equipmentList.section_title}</h3>
+                    ) : null}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {pageData.equipmentList.services.map((service: any) => (
+                        <div key={service.id || service.text} className="flex items-center gap-2 text-sm">
+                          <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+                          <span>{service.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
+          {/* Features Section */}
+          {pageData.features ? (
+            <section className="py-20 bg-muted/30">
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-12">
+                  {pageData.features.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.features.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.features.section_subtitle ? (
+                    <p className="text-muted-foreground max-w-2xl mx-auto">
+                      {pageData.features.section_subtitle}
+                    </p>
+                  ) : null}
                 </div>
 
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-                  {page.title}{" "}
-                  <span className="text-primary">{page.title_highlight}</span>
-                </h1>
+                {pageData.features.service_cards && pageData.features.service_cards.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {pageData.features.service_cards.map((feature: any, index: number) => {
+                      const FeatureIcon = feature.icon_name
+                        ? (getIcon(feature.icon_name) as LucideIcon)
+                        : null;
 
-                <p className="text-xl text-muted-foreground mb-6 max-w-xl">
-                  {page.description}
-                </p>
-
-                {/* Equipment List */}
-                <div className="bg-card/50 backdrop-blur rounded-xl p-4 border">
-                  <h3 className="text-sm font-semibold mb-3">
-                    {page.service_card?.title}
-                  </h3>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {equipmentList.slice(0, 6).map((item) => {
-                      const Icon = getIcon(item.icon_name);
                       return (
-                        <div key={item.id} className="flex items-center gap-2 text-xs">
-                          <Icon className="w-3 h-3 text-primary" />
-                          {item.label}
-                        </div>
+                        <motion.div
+                          key={feature.id || feature.title}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          viewport={{ once: true }}
+                          className="bg-card rounded-xl p-6 shadow-lg border hover:shadow-xl transition-shadow"
+                        >
+                          {FeatureIcon ? (
+                            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                              <FeatureIcon className="w-6 h-6 text-primary" aria-hidden="true" />
+                            </div>
+                          ) : null}
+                          <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                          <p className="text-muted-foreground">{feature.description}</p>
+                        </motion.div>
                       );
                     })}
                   </div>
-                </div>
-              </motion.div>
-
-              {/* Quote Form */}
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                <QuoteForm />
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* SECONDARY EQUIPMENT LIST */}
-        <section className="py-12 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto bg-card p-8 rounded-2xl shadow-lg border">
-              <h3 className="text-2xl font-semibold mb-6 text-center">
-                {page.secondary_section?.hero_title}
-              </h3>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {secondaryEquipment.map((item) => {
-                  const Icon = getIcon(item.icon_name);
-                  return (
-                    <div key={item.id} className="flex items-center gap-2 text-sm">
-                      <Icon className="w-4 h-4 text-primary" />
-                      {item.text}
-                    </div>
-                  );
-                })}
+                ) : null}
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
+          ) : null}
 
-        {/* WHY CHOOSE US (service_cards[0]) */}
-        <section className="py-20 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-              {heroSection.hero_title}
-            </h2>
-
-            <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
-              {heroSection.description}
-            </p>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {heroSection.services.map((item, index) => {
-                const Icon = getIcon(item.icon_name);
-                return (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    className="bg-card rounded-xl p-6 border shadow-lg"
-                  >
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                      <Icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">{item.text}</h3>
-                    <p className="text-muted-foreground">{item.description}</p>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* PROCESS STEPS */}
-        <section className="py-20">
-          <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-              {page.process_cards?.[0]?.hero_title}
-            </h2>
-
-            {processSteps.map((step, index) => (
-              <div key={step.id} className="flex gap-6 mb-8">
-                <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xl font-bold">
-                  {step.value}
+          {/* Process Section */}
+          {pageData.process ? (
+            <section className="py-20">
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-12">
+                  {pageData.process.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.process.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.process.section_subtitle ? (
+                    <p className="text-muted-foreground max-w-2xl mx-auto">
+                      {pageData.process.section_subtitle}
+                    </p>
+                  ) : null}
                 </div>
-                <div className="flex-1 pb-8 border-b last:border-0">
-                  <h3 className="text-xl font-semibold mb-2">{step.label}</h3>
-                  <p className="text-muted-foreground">{step.descrption}</p>
+
+                {pageData.process.steps && pageData.process.steps.length > 0 ? (
+                  <div className="max-w-4xl mx-auto">
+                    {pageData.process.steps.map((item: any, index: number) => (
+                      <motion.div
+                        key={item.id || item.step_number}
+                        initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        viewport={{ once: true }}
+                        className="flex gap-6 mb-8"
+                      >
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xl font-bold">
+                            {item.step_number || (index + 1).toString()}
+                          </div>
+                        </div>
+                        <div className="flex-1 pb-8 border-b last:border-0">
+                          <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                          <p className="text-muted-foreground">{item.description}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
+
+          {/* Trailer Types */}
+          {pageData.trailers ? (
+            <section className="py-20 bg-primary text-primary-foreground">
+              <div className="container mx-auto px-4">
+                {pageData.trailers.section_title ? (
+                  <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+                    {pageData.trailers.section_title}
+                  </h2>
+                ) : null}
+                
+                {pageData.trailers.trailer_types && pageData.trailers.trailer_types.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {pageData.trailers.trailer_types.map((trailer: any) => (
+                      <div key={trailer.id || trailer.type} className="bg-primary-foreground/10 rounded-xl p-6 backdrop-blur-sm">
+                        <h3 className="text-lg font-semibold mb-2">{trailer.type}</h3>
+                        {trailer.capacity ? (
+                          <div className="text-primary-foreground/80 font-bold mb-2 text-sm">{trailer.capacity}</div>
+                        ) : null}
+                        <p className="text-primary-foreground/80 text-sm">{trailer.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
+
+          {/* Safety Notice */}
+          {pageData.compliance ? (
+            <section className="py-12 bg-accent/10">
+              <div className="container mx-auto px-4">
+                <div className="flex items-start gap-4 max-w-4xl mx-auto">
+                  {pageData.compliance.icon_name ? (
+                    (() => {
+                      const AlertIcon = getIcon(pageData.compliance.icon_name) as LucideIcon;
+                      return <AlertIcon className="w-8 h-8 text-accent flex-shrink-0 mt-1" aria-hidden="true" />;
+                    })()
+                  ) : (
+                    <AlertTriangle className="w-8 h-8 text-accent flex-shrink-0 mt-1" aria-hidden="true" />
+                  )}
+                  <div>
+                    {pageData.compliance.title ? (
+                      <h3 className="text-lg font-semibold mb-2">{pageData.compliance.title}</h3>
+                    ) : null}
+                    {pageData.compliance.message ? (
+                      <p className="text-muted-foreground">
+                        {pageData.compliance.message}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
+          ) : null}
+        </main>
 
-        {/* TRAILER OPTIONS */}
-        <section className="py-20 bg-primary text-primary-foreground">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-              {page.trailer_options.hero_title}
-            </h2>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {trailers.map((item) => (
-                <div key={item.id} className="bg-primary-foreground/10 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold mb-2">{item.text}</h3>
-                  <p className="text-primary-foreground/80 text-sm">
-                    {item.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* COMPLIANCE */}
-        <section className="py-12 bg-accent/10">
-          <div className="container mx-auto px-4 max-w-4xl flex gap-6">
-            <AlertTriangle className="w-10 h-10 text-accent" />
-            <div>
-              <h3 className="text-xl font-semibold mb-2">
-                {page.compliance.hero_title}
-              </h3>
-              <p className="text-muted-foreground">{page.compliance.description}</p>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <Footer />
+        <Footer />
+      </div>
     </>
   );
 };

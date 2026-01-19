@@ -1,63 +1,41 @@
-import {
-  ServiceCard,
-  ProcessCard,
-  TrailerOptions,
-  FaqSection,
-  CTASection,
-  StatsBlock,
-  TableData,
-  SecondarySection,
-  GenericServiceItem,
-  StatItem,
-} from "./common.types";
-import { StrapiResponseWrapper } from "./api.types";
+import type { SeoMetadata } from "./LandingPage.types";
 
+/**
+ * Re-export types from LandingPage for reuse
+ */
+export type {
+  HeroSection,
+  ProcessSection,
+  FAQDisplay,
+  CallToAction,
+} from "./LandingPage.types";
+
+/**
+ * Rental Car Logistics Page Content Component Types
+ */
+export type RentalCarLogisticsContentComponent =
+  | import("./LandingPage.types").HeroSection
+  | import("./LandingPage.types").ProcessSection
+  | import("./LandingPage.types").FAQDisplay
+  | import("./LandingPage.types").CallToAction;
+
+/**
+ * Rental Car Logistics Page Data Structure
+ */
 export interface RentalCarLogisticsData {
   id: number;
-  page_icon: string | null;
-  title: string;
-  title_highlight: string;
-  description: string;
-  page_tagline: string;
-  manager_msg: string | null;
-  manager_name: string | null;
-
-  service_cards: ServiceCard[];
-
-  service_card: {
-    id: number;
-    title: string;
-    servieces: {
-      id: number;
-      label: string;
-      value: string | null;
-      icon_name: string | null;
-      descrption: string | null;
-    }[];
-  } | null;
-
-  process_cards: ProcessCard[];
-
-  trailer_options: TrailerOptions | null;
-
-  faqs: FaqSection | null;
-
-  cta: CTASection | null;
-
-  stats: StatsBlock | null;
-
-  services: StatItem[];
-
-  solutions: any | null;
-
-  secondary_section: SecondarySection & {
-    services: GenericServiceItem[];
-  };
-
-  compliance: any | null;
-
-  table_data: TableData | null;
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  seo_metadata: SeoMetadata;
+  page_content: RentalCarLogisticsContentComponent[];
 }
 
-export interface RentalCarLogisticsResponse
-  extends StrapiResponseWrapper<RentalCarLogisticsData> {}
+/**
+ * Rental Car Logistics Page API Response
+ */
+export interface RentalCarLogisticsResponse {
+  data: RentalCarLogisticsData;
+  meta: Record<string, unknown>;
+}

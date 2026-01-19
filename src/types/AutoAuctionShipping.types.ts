@@ -1,66 +1,91 @@
-import {
-  ServiceCard,
-  ProcessCard,
-  TrailerOptions,
-  FaqSection,
-  CTASection,
-  StatsBlock,
-  TableData,
-  SecondarySection,
-  GenericServiceItem,
-} from "./common.types";
-import { StrapiResponseWrapper } from "./api.types";
+import type { SeoMetadata } from "./LandingPage.types";
 
-export interface AutoAuctionShippingData {
+/**
+ * Service List Component
+ * List of services with checkmarks
+ */
+export interface ServiceList {
+  __component: "shared.service-list";
   id: number;
-  page_icon: string | null;
-  title: string;
-  title_highlight: string;
-  description: string;
-  page_tagline: string;
-  manager_msg: string | null;
-  manager_name: string | null;
-
-  service_cards: ServiceCard[];
-
-  service_card: {
+  section_title: string | null;
+  services: Array<{
     id: number;
-    title: string;
-    servieces: {
-      id: number;
-      label: string;
-      value: string | null;
-      icon_name: string | null;
-      descrption: string | null;
-    }[];
-  } | null;
-
-  process_cards: ProcessCard[];
-
-  trailer_options: TrailerOptions;
-
-  faqs: FaqSection | null;
-
-  cta: CTASection | null;
-
-  stats: StatsBlock | null;
-
-  services: any[];
-
-  solutions: any | null;
-
-  secondary_section: SecondarySection & {
-    services: GenericServiceItem[];
-  };
-
-  compliance: {
-    id: number;
-    hero_title: string;
-    description: string;
-  } | null;
-
-  table_data: TableData | null;
+    text: string;
+  }>;
 }
 
-export interface AutoAuctionShippingResponse
-  extends StrapiResponseWrapper<AutoAuctionShippingData> {}
+/**
+ * Service Card Component
+ * Individual service card with icon, title, and description
+ */
+export interface ServiceCard {
+  id: number;
+  icon_name: string | null;
+  title: string;
+  description: string;
+}
+
+/**
+ * Service Cards Component
+ * Section with title, subtitle, and service cards
+ */
+export interface ServiceCards {
+  __component: "shared.service-cards";
+  id: number;
+  section_title: string | null;
+  section_subtitle: string | null;
+  service_cards: ServiceCard[];
+}
+
+/**
+ * Alert Warning Component
+ * Alert/warning section with icon, title, and message
+ */
+export interface AlertWarning {
+  __component: "shared.alert-warning";
+  id: number;
+  icon_name: string | null;
+  title: string;
+  message: string;
+}
+
+/**
+ * Re-export types from LandingPage for reuse
+ */
+export type {
+  HeroSection,
+  ProcessSection,
+  TestimonialsDisplay,
+} from "./LandingPage.types";
+
+/**
+ * Auto Auction Shipping Page Content Component Types
+ */
+export type AutoAuctionShippingContentComponent =
+  | import("./LandingPage.types").HeroSection
+  | ServiceList
+  | ServiceCards
+  | import("./LandingPage.types").ProcessSection
+  | import("./LandingPage.types").TestimonialsDisplay
+  | AlertWarning;
+
+/**
+ * Auto Auction Shipping Page Data Structure
+ */
+export interface AutoAuctionShippingData {
+  id: number;
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  seo_metadata: SeoMetadata;
+  page_content: AutoAuctionShippingContentComponent[];
+}
+
+/**
+ * Auto Auction Shipping Page API Response
+ */
+export interface AutoAuctionShippingResponse {
+  data: AutoAuctionShippingData;
+  meta: Record<string, unknown>;
+}

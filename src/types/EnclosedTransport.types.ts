@@ -1,75 +1,100 @@
-import {
-  ServiceCard,
-  ProcessCard,
-  TrailerOptions,
-  FaqSection,
-  CTASection,
-  StatsBlock,
-  SecondarySection,
-  GenericServiceItem,
-} from "./common.types";
-import { StrapiResponseWrapper } from "./api.types";
+import type { SeoMetadata } from "./LandingPage.types";
 
-export interface SolutionsItem {
+/**
+ * Vehicle Type Item Component
+ * Individual vehicle type item
+ */
+export interface VehicleTypeItem {
   id: number;
-  icon_name: string | null;
-  title: string;
-  description: string | null;
+  name: string;
 }
 
-export interface Solutions {
+/**
+ * Vehicle Types Grid Component
+ * Grid display of vehicle types
+ */
+export interface VehicleTypesGrid {
+  __component: "shared.vehicle-types-grid";
   id: number;
-  title: string;
-  sub_title: string | null;
-  services: SolutionsItem[];
+  section_title: string | null;
+  section_subtitle: string | null;
+  vehicle_types: VehicleTypeItem[];
 }
 
+/**
+ * Trailer Type Item Component
+ * Individual trailer type item
+ */
+export interface TrailerTypeItem {
+  id: number;
+  type: string;
+  capacity: string;
+  description: string;
+}
+
+/**
+ * Trailer Types Component
+ * Section displaying different trailer options
+ */
+export interface TrailerTypes {
+  __component: "shared.trailer-types";
+  id: number;
+  section_title: string | null;
+  section_subtitle: string | null;
+  trailer_types: TrailerTypeItem[];
+}
+
+/**
+ * Re-export types from LandingPage and other pages for reuse
+ */
+export type {
+  HeroSection,
+  ProcessSection,
+  ComparisonSection,
+  TestimonialsDisplay,
+  FAQDisplay,
+  CallToAction,
+} from "./LandingPage.types";
+
+export type {
+  TextSection,
+} from "./AboutPage.types";
+
+export type {
+  ServiceCards,
+} from "./AutoAuctionShipping.types";
+
+/**
+ * Enclosed Transport Page Content Component Types
+ */
+export type EnclosedTransportContentComponent =
+  | import("./LandingPage.types").HeroSection
+  | import("./AboutPage.types").TextSection
+  | VehicleTypesGrid
+  | import("./AutoAuctionShipping.types").ServiceCards
+  | import("./LandingPage.types").ComparisonSection
+  | TrailerTypes
+  | import("./LandingPage.types").TestimonialsDisplay
+  | import("./LandingPage.types").FAQDisplay
+  | import("./LandingPage.types").CallToAction;
+
+/**
+ * Enclosed Transport Page Data Structure
+ */
 export interface EnclosedTransportData {
   id: number;
-  page_icon: string | null;
-  title: string;
-  title_highlight: string;
-  description: string | null;
-  page_tagline: string | null;
-  manager_msg: string | null;
-  manager_name: string | null;
-
-  service_cards: ServiceCard[];
-
-  service_card: {
-    id: number;
-    title: string | null;
-    servieces: {
-      id: number;
-      label: string;
-      value: string | null;
-      icon_name: string | null;
-      descrption: string | null;
-      href: string | null;
-      show_phone: boolean;
-    }[];
-  } | null;
-
-  process_cards: ProcessCard[];
-
-  trailer_options: TrailerOptions | null;
-
-  faqs: FaqSection | null;
-
-  cta: CTASection | null;
-
-  stats: StatsBlock | null;
-
-  services: any[];
-
-  solutions: Solutions | null;
-
-  secondary_section: SecondarySection | null;
-
-  compliance: any | null;
-
-  table_data: any | null;
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  seo_metadata: SeoMetadata;
+  page_content: EnclosedTransportContentComponent[];
 }
 
-export interface EnclosedTransportResponse
-  extends StrapiResponseWrapper<EnclosedTransportData> {}
+/**
+ * Enclosed Transport Page API Response
+ */
+export interface EnclosedTransportResponse {
+  data: EnclosedTransportData;
+  meta: Record<string, unknown>;
+}

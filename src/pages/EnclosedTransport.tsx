@@ -1,76 +1,106 @@
-import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { useEnclosedTransport } from "@/api/enclosedTransport";
+import { getIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { 
-  Shield, 
-  Lock, 
-  Eye, 
-  Award,
-  CheckCircle,
-  ArrowRight,
-  Star,
-  Car,
-  BadgeCheck,
-  Locate,
-  Truck,
-  Phone,
-} from "lucide-react";
+import { CheckCircle, Star, Car, Lock, Eye, ArrowRight } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { HeroSection, ComparisonSection, TestimonialsDisplay, FAQDisplay, CallToAction } from "@/types/LandingPage.types";
+import type { TextSection } from "@/types/AboutPage.types";
+import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
+import type { VehicleTypesGrid, TrailerTypes } from "@/types/EnclosedTransport.types";
 
-import { useEnclosedTransport } from "@/hooks/api/useEnclosedTransport";
-
-const ICONS: Record<string, any> = {
-  Truck,
-  Shield,
-  Lock,
-  Eye,
-  Award,
-  CheckCircle,
-  ArrowRight,
-  Star,
-  Car,
-  BadgeCheck,
-  Locate,
-  Phone,
-};
-
-const getIcon = (name?: string | null): React.ComponentType<any> => {
-  if (!name) return CheckCircle;
-  return ICONS[name] || CheckCircle;
-};
-
+/**
+ * Enclosed Transport page component
+ * 
+ * Fetches page content from Strapi CMS and renders sections with exact original layout.
+ * All content is managed through Strapi, including SEO metadata and page sections.
+ */
 const EnclosedTransport = () => {
-  const { data: page, isLoading } = useEnclosedTransport();
+  const { data, isLoading } = useEnclosedTransport();
 
-  if (isLoading || !page) return null;
+  // Extract components from page content
+  const pageData = useMemo(() => {
+    if (!data?.data?.page_content) return null;
 
-  const vehicleTypes = page.service_cards?.[0]?.services ?? [];
-  const features = page.process_cards?.[0]?.services ?? [];
-  const trailerTypes = page.trailer_options?.features ?? [];
-  const faqs = page.faqs?.FAQS ?? [];
-  const testimonials = page.service_card?.servieces ?? [];
-  const stats = page.stats?.stats ?? [];
-  const secondarySection = page.secondary_section;
-  const solutions = page.solutions;
+    const content = data.data.page_content;
+    const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
+    const textSection = content.find(c => c.__component === "shared.text-section") as TextSection | undefined;
+    const vehicleTypesGrid = content.find(c => c.__component === "shared.vehicle-types-grid") as VehicleTypesGrid | undefined;
+    const serviceCards = content.find(c => c.__component === "shared.service-cards") as ServiceCards | undefined;
+    const comparisonSection = content.find(c => c.__component === "shared.comparison-section") as ComparisonSection | undefined;
+    const trailerTypes = content.find(c => c.__component === "shared.trailer-types") as TrailerTypes | undefined;
+    const testimonials = content.find(c => c.__component === "shared.testimonials-display") as TestimonialsDisplay | undefined;
+    const faqDisplay = content.find(c => c.__component === "shared.faq-display") as FAQDisplay | undefined;
+    const cta = content.find(c => c.__component === "shared.call-to-action") as CallToAction | undefined;
 
-  const PageIcon = getIcon(page.page_icon);
+    return {
+      hero: heroSection,
+      textSection,
+      vehicleTypes: vehicleTypesGrid,
+      serviceCards,
+      comparison: comparisonSection,
+      trailerTypes,
+      testimonials,
+      faq: faqDisplay,
+      cta,
+    };
+  }, [data]);
+
+  // Parse paragraphs from richtext
+  const parsedParagraphs = useMemo(() => {
+    if (!pageData?.textSection?.paragraphs) return [];
+    return pageData.textSection.paragraphs
+      .split(/\n\n+/)
+      .map((p: string) => p.trim())
+      .filter((p: string) => p.length > 0);
+  }, [pageData?.textSection?.paragraphs]);
+
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <>
+        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <div className="container mx-auto px-4 py-12 text-center">
+              <p className="text-muted-foreground">No content available.</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <Helmet>
-        <title>Enclosed Auto Transport | Premium Car Shipping | CarShippers.ai</title>
-        <meta
-          name="description"
-          content="Enclosed auto carrier provides ultimate protection for your exotic, classic, or luxury vehicle. Fully insured premium car shipping with qualified drivers."
-        />
-        <link rel="canonical" href="https://carshippers.ai/enclosed-transport" />
-      </Helmet>
+      <PageSEO seoMetadata={data?.data?.seo_metadata} />
 
       <div className="min-h-screen flex flex-col">
         <Header />
-        
+
         <main className="flex-1 pt-20">
           {/* Hero Section with Quote Form */}
           <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background">
@@ -81,53 +111,55 @@ const EnclosedTransport = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  {page.page_tagline ? (
-                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-                      <PageIcon className="w-4 h-4" />
-                      <span className="text-sm font-medium">{page.page_tagline}</span>
-                    </div>
-                  ) : null}
-
                   <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                    {page.title} <span className="text-primary">{page.title_highlight}</span>
+                    {pageData.hero?.main_headline || "Enclosed"}{" "}
+                    {pageData.hero?.highlighted_text ? (
+                      <span className="text-primary">{pageData.hero.highlighted_text}</span>
+                    ) : null}
                   </h1>
-                  {page.description ? (
+                  {pageData.hero?.description ? (
                     <p className="text-lg md:text-xl text-muted-foreground mb-6">
-                      {page.description}
+                      {pageData.hero.description}
                     </p>
                   ) : null}
-                  
-                  <div className="flex flex-wrap gap-4 mb-6">
-                    <div className="flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-full">
-                      <Shield className="w-4 h-4" />
-                      <span className="text-sm font-medium">Premium Protection</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full">
-                      <Lock className="w-4 h-4" />
-                      <span className="text-sm font-medium">Secure & Private</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-warning/10 text-warning-foreground px-4 py-2 rounded-full">
-                      <Star className="w-4 h-4" />
-                      <span className="text-sm font-medium">A+ Service</span>
-                    </div>
-                  </div>
 
-                  {/* Quick Points - Below left text */}
-                  {secondarySection && secondarySection.services && secondarySection.services.length > 0 && (
+                  {pageData.hero?.trust_indicators && pageData.hero.trust_indicators.length > 0 ? (
+                    <div className="flex flex-wrap gap-4 mb-6">
+                      {pageData.hero.trust_indicators.map((indicator) => {
+                        const IndicatorIcon = indicator.icon_name
+                          ? (getIcon(indicator.icon_name) as LucideIcon)
+                          : null;
+                        const bgColor = indicator.icon_name === "shield"
+                          ? "bg-success/10 text-success"
+                          : indicator.icon_name === "star"
+                            ? "bg-warning/10 text-warning-foreground"
+                            : "bg-primary/10 text-primary";
+
+                        return (
+                          <div key={indicator.id} className={`flex items-center gap-2 ${bgColor} px-4 py-2 rounded-full`}>
+                            {IndicatorIcon ? (
+                              <IndicatorIcon className="w-4 h-4" aria-hidden="true" />
+                            ) : null}
+                            <span className="text-sm font-medium">{indicator.text}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+
+                  {/* Quick Points */}
+                  {pageData.hero?.quick_points && pageData.hero.quick_points.length > 0 ? (
                     <div className="bg-card/50 backdrop-blur rounded-xl p-4 border">
                       <div className="grid grid-cols-2 gap-2">
-                        {secondarySection.services.slice(0, 4).map((item) => {
-                          const Icon = getIcon(item.icon_name);
-                          return (
-                            <div key={item.id} className="flex items-center gap-2 text-xs">
-                              <Icon className="w-3 h-3 text-success flex-shrink-0" />
-                              <span>{item.text}</span>
-                            </div>
-                          );
-                        })}
+                        {pageData.hero.quick_points.map((point: any) => (
+                          <div key={point.id || point.text} className="flex items-center gap-2 text-xs">
+                            <CheckCircle className="w-3 h-3 text-success flex-shrink-0" aria-hidden="true" />
+                            <span>{point.text}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  )}
+                  ) : null}
                 </motion.div>
 
                 <motion.div
@@ -141,8 +173,8 @@ const EnclosedTransport = () => {
             </div>
           </section>
 
-          {/* What is Enclosed Transport - Moved from hero */}
-          {secondarySection && (
+          {/* What is Enclosed Transport */}
+          {pageData.textSection ? (
             <section className="py-16 md:py-20 bg-muted/30">
               <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
@@ -153,40 +185,34 @@ const EnclosedTransport = () => {
                     transition={{ duration: 0.5 }}
                     className="bg-card rounded-2xl p-8 border border-border shadow-lg"
                   >
-                    <h2 className="text-2xl font-bold mb-4">
-                      {secondarySection.hero_title || "What is Enclosed Auto Transport?"}
-                    </h2>
-                    {secondarySection.description ? (
-                      <p className="text-muted-foreground mb-4">
-                        {secondarySection.description}
-                      </p>
+                    {pageData.textSection.section_title ? (
+                      <h2 className="text-2xl font-bold mb-4">{pageData.textSection.section_title}</h2>
                     ) : null}
-                    {secondarySection.secondary_description ? (
-                      <p className="text-muted-foreground mb-4">
-                        {secondarySection.secondary_description}
-                      </p>
-                    ) : null}
-                    {secondarySection.services && secondarySection.services.length > 0 && (
+                    <div className="text-muted-foreground mb-4">
+                      {parsedParagraphs.map((paragraph: string, index: number) => (
+                        <p key={index} className={index < parsedParagraphs.length - 1 ? "mb-4" : ""}>
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+                    {pageData.textSection.bullet_points && pageData.textSection.bullet_points.length > 0 ? (
                       <div className="grid sm:grid-cols-2 gap-3 mt-6">
-                        {secondarySection.services.map((item) => {
-                          const Icon = getIcon(item.icon_name);
-                          return (
-                            <div key={item.id} className="flex items-start gap-3">
-                              <Icon className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                              <span>{item.text}</span>
-                            </div>
-                          );
-                        })}
+                        {pageData.textSection.bullet_points.map((point: any) => (
+                          <div key={point.id || point.text} className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
+                            <span>{point.text}</span>
+                          </div>
+                        ))}
                       </div>
-                    )}
+                    ) : null}
                   </motion.div>
                 </div>
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Ideal For Section */}
-          {vehicleTypes.length > 0 && (
+          {pageData.vehicleTypes ? (
             <section className="py-16 md:py-24 bg-primary">
               <div className="container mx-auto px-4">
                 <motion.div
@@ -196,40 +222,41 @@ const EnclosedTransport = () => {
                   transition={{ duration: 0.5 }}
                   className="text-center mb-12"
                 >
-                  <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-                    {page.service_cards?.[0]?.hero_title ?? "Ideal For Special Vehicles"}
-                  </h2>
-                  {page.service_cards?.[0]?.description ? (
+                  {pageData.vehicleTypes.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+                      {pageData.vehicleTypes.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.vehicleTypes.section_subtitle ? (
                     <p className="text-lg text-primary-foreground/80 max-w-2xl mx-auto">
-                      {page.service_cards[0].description}
+                      {pageData.vehicleTypes.section_subtitle}
                     </p>
                   ) : null}
                 </motion.div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-                  {vehicleTypes.map((item, index) => {
-                    const Icon = getIcon(item.icon_name);
-                    return (
+                {pageData.vehicleTypes.vehicle_types && pageData.vehicleTypes.vehicle_types.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                    {pageData.vehicleTypes.vehicle_types.map((type: any, index: number) => (
                       <motion.div
-                        key={item.id}
+                        key={type.id || type.name}
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: index * 0.1 }}
                         className="bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-4 text-center"
                       >
-                        <Icon className="w-6 h-6 text-primary-foreground mx-auto mb-2" />
-                        <span className="text-primary-foreground font-medium">{item.text}</span>
+                        <Car className="w-6 h-6 text-primary-foreground mx-auto mb-2" aria-hidden="true" />
+                        <span className="text-primary-foreground font-medium">{type.name}</span>
                       </motion.div>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Features Grid */}
-          {features.length > 0 && (
+          {pageData.serviceCards ? (
             <section className="py-16 md:py-24">
               <div className="container mx-auto px-4">
                 <motion.div
@@ -239,45 +266,52 @@ const EnclosedTransport = () => {
                   transition={{ duration: 0.5 }}
                   className="text-center mb-12"
                 >
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    {page.process_cards?.[0]?.hero_title ?? "Enclosed Car Hauler Services"}
-                  </h2>
-                  {page.process_cards?.[0]?.description ? (
+                  {pageData.serviceCards.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.serviceCards.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.serviceCards.section_subtitle ? (
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                      {page.process_cards[0].description}
+                      {pageData.serviceCards.section_subtitle}
                     </p>
                   ) : null}
                 </motion.div>
 
-                <div className="grid md:grid-cols-2 gap-8">
-                  {features.map((feature, index) => {
-                    const Icon = getIcon(feature.icon_name);
-                    return (
-                      <motion.div
-                        key={feature.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                        className="bg-card p-6 rounded-2xl border border-border"
-                      >
-                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                          <Icon className="w-6 h-6 text-primary" />
-                        </div>
-                        <h3 className="text-xl font-semibold mb-2">{feature.text}</h3>
-                        {feature.description ? (
+                {pageData.serviceCards.service_cards && pageData.serviceCards.service_cards.length > 0 ? (
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {pageData.serviceCards.service_cards.map((feature: any, index: number) => {
+                      const FeatureIcon = feature.icon_name
+                        ? (getIcon(feature.icon_name) as LucideIcon)
+                        : null;
+
+                      return (
+                        <motion.div
+                          key={feature.id || feature.title}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          className="bg-card p-6 rounded-2xl border border-border"
+                        >
+                          {FeatureIcon ? (
+                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                              <FeatureIcon className="w-6 h-6 text-primary" aria-hidden="true" />
+                            </div>
+                          ) : null}
+                          <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                           <p className="text-muted-foreground">{feature.description}</p>
-                        ) : null}
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Comparison Section */}
-          {solutions && (
+          {pageData.comparison ? (
             <section className="py-16 md:py-24 bg-muted/30">
               <div className="container mx-auto px-4">
                 <motion.div
@@ -287,109 +321,78 @@ const EnclosedTransport = () => {
                   transition={{ duration: 0.5 }}
                   className="text-center mb-12"
                 >
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    {solutions.title}
-                  </h2>
-                  {solutions.sub_title ? (
+                  {pageData.comparison.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.comparison.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.comparison.section_subtitle ? (
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                      {solutions.sub_title}
+                      {pageData.comparison.section_subtitle}
                     </p>
                   ) : null}
                 </motion.div>
 
-                {solutions.services && solutions.services.length >= 2 && (
+                {pageData.comparison.columns && pageData.comparison.columns.length > 0 ? (
                   <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5 }}
-                      className="bg-card p-6 rounded-2xl border-2 border-primary shadow-lg"
-                    >
-                      <div className="flex items-center gap-3 mb-6">
-                        {(() => {
-                          const EnclosedIcon = getIcon(solutions.services[0].icon_name);
-                          return (
-                            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                              <EnclosedIcon className="w-5 h-5 text-primary-foreground" />
-                            </div>
-                          );
-                        })()}
-                        <h3 className="text-xl font-bold">{solutions.services[0].title}</h3>
-                      </div>
-                      <ul className="space-y-3">
-                        <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                          <span>Full protection from elements</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                          <span>Reduces risk of exterior damage</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                          <span>Security against theft</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                          <span>Premium handling & care</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" />
-                          <span>2-3 vehicles per carrier</span>
-                        </li>
-                      </ul>
-                    </motion.div>
+                    {pageData.comparison.columns.map((column: any, index: number) => {
+                      const ColumnIcon = column.icon_name
+                        ? (getIcon(column.icon_name) as LucideIcon)
+                        : null;
 
-                    <motion.div
-                      initial={{ opacity: 0, x: 20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5 }}
-                      className="bg-card p-6 rounded-2xl border border-border"
-                    >
-                      <div className="flex items-center gap-3 mb-6">
-                        {(() => {
-                          const OpenIcon = getIcon(solutions.services[1].icon_name);
-                          return (
-                            <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center">
-                              <OpenIcon className="w-5 h-5 text-muted-foreground" />
-                            </div>
-                          );
-                        })()}
-                        <h3 className="text-xl font-bold">{solutions.services[1].title}</h3>
-                      </div>
-                      <ul className="space-y-3">
-                        <li className="flex items-start gap-3 text-muted-foreground">
-                          <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center mt-0.5 flex-shrink-0 text-xs">•</span>
-                          <span>No protection from debris</span>
-                        </li>
-                        <li className="flex items-start gap-3 text-muted-foreground">
-                          <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center mt-0.5 flex-shrink-0 text-xs">•</span>
-                          <span>Exposed to weather</span>
-                        </li>
-                        <li className="flex items-start gap-3 text-muted-foreground">
-                          <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center mt-0.5 flex-shrink-0 text-xs">•</span>
-                          <span>Less security</span>
-                        </li>
-                        <li className="flex items-start gap-3 text-muted-foreground">
-                          <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center mt-0.5 flex-shrink-0 text-xs">•</span>
-                          <span>Standard handling</span>
-                        </li>
-                        <li className="flex items-start gap-3 text-muted-foreground">
-                          <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center mt-0.5 flex-shrink-0 text-xs">•</span>
-                          <span>8-10 vehicles per carrier</span>
-                        </li>
-                      </ul>
-                    </motion.div>
+                      // Use bullet_points if available, otherwise use features
+                      const items = column.bullet_points && column.bullet_points.length > 0
+                        ? column.bullet_points
+                        : column.features && column.features.length > 0
+                          ? column.features
+                          : [];
+
+                      return (
+                        <motion.div
+                          key={column.id || column.column_title}
+                          initial={{ opacity: 0, x: index === 0 ? -20 : 20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.5 }}
+                          className={`bg-card p-6 rounded-2xl ${column.is_highlighted ? "border-2 border-primary shadow-lg" : "border border-border"}`}
+                        >
+                          <div className="flex items-center gap-3 mb-6">
+                            {ColumnIcon ? (
+                              <div className={`w-10 h-10 ${column.is_highlighted ? "bg-primary" : "bg-muted"} rounded-xl flex items-center justify-center`}>
+                                <ColumnIcon className={`w-5 h-5 ${column.is_highlighted ? "text-primary-foreground" : "text-muted-foreground"}`} aria-hidden="true" />
+                              </div>
+                            ) : null}
+                            <h3 className="text-xl font-bold">{column.column_title}</h3>
+                          </div>
+                          {items.length > 0 ? (
+                            <ul className="space-y-3">
+                              {items.map((item: any, itemIndex: number) => {
+                                const isPositive = column.is_highlighted || (item.is_positive !== null ? item.is_positive : true);
+
+                                return (
+                                  <li key={item.id || itemIndex} className={`flex items-start gap-3 ${!isPositive ? "text-muted-foreground" : ""}`}>
+                                    {isPositive ? (
+                                      <CheckCircle className="w-5 h-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
+                                    ) : (
+                                      <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center mt-0.5 flex-shrink-0 text-xs">•</span>
+                                    )}
+                                    <span>{item.text}</span>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : null}
+                        </motion.div>
+                      );
+                    })}
                   </div>
-                )}
+                ) : null}
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Trailer Types */}
-          {trailerTypes.length > 0 && (
+          {pageData.trailerTypes ? (
             <section className="py-16 md:py-24">
               <div className="container mx-auto px-4">
                 <motion.div
@@ -399,22 +402,23 @@ const EnclosedTransport = () => {
                   transition={{ duration: 0.5 }}
                   className="text-center mb-12"
                 >
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    {page.trailer_options?.hero_title || "Trailer Options"}
-                  </h2>
-                  {page.trailer_options?.description ? (
+                  {pageData.trailerTypes.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.trailerTypes.section_title}
+                    </h2>
+                  ) : null}
+                  {pageData.trailerTypes.section_subtitle ? (
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                      {page.trailer_options.description}
+                      {pageData.trailerTypes.section_subtitle}
                     </p>
                   ) : null}
                 </motion.div>
 
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {trailerTypes.map((trailer, index) => {
-                    const Icon = getIcon(trailer.icon_name);
-                    return (
+                {pageData.trailerTypes.trailer_types && pageData.trailerTypes.trailer_types.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {pageData.trailerTypes.trailer_types.map((trailer: any, index: number) => (
                       <motion.div
-                        key={trailer.id}
+                        key={trailer.id || trailer.type}
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -422,25 +426,21 @@ const EnclosedTransport = () => {
                         className="bg-card p-6 rounded-2xl border border-border text-center"
                       >
                         <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                          <Icon className="w-6 h-6 text-primary" />
+                          <Car className="w-6 h-6 text-primary" aria-hidden="true" />
                         </div>
-                        <h3 className="font-semibold mb-2">{String(trailer.label)}</h3>
-                        {trailer.value ? (
-                          <div className="text-primary font-bold mb-2">{trailer.value}</div>
-                        ) : null}
-                        {trailer.descrption ? (
-                          <p className="text-sm text-muted-foreground">{trailer.descrption}</p>
-                        ) : null}
+                        <h3 className="font-semibold mb-2">{trailer.type}</h3>
+                        <div className="text-primary font-bold mb-2">{trailer.capacity}</div>
+                        <p className="text-sm text-muted-foreground">{trailer.description}</p>
                       </motion.div>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Testimonials */}
-          {testimonials.length > 0 && (
+          {pageData.testimonials ? (
             <section className="py-16 md:py-24 bg-secondary/50">
               <div className="container mx-auto px-4">
                 <motion.div
@@ -450,50 +450,56 @@ const EnclosedTransport = () => {
                   transition={{ duration: 0.5 }}
                   className="text-center mb-12"
                 >
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    {page.service_card?.title || "A Trusted Car Shipping Company"}
-                  </h2>
+                  {pageData.testimonials.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.testimonials.section_title}
+                    </h2>
+                  ) : null}
                 </motion.div>
 
-                <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                  {testimonials.map((testimonial, index) => (
-                    <motion.div
-                      key={testimonial.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="bg-card p-6 rounded-2xl border border-border"
-                    >
-                      <div className="flex gap-1 mb-4">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-5 h-5 fill-warning text-warning" />
-                        ))}
-                      </div>
-                      <h3 className="text-lg font-semibold mb-3">{testimonial.label}</h3>
-                      {testimonial.descrption ? (
-                        <p className="text-muted-foreground text-sm">{testimonial.descrption}</p>
-                      ) : null}
-                    </motion.div>
-                  ))}
-                </div>
+                {pageData.testimonials.testimonials && pageData.testimonials.testimonials.length > 0 ? (
+                  <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    {pageData.testimonials.testimonials.map((testimonial: any, index: number) => (
+                      <motion.div
+                        key={testimonial.id || index}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        className="bg-card p-6 rounded-2xl border border-border"
+                      >
+                        <div className="flex gap-1 mb-4">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-5 h-5 fill-warning text-warning" aria-hidden="true" />
+                          ))}
+                        </div>
+                        {testimonial.title ? (
+                          <h3 className="text-lg font-semibold mb-3">{testimonial.title}</h3>
+                        ) : null}
+                        {testimonial.quote_text ? (
+                          <p className="text-muted-foreground text-sm">{testimonial.quote_text}</p>
+                        ) : null}
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : null}
 
-                {stats && stats.length > 0 && (
+                {pageData.testimonials.ratings && pageData.testimonials.ratings.length > 0 ? (
                   <div className="flex justify-center gap-8 mt-12">
-                    {stats.map((stat, index) => (
-                      <div key={index} className="text-center">
-                        <div className="text-2xl font-bold text-foreground mb-1">{stat.value}</div>
-                        <div className="text-sm text-muted-foreground">{String(stat.title)}</div>
+                    {pageData.testimonials.ratings.map((rating: any) => (
+                      <div key={rating.id || rating.score} className="text-center">
+                        <div className="text-2xl font-bold text-foreground mb-1">{rating.score}</div>
+                        <div className="text-sm text-muted-foreground">{rating.label}</div>
                       </div>
                     ))}
                   </div>
-                )}
+                ) : null}
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* FAQs */}
-          {faqs.length > 0 && (
+          {pageData.faq ? (
             <section className="py-16 md:py-24">
               <div className="container mx-auto px-4">
                 <motion.div
@@ -503,37 +509,36 @@ const EnclosedTransport = () => {
                   transition={{ duration: 0.5 }}
                   className="text-center mb-12"
                 >
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    {page.faqs?.title || "Frequently Asked Questions"}
-                  </h2>
-                  {page.faqs?.sub_title ? (
-                    <p className="text-muted-foreground max-w-2xl mx-auto">
-                      {page.faqs.sub_title}
-                    </p>
+                  {pageData.faq.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.faq.section_title}
+                    </h2>
                   ) : null}
                 </motion.div>
 
-                <div className="max-w-3xl mx-auto space-y-6">
-                  {faqs.map((faq, index) => (
-                    <motion.div
-                      key={faq.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="bg-card p-6 rounded-xl border border-border"
-                    >
-                      <h3 className="text-lg font-semibold mb-3">{faq.questions}</h3>
-                      <p className="text-muted-foreground">{faq.answer}</p>
-                    </motion.div>
-                  ))}
-                </div>
+                {pageData.faq.faq_items && pageData.faq.faq_items.length > 0 ? (
+                  <div className="max-w-3xl mx-auto space-y-6">
+                    {pageData.faq.faq_items.map((faq: any, index: number) => (
+                      <motion.div
+                        key={faq.id || index}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        className="bg-card p-6 rounded-xl border border-border"
+                      >
+                        <h3 className="text-lg font-semibold mb-3">{faq.question}</h3>
+                        <p className="text-muted-foreground">{faq.answer}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* CTA */}
-          {page.cta && (
+          {pageData.cta ? (
             <section className="py-16 md:py-24 bg-primary">
               <div className="container mx-auto px-4 text-center">
                 <motion.div
@@ -543,29 +548,42 @@ const EnclosedTransport = () => {
                   transition={{ duration: 0.5 }}
                 >
                   <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-                    {page.cta.title}
+                    {pageData.cta.headline || "How much will my enclosed auto shipping cost?"}
                   </h2>
-                  {page.cta.description ? (
+                  {pageData.cta.description ? (
                     <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-                      {page.cta.description}
+                      {pageData.cta.description}
                     </p>
                   ) : null}
-                  {page.cta.primary_button_text && page.cta.primary_button_link ? (
+                  {pageData.cta.primary_button ? (
                     <Button
                       variant="secondary"
                       size="xl"
-                      onClick={() => window.location.href = page.cta.primary_button_link || "/#quote-form"}
+                      onClick={() => {
+                        if (pageData.cta.primary_button?.button_link) {
+                          window.location.href = pageData.cta.primary_button.button_link;
+                        } else {
+                          window.location.href = "/#quote-form";
+                        }
+                      }}
                     >
-                      {page.cta.primary_button_text}
-                      <ArrowRight className="w-5 h-5" />
+                      {pageData.cta.primary_button.button_text || "Get Your Free Quote"}
+                      {pageData.cta.primary_button.icon_name ? (
+                        (() => {
+                          const ButtonIcon = getIcon(pageData.cta.primary_button.icon_name) as LucideIcon;
+                          return <ButtonIcon className="w-5 h-5 ml-2" aria-hidden="true" />;
+                        })()
+                      ) : (
+                        <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
+                      )}
                     </Button>
                   ) : null}
                 </motion.div>
               </div>
             </section>
-          )}
+          ) : null}
         </main>
-        
+
         <Footer />
       </div>
     </>

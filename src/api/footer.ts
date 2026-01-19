@@ -1,12 +1,24 @@
-import axios from "axios";
-import { FooterResponse } from "@/types/footer.types";
+import { useQuery } from "@tanstack/react-query";
+import type { FooterResponse } from "@/types/Footer.types";
 
-const baseUrl = import.meta.env.VITE_API_URL;
+const STRAPI_API_URL = import.meta.env.VITE_STRAPI_API_URL || "http://localhost:1337";
 
-export const getFooter = async (): Promise<FooterResponse> => {
-    const res = await axios.get(
-        `${baseUrl}/api/footer?populate[footerNavigationGroup][populate]=*&populate[footerLinkGroups][populate]=*&populate[bottomLinks]=*`
+const fetchFooter = async (): Promise<FooterResponse> => {
+    const response = await fetch(
+        `${STRAPI_API_URL}/api/footer?populate[social_links][populate]=*&populate[link_groups][populate][links][populate]=*&populate[seo_link_groups][populate][links][populate]=*&populate[bottom_links][populate]=*`
     );
 
-    return res.data;
+    if (!response.ok) {
+        throw new Error(`Failed to fetch footer: ${response.statusText}`);
+    }
+
+    return response.json();
 };
+
+export const useFooter = () =>
+    useQuery({
+        queryKey: ["footer"],
+        queryFn: fetchFooter,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        refetchOnWindowFocus: false,
+    });

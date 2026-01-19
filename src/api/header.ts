@@ -1,16 +1,22 @@
-import { apiClient } from "@/lib/axios";
-import { HeaderResponse } from "@/types/header.types";
+import { useQuery } from "@tanstack/react-query";
+import type { HeaderResponse } from "@/types/Header.types";
 
-const ENDPOINT = "/api/global?populate[header][populate][navLinks][populate]=*";
+const STRAPI_API_URL = import.meta.env.VITE_STRAPI_API_URL || "http://localhost:1337";
 
-export const getHeader = async (): Promise<HeaderResponse> => {
-    try {
-        const { data } = await apiClient.get<HeaderResponse>(
-            ENDPOINT
-        );
-        return data;
-    } catch (error) {
-        console.error("Failed to fetch header:", error);
-        throw new Error("Unable to load header data.");
-    }
+const fetchHeader = async (): Promise<HeaderResponse> => {
+  const response = await fetch(`${STRAPI_API_URL}/api/header?populate=*`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch header: ${response.statusText}`);
+  }
+  
+  return response.json();
 };
+
+export const useHeader = () =>
+  useQuery({
+    queryKey: ["header"],
+    queryFn: fetchHeader,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
+  });

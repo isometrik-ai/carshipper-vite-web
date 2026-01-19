@@ -1,98 +1,93 @@
-import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
-import { motion } from "framer-motion";
-import {
-  Truck,
-  Shield,
-  Clock,
-  CheckCircle,
-  Factory,
-  BarChart,
-  Zap,
-  Phone,
-  Star,
-  Award,
-  MapPin,
-  DollarSign,
-  FileText,
-  Route,
-  Weight,
-  AlertTriangle,
-  MessageSquare,
-  BarChart3,
-  ArrowRight,
-} from "lucide-react";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { LoadingState } from "@/components/landing/LoadingState";
+import { useOEMTransport } from "@/api/oemTransport";
+import { getIcon } from "@/lib/icons";
+import { Factory, CheckCircle, Phone } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import type { HeroSection, StatsBar, FAQDisplay, CallToAction } from "@/types/LandingPage.types";
+import type { FeatureListSection } from "@/types/AboutPage.types";
+import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
 
-import { useOEMTransport } from "@/hooks/api/useOEMTransport";
-
-const ICONS: Record<string, any> = {
-  Truck,
-  Shield,
-  Clock,
-  FileText,
-  Route,
-  Weight,
-  CheckCircle,
-  Phone,
-  AlertTriangle,
-  Factory,
-  MessageSquare,
-  MapPin,
-  BarChart3,
-  BarChart,
-  Zap,
-  Award,
-  DollarSign,
-  Star,
-  ArrowRight,
-};
-
-const getIcon = (name?: string | null): React.ComponentType<any> => {
-  if (!name) return CheckCircle;
-  return ICONS[name] || CheckCircle;
-};
-
-const getChipColorClasses = (index: number) => {
-  const colors = [
-    "bg-success/10 text-success", // First chip - green
-    "bg-primary/10 text-primary", // Second chip - blue
-    "bg-warning/10 text-warning-foreground", // Third chip - yellow/gold
-  ];
-  return colors[index % colors.length] || "bg-primary/10 text-primary";
-};
-
+/**
+ * OEM Transport page component
+ * 
+ * Fetches page content from Strapi CMS and renders sections with exact original layout.
+ * All content is managed through Strapi, including SEO metadata and page sections.
+ */
 const OEMTransport = () => {
-  const { data: page, isLoading } = useOEMTransport();
+  const { data, isLoading } = useOEMTransport();
 
-  if (isLoading || !page) return null;
+  // Extract components from page content
+  const pageData = useMemo(() => {
+    if (!data?.data?.page_content) return null;
 
-  const capabilities = page.secondary_section?.services ?? [];
-  const stats = page.stats?.stats ?? [];
-  const benefits = page.service_cards?.[0]?.services ?? [];
-  const features = page.process_cards?.[0]?.services ?? [];
-  const faqs = page.faqs?.FAQS ?? [];
-  const badges = page.services ?? [];
+    const content = data.data.page_content;
+    const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
+    const capabilitiesSection = content.find(c => c.__component === "shared.feature-list-section") as FeatureListSection | undefined;
+    const statsBar = content.find(c => c.__component === "shared.stats-bar") as StatsBar | undefined;
+    const benefitsSection = content.find(c => c.__component === "shared.service-cards" && (c as ServiceCards).section_title === "Why Manufacturers Choose Us") as ServiceCards | undefined;
+    const featuresSection = content.find(c => c.__component === "shared.service-cards" && (c as ServiceCards).section_title === "OEM-Grade Transport Standards") as ServiceCards | undefined;
+    const faqDisplay = content.find(c => c.__component === "shared.faq-display") as FAQDisplay | undefined;
+    const cta = content.find(c => c.__component === "shared.call-to-action") as CallToAction | undefined;
 
-  const PageIcon = getIcon(page.page_icon);
+    return {
+      hero: heroSection,
+      capabilities: capabilitiesSection,
+      stats: statsBar,
+      benefits: benefitsSection,
+      features: featuresSection,
+      faq: faqDisplay,
+      cta,
+    };
+  }, [data]);
+
+  // Show loading state while fetching initial data
+  if (isLoading && !data) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <LoadingState />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <>
+        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-20" role="main" aria-label="Main content">
+            <div className="container mx-auto px-4 py-12 text-center">
+              <p className="text-muted-foreground">No content available.</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <Helmet>
-        <title>
-          {page.title} {page.title_highlight}
-        </title>
-        {page.description ? (
-          <meta name="description" content={page.description} />
-        ) : null}
-      </Helmet>
+      <PageSEO seoMetadata={data?.data?.seo_metadata} />
 
       <div className="min-h-screen flex flex-col">
         <Header />
-
+        
         <main className="flex-1 pt-20">
           {/* Hero Section with Quote Form */}
           <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background">
@@ -103,37 +98,58 @@ const OEMTransport = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  {page.page_tagline ? (
-                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-                      <PageIcon className="w-4 h-4" />
-                      <span>{page.page_tagline}</span>
-                    </div>
+                  {pageData.hero?.tagline ? (
+                    <span className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+                      {pageData.hero.tagline_icon ? (
+                        (() => {
+                          const TaglineIcon = getIcon(pageData.hero.tagline_icon) as LucideIcon;
+                          return <TaglineIcon className="w-4 h-4" aria-hidden="true" />;
+                        })()
+                      ) : (
+                        <Factory className="w-4 h-4" aria-hidden="true" />
+                      )}
+                      {pageData.hero.tagline}
+                    </span>
                   ) : null}
-
+                  
                   <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                    {page.title} <span className="text-primary">{page.title_highlight}</span>
+                    {pageData.hero?.main_headline || "OEM"}{" "}
+                    {pageData.hero?.highlighted_text ? (
+                      <span className="text-primary">{pageData.hero.highlighted_text}</span>
+                    ) : null}
                   </h1>
-
-                  {page.description ? (
+                  
+                  {pageData.hero?.description ? (
                     <p className="text-lg text-muted-foreground mb-6">
-                      {page.description}
+                      {pageData.hero.description}
                     </p>
                   ) : null}
 
-                  {badges.length > 0 && (
+                  {pageData.hero?.trust_indicators && pageData.hero.trust_indicators.length > 0 ? (
                     <div className="flex flex-wrap gap-4 mb-8">
-                      {badges.map((badge, index) => {
-                        const Icon = getIcon(badge.icon_name);
-                        const colorClasses = getChipColorClasses(index);
+                      {pageData.hero.trust_indicators.map((indicator) => {
+                        const IndicatorIcon = indicator.icon_name
+                          ? (getIcon(indicator.icon_name) as LucideIcon)
+                          : null;
+                        const bgColor = indicator.icon_name === "shield" 
+                          ? "bg-success/10 text-success"
+                          : indicator.icon_name === "clock"
+                          ? "bg-primary/10 text-primary"
+                          : indicator.icon_name === "star"
+                          ? "bg-warning/10 text-warning-foreground"
+                          : "bg-primary/10 text-primary";
+                        
                         return (
-                          <div key={badge.id} className={`flex items-center gap-2 ${colorClasses} px-4 py-2 rounded-full`}>
-                            <Icon className="w-4 h-4" />
-                            <span className="text-sm font-medium">{badge.label}</span>
+                          <div key={indicator.id} className={`flex items-center gap-2 ${bgColor} px-4 py-2 rounded-full`}>
+                            {IndicatorIcon ? (
+                              <IndicatorIcon className="w-4 h-4" aria-hidden="true" />
+                            ) : null}
+                            <span className="text-sm font-medium">{indicator.text}</span>
                           </div>
                         );
                       })}
                     </div>
-                  )}
+                  ) : null}
                 </motion.div>
 
                 <motion.div
@@ -148,7 +164,7 @@ const OEMTransport = () => {
           </section>
 
           {/* Capabilities List */}
-          {capabilities.length > 0 && (
+          {pageData.capabilities ? (
             <section className="py-16 bg-muted/30">
               <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
@@ -159,34 +175,33 @@ const OEMTransport = () => {
                     transition={{ duration: 0.5 }}
                     className="bg-card rounded-2xl p-8 border border-border shadow-lg"
                   >
-                    <h2 className="text-2xl font-bold mb-6 text-center">
-                      {page.secondary_section?.hero_title ?? "Finished Vehicle Logistics Capabilities"}
-                    </h2>
-                    <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-                      {capabilities.map((capability) => {
-                        const Icon = getIcon(capability.icon_name);
-                        return (
-                          <div key={capability.id} className="flex items-center gap-2 text-sm">
-                            <Icon className="w-4 h-4 text-primary flex-shrink-0" />
-                            <span>{capability.text}</span>
+                    {pageData.capabilities.section_title ? (
+                      <h2 className="text-2xl font-bold mb-6 text-center">{pageData.capabilities.section_title}</h2>
+                    ) : null}
+                    {pageData.capabilities.bullet_points && pageData.capabilities.bullet_points.length > 0 ? (
+                      <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        {pageData.capabilities.bullet_points.map((point: any) => (
+                          <div key={point.id || point.text} className="flex items-center gap-2 text-sm">
+                            <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+                            <span>{point.text}</span>
                           </div>
-                        );
-                      })}
-                    </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </motion.div>
                 </div>
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Stats Section */}
-          {stats.length > 0 && (
+          {pageData.stats && pageData.stats.statistics && pageData.stats.statistics.length > 0 ? (
             <section className="py-16">
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                  {stats.map((stat, index) => (
+                  {pageData.stats.statistics.map((stat: any, index: number) => (
                     <motion.div
-                      key={String(stat.label)}
+                      key={stat.id || stat.label}
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -194,129 +209,140 @@ const OEMTransport = () => {
                       className="text-center"
                     >
                       <div className="text-3xl md:text-4xl font-bold text-primary mb-2">{stat.value}</div>
-                      <div className="text-sm text-muted-foreground">{String(stat.label)}</div>
+                      <div className="text-sm text-muted-foreground">{stat.label}</div>
                     </motion.div>
                   ))}
                 </div>
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Benefits Section */}
-          {benefits.length > 0 && (
+          {pageData.benefits ? (
             <section className="py-20 bg-muted/30">
               <div className="container mx-auto px-4">
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    {page.service_cards?.[0]?.hero_title ?? "Why Manufacturers Choose Us"}
-                  </h2>
-                  {page.service_cards?.[0]?.description ? (
-                    <p className="text-muted-foreground max-w-2xl mx-auto">
-                      {page.service_cards[0].description}
-                    </p>
+                  {pageData.benefits.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.benefits.section_title}
+                    </h2>
                   ) : null}
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {benefits.map((benefit, index) => {
-                    const Icon = getIcon(benefit.icon_name);
-                    return (
-                      <motion.div
-                        key={benefit.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                        viewport={{ once: true }}
-                        className="bg-card rounded-xl p-6 shadow-lg border text-center"
-                      >
-                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Icon className="w-8 h-8 text-primary" />
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2">{benefit.text}</h3>
-                        <p className="text-muted-foreground text-sm">{benefit.description}</p>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                {pageData.benefits.service_cards && pageData.benefits.service_cards.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {pageData.benefits.service_cards.map((benefit: any, index: number) => {
+                      const BenefitIcon = benefit.icon_name
+                        ? (getIcon(benefit.icon_name) as LucideIcon)
+                        : null;
+
+                      return (
+                        <motion.div
+                          key={benefit.id || benefit.title}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          viewport={{ once: true }}
+                          className="bg-card rounded-xl p-6 shadow-lg border text-center"
+                        >
+                          {BenefitIcon ? (
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <BenefitIcon className="w-8 h-8 text-primary" aria-hidden="true" />
+                            </div>
+                          ) : null}
+                          <h3 className="text-lg font-semibold mb-2">{benefit.title}</h3>
+                          <p className="text-muted-foreground text-sm">{benefit.description}</p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Features Section */}
-          {features.length > 0 && (
+          {pageData.features ? (
             <section className="py-20">
               <div className="container mx-auto px-4">
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    {page.process_cards?.[0]?.hero_title ?? "OEM-Grade Transport Standards"}
-                  </h2>
-                  {page.process_cards?.[0]?.description ? (
-                    <p className="text-muted-foreground max-w-2xl mx-auto">
-                      {page.process_cards[0].description}
-                    </p>
+                  {pageData.features.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.features.section_title}
+                    </h2>
                   ) : null}
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {features.map((feature, index) => {
-                    const Icon = getIcon(feature.icon_name);
-                    return (
-                      <motion.div
-                        key={feature.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                        viewport={{ once: true }}
-                        className="text-center"
-                      >
-                        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                          <Icon className="w-8 h-8 text-primary" />
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2">{feature.text}</h3>
-                        <p className="text-muted-foreground text-sm">{feature.description}</p>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                {pageData.features.service_cards && pageData.features.service_cards.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {pageData.features.service_cards.map((feature: any, index: number) => {
+                      const FeatureIcon = feature.icon_name
+                        ? (getIcon(feature.icon_name) as LucideIcon)
+                        : null;
+
+                      return (
+                        <motion.div
+                          key={feature.id || feature.title}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          viewport={{ once: true }}
+                          className="text-center"
+                        >
+                          {FeatureIcon ? (
+                            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                              <FeatureIcon className="w-8 h-8 text-primary" aria-hidden="true" />
+                            </div>
+                          ) : null}
+                          <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                          <p className="text-muted-foreground text-sm">{feature.description}</p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* FAQ Section */}
-          {faqs.length > 0 && (
+          {pageData.faq ? (
             <section className="py-20 bg-muted/30">
               <div className="container mx-auto px-4">
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    {page.faqs?.title ?? "Frequently Asked Questions"}
-                  </h2>
-                  {page.faqs?.sub_title ? (
-                    <p className="text-muted-foreground max-w-2xl mx-auto">
-                      {page.faqs.sub_title}
-                    </p>
+                  {pageData.faq.section_title ? (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                      {pageData.faq.section_title}
+                    </h2>
                   ) : null}
                 </div>
 
-                <div className="max-w-3xl mx-auto">
-                  <Accordion type="single" collapsible className="space-y-4">
-                    {faqs.map((faq, index) => (
-                      <AccordionItem key={faq.id} value={`item-${index}`} className="bg-card rounded-lg border px-6">
-                        <AccordionTrigger className="text-left hover:no-underline">
-                          {faq.questions}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">
-                          {faq.answer}
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
+                {pageData.faq.faq_items && pageData.faq.faq_items.length > 0 ? (
+                  <div className="max-w-3xl mx-auto">
+                    <Accordion type="single" collapsible className="space-y-4">
+                      {pageData.faq.faq_items.map((faq: any, index: number) => (
+                        <AccordionItem
+                          key={faq.id || index}
+                          value={`item-${index}`}
+                          className="bg-card rounded-lg border px-6"
+                        >
+                          <AccordionTrigger className="text-left hover:no-underline">
+                            {faq.question}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-muted-foreground">
+                            {faq.answer}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </div>
+                ) : null}
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* CTA Section */}
-          {page.cta && (
+          {pageData.cta ? (
             <section className="py-20 bg-primary">
               <div className="container mx-auto px-4 text-center">
                 <motion.div
@@ -326,35 +352,50 @@ const OEMTransport = () => {
                   transition={{ duration: 0.5 }}
                 >
                   <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-                    {page.cta.title}
+                    {pageData.cta.headline || "Partner With Us for OEM Logistics"}
                   </h2>
-                  <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-                    {page.cta.description}
-                  </p>
+                  {pageData.cta.description ? (
+                    <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+                      {pageData.cta.description.trim()}
+                    </p>
+                  ) : null}
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    {page.cta.primary_button_link ? (
+                    {pageData.cta.primary_button ? (
                       <Button
                         variant="secondary"
                         size="lg"
-                        onClick={() => (window.location.href = page.cta.primary_button_link || "/quote")}
+                        onClick={() => {
+                          if (pageData.cta.primary_button?.button_link) {
+                            window.location.href = pageData.cta.primary_button.button_link;
+                          } else {
+                            window.location.href = "/quote";
+                          }
+                        }}
                       >
-                        {page.cta.primary_button_text}
+                        {pageData.cta.primary_button.button_text || "Get OEM Quote"}
                       </Button>
                     ) : null}
-                    {page.cta.show_phone && page.cta.secondary_button_link ? (
+                    {pageData.cta.secondary_button ? (
                       <a
-                        href={page.cta.secondary_button_link}
+                        href={pageData.cta.secondary_button.button_link || "tel:+18885551234"}
                         className="flex items-center gap-2 text-primary-foreground hover:underline"
                       >
-                        <Phone className="w-5 h-5" />
-                        <span className="font-medium">{page.cta.secondary_button_text}</span>
+                        {pageData.cta.secondary_button.icon_name ? (
+                          (() => {
+                            const PhoneIcon = getIcon(pageData.cta.secondary_button.icon_name) as LucideIcon;
+                            return <PhoneIcon className="w-5 h-5" aria-hidden="true" />;
+                          })()
+                        ) : (
+                          <Phone className="w-5 h-5" aria-hidden="true" />
+                        )}
+                        <span className="font-medium">{pageData.cta.secondary_button.button_text || "(888) 555-1234"}</span>
                       </a>
                     ) : null}
                   </div>
                 </motion.div>
               </div>
             </section>
-          )}
+          ) : null}
         </main>
         
         <Footer />

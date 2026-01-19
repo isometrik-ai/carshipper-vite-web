@@ -1,62 +1,39 @@
-import {
-  ServiceCard,
-  ProcessCard,
-  TrailerOptions,
-  FaqSection,
-  CTASection,
-  StatsBlock,
-  TableData,
-  SecondarySection,
-  GenericServiceItem,
-} from "./common.types";
-import { StrapiResponseWrapper } from "./api.types";
+import type { SeoMetadata } from "./LandingPage.types";
 
-export interface SolutionsItem {
-  id: number;
-  icon_name: string | null;
-  title: string;
-  description: string;
-}
+/**
+ * Re-export types from LandingPage for reuse
+ */
+export type {
+  HeroSection,
+  ProcessSection,
+  CallToAction,
+} from "./LandingPage.types";
 
-export interface SolutionsBlock {
-  id: number;
-  title: string;
-  sub_title: string;
-  services: SolutionsItem[];
-}
+/**
+ * Fleet Transport Page Content Component Types
+ */
+export type FleetTransportContentComponent =
+  | import("./LandingPage.types").HeroSection
+  | import("./LandingPage.types").ProcessSection
+  | import("./LandingPage.types").CallToAction;
 
+/**
+ * Fleet Transport Page Data Structure
+ */
 export interface FleetTransportData {
   id: number;
-  page_icon: string;
-  title: string;
-  title_highlight: string;
-  description: string;
-  page_tagline: string;
-
-  service_cards: ServiceCard[];
-
-  service_card: null;
-
-  process_cards: ProcessCard[];
-
-  trailer_options: TrailerOptions;
-
-  faqs: FaqSection | null;
-
-  cta: CTASection | null;
-
-  stats: StatsBlock | null;
-
-  solutions: SolutionsBlock | null;
-
-  secondary_section: SecondarySection & {
-    services: GenericServiceItem[];
-  };
-
-  compliance: any | null;
-
-  table_data: TableData | null;
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  seo_metadata: SeoMetadata;
+  page_content: FleetTransportContentComponent[];
 }
 
-export interface FleetTransportResponse
-  extends StrapiResponseWrapper<FleetTransportData> { }
+/**
+ * Fleet Transport Page API Response
+ */
+export interface FleetTransportResponse {
+  data: FleetTransportData;
+  meta: Record<string, unknown>;
+}

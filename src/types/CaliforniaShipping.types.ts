@@ -1,48 +1,93 @@
+import type { SeoMetadata } from "./LandingPage.types";
+
 /**
- * California Shipping Types
- * Re-exports common types and defines California-specific types
+ * Route Item Component
+ * Individual route in a route table
  */
-
-import {
-  StatItem,
-  ServiceCard,
-  ProcessCard,
-  TrailerOptions,
-  FaqSection,
-  CTASection,
-  StatsBlock,
-  TableData,
-} from "./common.types";
-
-// Re-export common types for backward compatibility
-export type {
-  StatItem,
-  ServiceCard,
-  ProcessCard,
-  TrailerOptions,
-  FaqSection,
-  CTASection,
-  StatsBlock,
-  TableData,
-};
-
-export interface CaliforniaShippingData {
+export interface RouteItem {
   id: number;
-  page_icon: string;
-  title: string;
-  title_highlight: string;
-  description: string;
-  page_tagline: string;
-  service_cards: ServiceCard[];
-  process_cards: ProcessCard[];
-  trailer_options: TrailerOptions;
-  faqs: FaqSection;
-  cta: CTASection;
-  stats: StatsBlock;
-  table_data: TableData;
+  from: string;
+  to: string;
+  distance: string;
+  time: string;
+  cost: string;
+  transit_days: string | null;
 }
 
-import { StrapiResponseWrapper } from "./api.types";
+/**
+ * Route Table Component
+ * Table displaying shipping routes with pricing
+ */
+export interface RouteTable {
+  __component: "shared.route-table";
+  id: number;
+  section_title: string | null;
+  section_description: string | null;
+  routes: RouteItem[];
+}
 
-export interface CaliforniaShippingResponse
-  extends StrapiResponseWrapper<CaliforniaShippingData> { }
+/**
+ * City Link Component
+ * Individual city link item
+ */
+export interface CityLink {
+  id: number;
+  city_name: string;
+  link: string;
+}
+
+/**
+ * City Links Component
+ * Section with links to city pages
+ */
+export interface CityLinks {
+  __component: "shared.city-links";
+  id: number;
+  section_title: string | null;
+  section_description: string | null;
+  cities: CityLink[];
+}
+
+/**
+ * Re-export types from LandingPage for reuse
+ */
+export type {
+  HeroSection,
+  StatsBar,
+  ProcessSection,
+  FAQDisplay,
+  CallToAction,
+} from "./LandingPage.types";
+
+/**
+ * California Shipping Page Content Component Types
+ */
+export type CaliforniaShippingContentComponent =
+  | import("./LandingPage.types").HeroSection
+  | import("./LandingPage.types").StatsBar
+  | import("./LandingPage.types").ProcessSection
+  | RouteTable
+  | CityLinks
+  | import("./LandingPage.types").FAQDisplay
+  | import("./LandingPage.types").CallToAction;
+
+/**
+ * California Shipping Page Data Structure
+ */
+export interface CaliforniaShippingData {
+  id: number;
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  seo_metadata: SeoMetadata;
+  page_content: CaliforniaShippingContentComponent[];
+}
+
+/**
+ * California Shipping Page API Response
+ */
+export interface CaliforniaShippingResponse {
+  data: CaliforniaShippingData;
+  meta: Record<string, unknown>;
+}
