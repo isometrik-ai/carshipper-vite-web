@@ -4,13 +4,12 @@ export interface ChatWidgetData {
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
-  welcome_message: string;
-  reply_message: string;
-  modal_icon: string;
-  modal_close_icon: string;
-  modal_title: string;
-  modal_description: string;
-  input_placehoder: string; // Note: keeping typo to match existing Strapi field
+  widget_title: string;
+  widget_subtitle: string;
+  initial_message: string;
+  placeholder_text: string;
+  auto_response: string;
+  phone_number: string | null;
 }
 
 export interface ChatWidgetResponse {
