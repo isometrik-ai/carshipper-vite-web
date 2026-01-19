@@ -10,6 +10,7 @@ import { VehicleSelector, Vehicle, getVehicleDisplayName, isVehicleComplete } fr
 import { useQuoteForm } from "@/api/quoteForm";
 import { getIcon } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
+import { PageSkeleton } from "./ui/page-skeleton";
 
 interface QuoteFormProps {
   defaultOrigin?: string;
@@ -64,14 +65,14 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
     if (!data?.data?.form_config?.vehicle_data || data.data.form_config.vehicle_data.length === 0) {
       return undefined; // Will use fallback in VehicleSelector
     }
-    
+
     const vehicleDataMap: Record<string, string[]> = {};
     data.data.form_config.vehicle_data.forEach((make) => {
       if (make.make_name && make.models && make.models.length > 0) {
         vehicleDataMap[make.make_name] = make.models.map((model) => model.model_name);
       }
     });
-    
+
     return vehicleDataMap;
   }, [data]);
 
@@ -191,7 +192,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
 
   const handleSubmit = async () => {
     if (!canProceed()) return;
-    
+
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
 
@@ -212,16 +213,9 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   // Show loading state if config is loading
   if (isConfigLoading && !data) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="bg-card rounded-2xl shadow-2xl p-6 md:p-8 overflow-hidden"
-      >
-        <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      </motion.div>
+      <div className="flex-1" role="main" aria-label="Main content">
+        <PageSkeleton />
+      </div>
     );
   }
 
@@ -249,7 +243,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           </span>
         </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden">
-          <motion.div 
+          <motion.div
             className="h-full bg-primary rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
@@ -331,12 +325,12 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
             <div className="space-y-6">
               {vehicles.map((vehicle, index) => {
                 const runningQuestion = currentStepConfig?.running_question_text || "Is it running?";
-                const runningOptions = formConfig.runningStatusOptions.length > 0 
-                  ? formConfig.runningStatusOptions 
+                const runningOptions = formConfig.runningStatusOptions.length > 0
+                  ? formConfig.runningStatusOptions
                   : [
-                      { id: 1, value: true, label: "Running", icon_name: "checkCircle" },
-                      { id: 2, value: false, label: "Not Running", icon_name: "x" },
-                    ];
+                    { id: 1, value: true, label: "Running", icon_name: "checkCircle" },
+                    { id: 2, value: false, label: "Not Running", icon_name: "x" },
+                  ];
 
                 return (
                   <div key={vehicle.id} className="p-4 bg-muted/50 rounded-lg">
@@ -348,7 +342,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                         const isSelected = vehicle.isRunning === option.value;
                         const isRunning = option.value === true;
                         const IconComponent = getIcon(option.icon_name) as LucideIcon;
-                        
+
                         return (
                           <button
                             key={option.id || option.label}
@@ -424,7 +418,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
               {currentStepConfig?.step_title || `Delivery Location${dropLocations.length > 1 ? 's' : ''}`}
             </h2>
             <p className="text-muted-foreground text-center mb-6">
-              {vehicles.length > 1 
+              {vehicles.length > 1
                 ? (currentStepConfig?.dynamic_description || "Add multiple delivery locations if vehicles go to different places")
                 : (currentStepConfig?.step_description || "Enter where you want your vehicle delivered")}
             </p>
@@ -435,7 +429,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                   <div className="flex gap-3 items-start">
                     <div className="flex-1">
                       <Label className="text-sm font-medium">
-                        {dropLocations.length > 1 
+                        {dropLocations.length > 1
                           ? formConfig.deliveryLocationLabelMultiple.replace("{index}", (index + 1).toString())
                           : formConfig.deliveryLocationLabelSingle}
                       </Label>
@@ -461,7 +455,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                       </Button>
                     ) : null}
                   </div>
-                  
+
                   {vehicles.length > 1 && dropLocations.length > 1 ? (
                     <div className="mt-3">
                       <Label className="text-xs text-muted-foreground">
@@ -525,7 +519,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
               {formConfig.transportTypeOptions.map((option) => {
                 const isSelected = transportType === option.value;
                 const IconComponent = getIcon(option.icon_name) as LucideIcon;
-                
+
                 return (
                   <button
                     key={option.id || option.value}
@@ -533,7 +527,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                     onClick={() => setTransportType(option.value as "open" | "enclosed")}
                     className={`p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-3
                       ${isSelected
-                        ? 'border-primary bg-primary/5' 
+                        ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-muted-foreground'}`}
                   >
                     <div className={`w-16 h-16 rounded-lg flex items-center justify-center
@@ -573,8 +567,8 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                   <label
                     key={option.id || option.value}
                     className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all
-                      ${timeframe === option.value 
-                        ? 'border-primary bg-primary/5' 
+                      ${timeframe === option.value
+                        ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-muted-foreground'}`}
                   >
                     <RadioGroupItem value={option.value} className="mr-4" />
@@ -648,7 +642,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
             {formConfig.buttonTexts.back_button}
           </Button>
         ) : null}
-        
+
         {currentStep === "contact" ? (
           <Button
             type="button"
