@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Truck } from "lucide-react";
+import { Truck, Phone } from "lucide-react";
 import type { CallToAction } from "@/types/LandingPage.types";
 
 interface FinalCTAProps {
@@ -46,19 +46,45 @@ const FinalCTA = ({ data }: FinalCTAProps) => {
             </p>
           ) : null}
 
-          {ctaData.primaryButton ? (
-            ctaData.primaryButton.button_link ? (
-              <Button variant="secondary" size="lg" className="text-lg px-8" asChild>
-                <a href={ctaData.primaryButton.button_link}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {ctaData.primaryButton ? (
+              ctaData.primaryButton.button_link ? (
+                <Button variant="secondary" size="lg" className="text-lg px-8" asChild>
+                  <a href={ctaData.primaryButton.button_link}>
+                    {ctaData.primaryButton.button_text}
+                  </a>
+                </Button>
+              ) : (
+                <Button variant="secondary" size="lg" className="text-lg px-8">
                   {ctaData.primaryButton.button_text}
+                </Button>
+              )
+            ) : null}
+            {ctaData.secondaryButton ? (
+              ctaData.secondaryButton.button_link ? (
+                <a
+                  href={ctaData.secondaryButton.button_link}
+                  className="flex items-center gap-2 text-primary-foreground hover:text-primary-foreground/80"
+                >
+                  <Phone className="w-5 h-5" />
+                  <span className="font-medium">{ctaData.secondaryButton.button_text}</span>
                 </a>
-              </Button>
-            ) : (
-              <Button variant="secondary" size="lg" className="text-lg px-8">
-                {ctaData.primaryButton.button_text}
-              </Button>
-            )
-          ) : null}
+              ) : (
+                <div className="flex items-center gap-2 text-primary-foreground">
+                  <Phone className="w-5 h-5" />
+                  <span className="font-medium">{ctaData.secondaryButton.button_text}</span>
+                </div>
+              )
+            ) : ctaData.phoneNumber ? (
+              <a
+                href={ctaData.phoneHref || `tel:${ctaData.phoneNumber.replace(/\D/g, '')}`}
+                className="flex items-center gap-2 text-primary-foreground hover:text-primary-foreground/80"
+              >
+                <Phone className="w-5 h-5" />
+                <span className="font-medium">{ctaData.phoneNumber}</span>
+              </a>
+            ) : null}
+          </div>
         </motion.div>
       </div>
     </section>

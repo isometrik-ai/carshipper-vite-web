@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { HeavyHaulingResponse } from "@/types/HeavyHauling.types";
 
-const STRAPI_API_URL = import.meta.env.VITE_STRAPI_API_URL || "http://localhost:1337";
+const STRAPI_API_URL = import.meta.env.VITE_API_URL || "http://localhost:1337";
 
 /**
  * Fetches Heavy Hauling page data from Strapi with full population
