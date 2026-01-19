@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageSEO } from "@/components/seo/PageSEO";
-import { LoadingState } from "@/components/landing/LoadingState";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useBlogPage } from "@/api/blog";
 import { getStrapiMediaUrl } from "@/lib/strapi";
 import { Search, Calendar, Clock, ArrowRight, Tag } from "lucide-react";
@@ -123,7 +123,7 @@ const Blog = () => {
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1" role="main" aria-label="Main content">
-            <LoadingState />
+            <PageSkeleton />
           </main>
           <Footer />
         </div>

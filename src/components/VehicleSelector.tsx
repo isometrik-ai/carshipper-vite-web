@@ -47,7 +47,7 @@ interface VehicleSelectorProps {
   showRemove: boolean;
   onUpdate: (updates: Partial<Vehicle>) => void;
   onRemove: () => void;
-  vehicleFieldConfig?: VehicleFieldConfig;
+  vehicleFieldConfig?: VehicleFieldConfig
   vehicleData?: Record<string, string[]>;
 }
 
@@ -148,15 +148,15 @@ export const VehicleSelector = ({
     }
   };
 
-  const selectedMakeModel = vehicle.make && vehicle.model 
-    ? `${vehicle.make}|${vehicle.model}` 
+  const selectedMakeModel = vehicle.make && vehicle.model
+    ? `${vehicle.make}|${vehicle.model}`
     : "";
 
   const displayValue = vehicle.year && vehicle.make && vehicle.model
     ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
     : vehicle.make && vehicle.model
-    ? `${vehicle.make} ${vehicle.model}`
-    : "";
+      ? `${vehicle.make} ${vehicle.model}`
+      : "";
 
   return (
     <div className="p-4 bg-muted/50 rounded-lg">

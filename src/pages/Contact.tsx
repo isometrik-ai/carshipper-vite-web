@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO } from "@/components/seo/PageSEO";
-import { LoadingState } from "@/components/landing/LoadingState";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useContact } from "@/api/contact";
 import { getIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
@@ -73,7 +73,7 @@ const Contact = () => {
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 pt-20" role="main" aria-label="Main content">
-            <LoadingState />
+            <PageSkeleton />
           </main>
           <Footer />
         </div>
@@ -104,7 +104,7 @@ const Contact = () => {
 
       <div className="min-h-screen flex flex-col">
         <Header />
-        
+
         <main className="flex-1 pt-20" role="main" aria-label="Contact page main content">
           {/* Hero Section - Contains the ONLY H1 on the page */}
           <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background" aria-labelledby="contact-hero-heading">
@@ -300,7 +300,7 @@ const Contact = () => {
             </section>
           ) : null}
         </main>
-        
+
         <Footer />
       </div>
     </>

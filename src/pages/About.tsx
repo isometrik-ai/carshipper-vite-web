@@ -5,7 +5,7 @@ import { CheckCircle, Truck } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO } from "@/components/seo/PageSEO";
-import { LoadingState } from "@/components/landing/LoadingState";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useAboutPage } from "@/api/about";
 import { getIcon } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
@@ -57,7 +57,7 @@ const About = () => {
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1" role="main" aria-label="Main content">
-            <LoadingState />
+            <PageSkeleton />
           </main>
           <Footer />
         </div>

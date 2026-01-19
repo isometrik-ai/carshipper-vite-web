@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
 import { PageSEO } from "@/components/seo/PageSEO";
-import { LoadingState } from "@/components/landing/LoadingState";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useLosAngelesShipping } from "@/api/losAngelesShipping";
 import { getIcon } from "@/lib/icons";
 import { MapPin, Phone, Building2, CheckCircle } from "lucide-react";
@@ -67,7 +67,7 @@ const LosAngelesShipping = () => {
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 pt-20" role="main" aria-label="Main content">
-            <LoadingState />
+            <PageSkeleton />
           </main>
           <Footer />
         </div>

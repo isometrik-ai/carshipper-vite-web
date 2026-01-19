@@ -52,7 +52,8 @@ export interface BottomLink {
 /* --------------------------------------------- */
 
 export interface FooterData {
-    id: number;
+    [x: string]: any;
+    id: string;
 
     brandName: string;
     brandAccent: string;
