@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
 import { PageSEO } from "@/components/seo/PageSEO";
-import { LoadingState } from "@/components/landing/LoadingState";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useFleetTransport } from "@/api/fleetTransport";
 import { getIcon } from "@/lib/icons";
 import { Car, CheckCircle, Phone, ArrowRight } from "lucide-react";
@@ -49,7 +49,7 @@ const FleetTransport = () => {
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 pt-20" role="main" aria-label="Main content">
-            <LoadingState />
+            <PageSkeleton />
           </main>
           <Footer />
         </div>

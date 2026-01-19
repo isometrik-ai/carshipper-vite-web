@@ -12,7 +12,7 @@ import type { LucideIcon } from "lucide-react";
 import { useHowItWorks } from "@/api/howItWorks";
 import { useMemo } from "react";
 import { PageSEO } from "@/components/seo/PageSEO";
-import { LoadingState } from "@/components/landing/LoadingState";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 
 const HowItWorksPage = () => {
 
@@ -32,7 +32,7 @@ const HowItWorksPage = () => {
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1" role="main" aria-label="Main content">
-            <LoadingState />
+            <PageSkeleton />
           </main>
           <Footer />
         </div>

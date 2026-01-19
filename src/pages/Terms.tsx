@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO } from "@/components/seo/PageSEO";
-import { LoadingState } from "@/components/landing/LoadingState";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useTerms } from "@/api/terms";
 import type { PrivacySection } from "@/types/Privacy.types";
 
@@ -123,7 +123,7 @@ const Terms = () => {
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 pt-20" role="main" aria-label="Main content">
-            <LoadingState />
+            <PageSkeleton />
           </main>
           <Footer />
         </div>

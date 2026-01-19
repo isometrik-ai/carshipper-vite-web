@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuoteForm from "@/components/QuoteForm";
 import { PageSEO } from "@/components/seo/PageSEO";
-import { LoadingState } from "@/components/landing/LoadingState";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useFlatbedTransport } from "@/api/flatbedTransport";
 import { getIcon } from "@/lib/icons";
 import { Truck, CheckCircle, DollarSign, HelpCircle } from "lucide-react";
@@ -72,7 +72,7 @@ const FlatbedTransport = () => {
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 pt-20" role="main" aria-label="Main content">
-            <LoadingState />
+            <PageSkeleton />
           </main>
           <Footer />
         </div>
