@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DealershipDeliveryResponse } from "@/types/DealershipDelivery.types";
 
-const STRAPI_API_URL = import.meta.env.VITE_STRAPI_API_URL || "http://localhost:1337";
+const STRAPI_API_URL = import.meta.env.VITE_API_URL || "http://localhost:1337";
 
 /**
  * Fetches Dealership Delivery page data from Strapi with full population
