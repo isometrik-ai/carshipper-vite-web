@@ -80,9 +80,9 @@ const FAQSection = ({ data }: FAQSectionProps) => {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="text-center mt-12 bg-muted rounded-2xl p-8"
           >
-            <h3 className="text-2xl font-bold text-foreground mb-4">
+            <p className="text-2xl font-bold text-foreground mb-4">
               {sectionData.contactCta.title}
-            </h3>
+            </p>
             {sectionData.contactCta.description ? (
               <p className="text-muted-foreground mb-6">
                 {sectionData.contactCta.description}

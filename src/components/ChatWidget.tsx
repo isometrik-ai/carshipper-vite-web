@@ -3,7 +3,7 @@ import * as LucideIcons from "lucide-react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { useChatWidget } from "@/hooks/api";
+import { useChatWidget } from "@/api/chatWidget";
 import type { LucideIcon } from "lucide-react";
 
 // Helper to resolve dynamic icons from Lucide
@@ -18,15 +18,18 @@ const ChatWidget = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
 
+  // Extract chat widget data from API response
+  const chatData = data?.data;
+
   // Initialize messages with welcome message when data is loaded
   useEffect(() => {
-    if (data && messages.length === 0) {
-      setMessages([{ text: data.welcome_message, isUser: false }]);
+    if (chatData && messages.length === 0) {
+      setMessages([{ text: chatData.welcome_message, isUser: false }]);
     }
-  }, [data, messages.length]);
+  }, [chatData, messages.length]);
 
   const handleSend = () => {
-    if (!message.trim() || !data) return;
+    if (!message.trim() || !chatData) return;
 
     setMessages((prev) => [...prev, { text: message, isUser: true }]);
     setMessage("");
@@ -35,17 +38,17 @@ const ChatWidget = () => {
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        { text: data.reply_message, isUser: false },
+        { text: chatData.reply_message, isUser: false },
       ]);
     }, 1000);
   };
 
-  if (isLoading || !data) {
+  if (isLoading || !chatData) {
     return null; // Don't render widget while loading
   }
 
-  const ModalIcon = getIcon(data.modal_icon);
-  const CloseIcon = getIcon(data.modal_close_icon);
+  const ModalIcon = getIcon(chatData.modal_icon);
+  const CloseIcon = getIcon(chatData.modal_close_icon);
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -65,8 +68,8 @@ const ChatWidget = () => {
                   <ModalIcon className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-primary-foreground">{data.modal_title}</h3>
-                  <p className="text-xs text-primary-foreground/70">{data.modal_description}</p>
+                  <h3 className="font-semibold text-primary-foreground">{chatData.modal_title}</h3>
+                  <p className="text-xs text-primary-foreground/70">{chatData.modal_description}</p>
                 </div>
               </div>
               <button
@@ -104,7 +107,7 @@ const ChatWidget = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  placeholder={data.input_placehoder}
+                  placeholder={chatData.input_placehoder}
                   className="flex-1 bg-muted rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <Button

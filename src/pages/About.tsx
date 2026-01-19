@@ -89,9 +89,9 @@ const About = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
 
-        <main className="flex-1 pt-20">
-          {/* Hero Section */}
-          <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background">
+        <main className="flex-1 pt-20" role="main" aria-label="About page main content">
+          {/* Hero Section - Contains the ONLY H1 on the page */}
+          <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background" aria-labelledby="about-hero-heading">
             <div className="container mx-auto px-4">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -99,7 +99,7 @@ const About = () => {
                 transition={{ duration: 0.5 }}
                 className="max-w-3xl mx-auto text-center"
               >
-                <h1 className="text-4xl md:text-5xl font-bold mb-6">
+                <h1 id="about-hero-heading" className="text-4xl md:text-5xl font-bold mb-6">
                   {pageData.hero?.main_headline || "Shipping Cars with"}{" "}
                   {pageData.hero?.highlighted_text ? (
                     <span className="text-primary">{pageData.hero.highlighted_text}</span>
@@ -112,11 +112,11 @@ const About = () => {
             </div>
           </section>
 
-          {/* Stats Section */}
+          {/* Stats Section - No headings, just statistics */}
           {pageData.stats.length > 0 ? (
-            <section className="py-12 bg-primary">
+            <section className="py-12 bg-primary" aria-label="Statistics">
               <div className="container mx-auto px-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8" role="list">
                   {pageData.stats.map((stat: any, index: number) => (
                     <motion.div
                       key={stat.id || stat.label}
@@ -124,8 +124,9 @@ const About = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className="text-center"
+                      role="listitem"
                     >
-                      <div className="text-3xl md:text-4xl font-bold text-primary-foreground mb-2">
+                      <div className="text-3xl md:text-4xl font-bold text-primary-foreground mb-2" aria-label={`${stat.value} ${stat.label}`}>
                         {stat.value}
                       </div>
                       <div className="text-primary-foreground/80">{stat.label}</div>
@@ -136,9 +137,9 @@ const About = () => {
             </section>
           ) : null}
 
-          {/* Our Story */}
+          {/* Our Story Section */}
           {pageData.text ? (
-            <section className="py-16 md:py-24">
+            <section className="py-16 md:py-24" aria-labelledby="our-story-heading">
               <div className="container mx-auto px-4">
                 <div className="max-w-3xl mx-auto">
                   <motion.div
@@ -148,7 +149,7 @@ const About = () => {
                     transition={{ duration: 0.5 }}
                   >
                     {pageData.text.section_title ? (
-                      <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center">
+                      <h2 id="our-story-heading" className="text-3xl md:text-4xl font-bold mb-6 text-center">
                         {pageData.text.section_title}
                       </h2>
                     ) : null}
@@ -165,11 +166,12 @@ const About = () => {
             </section>
           ) : null}
 
-          {/* Values */}
+          {/* Values Section */}
           {pageData.values ? (
-            <section className="py-16 md:py-24 bg-muted/30">
+            <section className="py-16 md:py-24 bg-muted/30" aria-labelledby="our-values-heading">
               <div className="container mx-auto px-4">
                 <motion.h2
+                  id="our-values-heading"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -179,24 +181,25 @@ const About = () => {
                   {pageData.values.section_title || "Our Values"}
                 </motion.h2>
                 {pageData.values.steps && pageData.values.steps.length > 0 ? (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8" role="list" aria-label="Company values">
                     {pageData.values.steps.map((value: any, index: number) => {
                       const ValueIcon = getIcon(value.icon_name) as LucideIcon;
                       return (
-                        <motion.div
+                        <motion.article
                           key={value.id || value.title}
                           initial={{ opacity: 0, y: 20 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
                           transition={{ duration: 0.5, delay: index * 0.1 }}
                           className="bg-card p-6 rounded-2xl border border-border"
+                          role="listitem"
                         >
-                          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4" aria-hidden="true">
                             <ValueIcon className="w-6 h-6 text-primary" />
                           </div>
                           <h3 className="text-xl font-semibold mb-2">{value.title}</h3>
                           <p className="text-muted-foreground">{value.description}</p>
-                        </motion.div>
+                        </motion.article>
                       );
                     })}
                   </div>
@@ -205,9 +208,9 @@ const About = () => {
             </section>
           ) : null}
 
-          {/* Why 30 Minutes */}
+          {/* Why 30 Minutes Section */}
           {pageData.why30Minutes ? (
-            <section className="py-16 md:py-24">
+            <section className="py-16 md:py-24" aria-labelledby="why-30-minutes-heading">
               <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
                   <motion.div
@@ -218,7 +221,7 @@ const About = () => {
                     className="bg-secondary/50 rounded-3xl p-8 md:p-12"
                   >
                     {pageData.why30Minutes.section_title ? (
-                      <h2 className="text-2xl md:text-3xl font-bold mb-6">
+                      <h2 id="why-30-minutes-heading" className="text-2xl md:text-3xl font-bold mb-6">
                         {pageData.why30Minutes.section_title}
                       </h2>
                     ) : null}
@@ -248,9 +251,9 @@ const About = () => {
             </section>
           ) : null}
 
-          {/* CTA */}
+          {/* CTA Section */}
           {pageData.cta ? (
-            <section className="py-16 md:py-24 bg-primary">
+            <section className="py-16 md:py-24 bg-primary" aria-labelledby="cta-heading">
               <div className="container mx-auto px-4 text-center">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -258,10 +261,10 @@ const About = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
                 >
-                  <div className="w-16 h-16 bg-primary-foreground/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <div className="w-16 h-16 bg-primary-foreground/20 rounded-2xl flex items-center justify-center mx-auto mb-6" aria-hidden="true">
                     <Truck className="w-8 h-8 text-primary-foreground" />
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+                  <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
                     {pageData.cta.headline || "Ready to Ship Your Car?"}
                   </h2>
                   {pageData.cta.description ? (
