@@ -18,6 +18,7 @@ import type {
     FAQDisplay,
     CallToAction,
 } from "@/types/LandingPage.types";
+import ProcessStepsSection from "@/components/sections/ProcessStepsSection";
 
 /**
  * Type guard to check if component matches a specific type
@@ -47,7 +48,8 @@ const renderComponent = (component: PageContentComponent, index: number): JSX.El
 
         case "shared.process-section":
             // HowItWorks uses H2 for section title - correct
-            return <HowItWorks key={key} data={component as ProcessSection} />;
+            // return <HowItWorks key={key} data={component as ProcessSection} />;
+            return <ProcessStepsSection key={key} sectionTitle={component.section_title} sectionSubtitle={component.section_subtitle} steps={component.steps} ctaButton={component.cta_button} />;
 
         case "shared.comparison-section":
             // WhyChooseUs uses H2 for section title - correct

@@ -2,9 +2,10 @@ import type { SeoMetadata } from "./LandingPage.types";
 
 /**
  * Contact Method Component
- * Individual contact method item
+ * Individual contact method item (each shared.contact-methods component is a single method)
  */
 export interface ContactMethod {
+  __component?: "shared.contact-methods";
   id: number;
   icon_name: string | null;
   title: string;
@@ -14,8 +15,9 @@ export interface ContactMethod {
 }
 
 /**
- * Contact Methods Component
+ * Contact Methods Component (Legacy - kept for backward compatibility)
  * Section displaying contact methods
+ * Note: In the actual API, each shared.contact-methods is an individual component, not a wrapper
  */
 export interface ContactMethods {
   __component: "shared.contact-methods";
@@ -81,10 +83,18 @@ export type {
 } from "./LandingPage.types";
 
 /**
+ * Contact Method Component Type (for individual shared.contact-methods components)
+ */
+export interface ContactMethodComponent extends ContactMethod {
+  __component: "shared.contact-methods";
+}
+
+/**
  * Contact Page Content Component Types
  */
 export type ContactContentComponent =
   | import("./LandingPage.types").HeroSection
+  | ContactMethodComponent
   | ContactMethods
   | ContactForm
   | BusinessInfo;

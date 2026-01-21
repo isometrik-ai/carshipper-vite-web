@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO } from "@/components/seo/PageSEO";
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/accordion";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import type { FAQHero, FAQCategories, ContactCTA } from "@/types/FAQ.types";
+import type { FAQHero, FAQCategories, ContactCTA, FAQItem } from "@/types/FAQ.types";
 import type { CallToAction } from "@/types/LandingPage.types";
 
 /**
@@ -26,6 +27,7 @@ import type { CallToAction } from "@/types/LandingPage.types";
 const FAQ = () => {
   const { data, isLoading } = useFAQ();
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   // Extract components from page content
   const pageData = useMemo(() => {
@@ -49,13 +51,20 @@ const FAQ = () => {
   const filteredCategories = useMemo(() => {
     if (!pageData?.categories?.categories) return [];
 
+    // If no search query, show all categories with all FAQs
+    if (!searchQuery.trim()) {
+      return pageData.categories.categories;
+    }
+
+    // Filter categories and FAQs based on search query
+    const query = searchQuery.toLowerCase();
     return pageData.categories.categories
       .map(category => ({
         ...category,
         faqs: category.faqs?.filter(
-          (faq: any) =>
-            faq.question?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            faq.answer?.toLowerCase().includes(searchQuery.toLowerCase())
+          (faq: FAQItem) =>
+            faq.question?.toLowerCase().includes(query) ||
+            faq.answer?.toLowerCase().includes(query)
         ) || [],
       }))
       .filter(category => category.faqs.length > 0);
@@ -153,19 +162,21 @@ const FAQ = () => {
                       transition={{ duration: 0.5, delay: categoryIndex * 0.1 }}
                       className="mb-12"
                     >
-                      <h2 className="text-2xl font-bold mb-6">{category.category_title}</h2>
+                      <h2 id={`category-${category.id}`} className="text-2xl font-bold mb-6">
+                        {category.category_title}
+                      </h2>
                       {category.faqs && category.faqs.length > 0 ? (
-                        <Accordion type="single" collapsible className="space-y-4">
-                          {category.faqs.map((faq: any, index: number) => (
+                        <Accordion type="single" collapsible className="space-y-4" aria-labelledby={`category-${category.id}`}>
+                          {category.faqs.map((faq: FAQItem, index: number) => (
                             <AccordionItem
                               key={faq.id || index}
-                              value={`${category.category_title}-${index}`}
+                              value={`category-${category.id}-faq-${faq.id || index}`}
                               className="bg-card border border-border rounded-xl px-6"
                             >
                               <AccordionTrigger className="text-left font-medium hover:no-underline py-4">
                                 {faq.question}
                               </AccordionTrigger>
-                              <AccordionContent className="text-muted-foreground pb-4">
+                              <AccordionContent className="text-muted-foreground pb-4 whitespace-pre-line">
                                 {faq.answer}
                               </AccordionContent>
                             </AccordionItem>
@@ -219,10 +230,11 @@ const FAQ = () => {
                         variant="hero" 
                         size="lg" 
                         onClick={() => {
-                          if (pageData.contactCTA.primary_button?.button_link) {
-                            window.location.href = pageData.contactCTA.primary_button.button_link;
+                          const link = pageData.contactCTA.primary_button?.button_link || "/contact";
+                          if (link.startsWith("http") || link.startsWith("tel:") || link.startsWith("mailto:")) {
+                            window.location.href = link;
                           } else {
-                            window.location.href = "/contact";
+                            navigate(link);
                           }
                         }}
                       >
@@ -267,10 +279,11 @@ const FAQ = () => {
                       size="lg"
                       className="text-lg px-8"
                       onClick={() => {
-                        if (pageData.cta.primary_button?.button_link) {
-                          window.location.href = pageData.cta.primary_button.button_link;
+                        const link = pageData.cta.primary_button?.button_link || "/quote";
+                        if (link.startsWith("http") || link.startsWith("tel:") || link.startsWith("mailto:")) {
+                          window.location.href = link;
                         } else {
-                          window.location.href = "/quote";
+                          navigate(link);
                         }
                       }}
                     >
