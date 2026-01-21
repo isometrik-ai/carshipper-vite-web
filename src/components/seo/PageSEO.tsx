@@ -15,17 +15,17 @@ export const PageSEO = ({ seoMetadata }: PageSEOProps) => {
   return (
     <Helmet>
       {/* Basic Meta Tags */}
-      <title>{seo.title}</title>
+      <title>{seo.meta_title}</title>
       <meta name="description" content={seo.description} />
       {seo.keywords ? <meta name="keywords" content={seo.keywords} /> : null}
-      <link rel="canonical" href={seo.canonical} />
+      {seo.canonical ? <link rel="canonical" href={seo.canonical} /> : null}
       <meta name="robots" content={seo.robots} />
 
       {/* Open Graph */}
-      <meta property="og:title" content={seo.ogTitle} />
-      <meta property="og:description" content={seo.ogDescription} />
-      <meta property="og:type" content={seo.ogType} />
-      <meta property="og:url" content={seo.ogUrl} />
+      {seo.ogTitle ? <meta property="og:title" content={seo.ogTitle} /> : null}
+      {seo.ogDescription ? <meta property="og:description" content={seo.ogDescription} /> : null}
+      {seo.ogType ? <meta property="og:type" content={seo.ogType} /> : null}
+      {seo.ogUrl ? <meta property="og:url" content={seo.ogUrl} /> : null}
       {seo.ogImage ? <meta property="og:image" content={seo.ogImage} /> : null}
       {seo.ogImageWidth ? (
         <meta property="og:image:width" content={seo.ogImageWidth.toString()} />
@@ -38,9 +38,9 @@ export const PageSEO = ({ seoMetadata }: PageSEOProps) => {
       ) : null}
 
       {/* Twitter Card */}
-      <meta name="twitter:card" content={seo.twitterCard} />
-      <meta name="twitter:title" content={seo.twitterTitle} />
-      <meta name="twitter:description" content={seo.twitterDescription} />
+      {seo.twitterCard ? <meta name="twitter:card" content={seo.twitterCard} /> : null}
+      {seo.twitterTitle ? <meta name="twitter:title" content={seo.twitterTitle} /> : null}
+      {seo.twitterDescription ? <meta name="twitter:description" content={seo.twitterDescription} /> : null}
       {seo.twitterImage ? <meta name="twitter:image" content={seo.twitterImage} /> : null}
 
       {/* Structured Data (JSON-LD) */}
