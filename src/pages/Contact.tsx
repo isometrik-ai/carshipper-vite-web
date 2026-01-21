@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import type { LucideIcon } from "lucide-react";
 import type { HeroSection } from "@/types/LandingPage.types";
-import type { ContactMethods, ContactForm, BusinessInfo } from "@/types/Contact.types";
+import type { ContactMethod, ContactMethodComponent, ContactForm, BusinessInfo } from "@/types/Contact.types";
 
 /**
  * Contact page component
@@ -37,7 +37,8 @@ const Contact = () => {
 
     const content = data.data.page_content;
     const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
-    const contactMethods = content.find(c => c.__component === "shared.contact-methods") as ContactMethods | undefined;
+    // Get all contact-methods components (they are individual components, not nested)
+    const contactMethods = content.filter(c => c.__component === "shared.contact-methods") as ContactMethodComponent[];
     const contactForm = content.find(c => c.__component === "shared.contact-form") as ContactForm | undefined;
     const businessInfo = content.find(c => c.__component === "shared.business-info") as BusinessInfo | undefined;
 
@@ -131,11 +132,11 @@ const Contact = () => {
           </section>
 
           {/* Contact Methods Section - No section heading, just contact method cards */}
-          {pageData.contactMethods && pageData.contactMethods.methods && pageData.contactMethods.methods.length > 0 ? (
+          {pageData.contactMethods && pageData.contactMethods.length > 0 ? (
             <section className="py-12" aria-label="Contact methods">
               <div className="container mx-auto px-4">
                 <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto" role="list" aria-label="Contact methods">
-                  {pageData.contactMethods.methods.map((method, index) => {
+                  {pageData.contactMethods.map((method, index) => {
                     const MethodIcon = method.icon_name
                       ? (getIcon(method.icon_name) as LucideIcon)
                       : null;

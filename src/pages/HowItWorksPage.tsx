@@ -118,9 +118,10 @@ const HowItWorksPage = () => {
 
           {/* Steps */}
           <ProcessStepsSection
-            sectionTitle="The Complete Car Shipping Process"
-            sectionSubtitle="We've streamlined car shipping into 6 simple steps, ensuring a hassle-free experience from start to finish."
+            sectionTitle={processSection?.section_title}
+            sectionSubtitle={processSection?.section_subtitle}
             steps={processSection?.steps || []}
+            ctaButton={processSection?.cta_button}
           />
 
           {/* Comparison Section */}
