@@ -1,4 +1,23 @@
-import type { SeoMetadata } from "@/types/LandingPage.types";
+import type { SeoMetadata, PageContentComponent, FAQDisplay, FAQItem } from "@/types/LandingPage.types";
+
+/** Schema.org context URL - use without trailing slash per spec */
+const SCHEMA_CONTEXT = "https://schema.org";
+
+/**
+ * Strips HTML tags and normalizes whitespace for schema.org plain-text fields
+ */
+const stripHtml = (text: string): string => {
+    if (!text || typeof text !== "string") return "";
+    return text
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .trim();
+};
 
 /**
  * Default SEO values used as fallbacks when Strapi data is not available
@@ -15,6 +34,20 @@ export const DEFAULT_SEO = {
     twitterCard: "summary_large_image",
     twitterTitle: "CarShippers.ai | Instant Car Shipping Quotes",
     twitterDescription: "Get an instant car shipping quote in 30 seconds. Licensed carriers, door-to-door service, no hidden fees.",
+} as const;
+
+/**
+ * Company information for structured data (production: set logo, real phone, alternateName)
+ */
+export const COMPANY_INFO = {
+    name: "Carshippers AI",
+    alternateName: "",
+    url: "https://carshippers.ai",
+    logo: "", // Production: set absolute logo URL e.g. https://carshippers.ai/logo.png
+    telephone: "8885551234", // Production: use E.164 e.g. +18885551234
+    contactType: "customer service",
+    areaServed: ["US"],
+    availableLanguage: "en",
 } as const;
 
 /**
@@ -85,4 +118,172 @@ export const extractSeoMetadata = (seoData: SeoMetadata | null | undefined) => {
         robots: seoData.robots || "index, follow",
         structuredData: seoData.structured_data || null,
     };
+};
+
+/**
+ * Extracts FAQ items from page content (production-ready)
+ * - Handles faq-display and faq-categories
+ * - Strips HTML for schema.org plain-text requirement
+ * - Deduplicates by normalized question (per Google guidelines)
+ * - Filters out invalid items (empty question/answer)
+ */
+export const extractFAQItems = (pageContent: PageContentComponent[] | null | undefined): FAQItem[] => {
+    if (!pageContent?.length) return [];
+
+    const seen = new Set<string>();
+    const faqItems: FAQItem[] = [];
+
+    const addIfValid = (item: FAQItem) => {
+        const question = stripHtml(item.question || "");
+        const answer = stripHtml(item.answer || "");
+        if (!question || !answer) return;
+        const key = question.toLowerCase().slice(0, 200);
+        if (seen.has(key)) return;
+        seen.add(key);
+        faqItems.push({ ...item, question, answer });
+    };
+
+    const faqDisplay = pageContent.find(
+        (c): c is FAQDisplay => c.__component === "shared.faq-display"
+    );
+    if (faqDisplay?.faq_items) {
+        faqDisplay.faq_items.forEach(addIfValid);
+    }
+
+    const faqCategories = pageContent.find(
+        (c) => c.__component === "shared.faq-categories"
+    ) as { categories?: Array<{ faqs?: FAQItem[] }> } | undefined;
+    if (faqCategories?.categories) {
+        faqCategories.categories.forEach((cat) => {
+            cat.faqs?.forEach(addIfValid);
+        });
+    }
+
+    return faqItems;
+};
+
+/**
+ * Generates Corporation schema (schema.org compliant)
+ */
+export const generateCorporationSchema = () => {
+    return {
+        "@context": SCHEMA_CONTEXT,
+        "@type": "Corporation",
+        name: COMPANY_INFO.name,
+        ...(COMPANY_INFO.alternateName && { alternateName: COMPANY_INFO.alternateName }),
+        url: COMPANY_INFO.url,
+        ...(COMPANY_INFO.logo && { logo: COMPANY_INFO.logo }),
+        contactPoint: {
+            "@type": "ContactPoint",
+            telephone: COMPANY_INFO.telephone,
+            contactType: COMPANY_INFO.contactType,
+            areaServed: COMPANY_INFO.areaServed,
+            availableLanguage: COMPANY_INFO.availableLanguage,
+        },
+    };
+};
+
+/**
+ * Generates FAQPage schema (Google FAQ rich result guidelines)
+ * Uses plain-text only; invalid/empty items filtered by extractFAQItems
+ */
+export const generateFAQPageSchema = (faqItems: FAQItem[]) => {
+    if (!faqItems?.length) return null;
+
+    return {
+        "@context": SCHEMA_CONTEXT,
+        "@type": "FAQPage",
+        mainEntity: faqItems.map((faq) => ({
+            "@type": "Question",
+            name: faq.question,
+            acceptedAnswer: {
+                "@type": "Answer",
+                text: faq.answer,
+            },
+        })),
+    };
+};
+
+/**
+ * Generates Product schema for inner pages (schema.org compliant)
+ */
+export const generateProductSchema = (
+    pageTitle: string,
+    pageDescription: string,
+    pageUrl: string,
+    imageUrl?: string | null
+) => {
+    const baseUrl = getBaseUrl();
+    const fullUrl = pageUrl.startsWith("http") ? pageUrl : `${baseUrl}${pageUrl}`;
+
+    return {
+        "@context": SCHEMA_CONTEXT,
+        "@type": "Product",
+        "@id": `${fullUrl}#product`,
+        url: fullUrl,
+        name: pageTitle,
+        description: pageDescription,
+        brand: {
+            "@type": "Brand",
+            name: COMPANY_INFO.name,
+            url: COMPANY_INFO.url,
+            ...(imageUrl && { image: imageUrl }),
+        },
+        ...(imageUrl && {
+            image: {
+                "@type": "ImageObject",
+                url: imageUrl,
+            },
+        }),
+        offers: {
+            "@type": "AggregateOffer",
+            availability: "https://schema.org/BackOrder",
+            itemCondition: "https://schema.org/NewCondition",
+            priceCurrency: "USD",
+            url: fullUrl,
+        },
+    };
+};
+
+/** JSON-LD schema object shape for type safety */
+export type JsonLdSchema = Record<string, unknown>;
+
+/**
+ * Generates all structured data schemas for a page (production-ready)
+ */
+export const generateStructuredDataSchemas = (
+    isMainPage: boolean,
+    seoMetadata: SeoMetadata | null | undefined,
+    pageContent: PageContentComponent[] | null | undefined
+): JsonLdSchema[] => {
+    const schemas: JsonLdSchema[] = [];
+    const baseUrl = getBaseUrl();
+
+    schemas.push(generateCorporationSchema() as JsonLdSchema);
+
+    if (!isMainPage && seoMetadata) {
+        const pageTitle = seoMetadata.meta_title || DEFAULT_SEO.title;
+        const pageDescription = seoMetadata.meta_description || DEFAULT_SEO.description;
+        const pageUrl =
+            seoMetadata.canonical_url ??
+            (typeof window !== "undefined" ? `${baseUrl}${window.location.pathname}` : DEFAULT_SEO.canonical);
+        const rawImage = seoMetadata.og_image?.url;
+        const imageUrl = rawImage
+            ? rawImage.startsWith("http")
+                ? rawImage
+                : `${baseUrl}${rawImage}`
+            : null;
+
+        schemas.push(
+            generateProductSchema(pageTitle, pageDescription, pageUrl, imageUrl) as JsonLdSchema
+        );
+    }
+
+    const faqItems = extractFAQItems(pageContent);
+    const faqSchema = generateFAQPageSchema(faqItems);
+    if (faqSchema) {
+        schemas.push(faqSchema as JsonLdSchema);
+    }
+
+    return schemas;
 };

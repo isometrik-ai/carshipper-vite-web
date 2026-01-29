@@ -28,7 +28,7 @@ const HowItWorksPage = () => {
   if (isLoading && !data) {
     return (
       <>
-        <PageSEO seoMetadata={null} />
+        <PageSEO seoMetadata={null} pageContent={null} />
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1" role="main" aria-label="Main content">
@@ -49,7 +49,7 @@ const HowItWorksPage = () => {
 
   return (
     <>
-      <PageSEO seoMetadata={data?.data?.seo_metadata} />
+      <PageSEO seoMetadata={data?.data?.seo_metadata} pageContent={pageContent} />
 
       <div className="min-h-screen flex flex-col">
         <Header />

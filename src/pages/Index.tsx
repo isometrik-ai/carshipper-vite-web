@@ -28,7 +28,7 @@ const Index = () => {
   if (isLoading && !data) {
     return (
       <>
-        <PageSEO seoMetadata={null} />
+        <PageSEO seoMetadata={null} pageContent={null} isMainPage={true} />
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1" role="main" aria-label="Main content">
@@ -42,7 +42,11 @@ const Index = () => {
 
   return (
     <>
-      <PageSEO seoMetadata={data?.data?.seo_metadata} />
+      <PageSEO 
+        seoMetadata={data?.data?.seo_metadata} 
+        pageContent={pageContent}
+        isMainPage={true}
+      />
 
       <div className="min-h-screen flex flex-col">
         <Header />
