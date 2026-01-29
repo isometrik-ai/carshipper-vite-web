@@ -47,6 +47,11 @@ const TrackShipment = () => {
     };
   }, [data]);
 
+  // Extract page content for SEO
+  const pageContent = useMemo(() => {
+    return data?.data?.page_content || [];
+  }, [data]);
+
   const handleTrackByNumber = (e: React.FormEvent) => {
     e.preventDefault();
     if (!trackingNumber.trim()) return;

@@ -41,11 +41,16 @@ const FleetTransport = () => {
     };
   }, [data]);
 
+  // Extract page content for SEO
+  const pageContent = useMemo(() => {
+    return data?.data?.page_content || [];
+  }, [data]);
+
   // Show loading state while fetching initial data
   if (isLoading && !data) {
     return (
       <>
-        <PageSEO seoMetadata={null} />
+        <PageSEO seoMetadata={null} pageContent={null} />
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 pt-20" role="main" aria-label="Main content">
@@ -60,7 +65,7 @@ const FleetTransport = () => {
   if (!pageData) {
     return (
       <>
-        <PageSEO seoMetadata={data?.data?.seo_metadata} />
+        <PageSEO seoMetadata={data?.data?.seo_metadata} pageContent={pageContent} />
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 pt-20" role="main" aria-label="Main content">
@@ -76,7 +81,7 @@ const FleetTransport = () => {
 
   return (
     <>
-      <PageSEO seoMetadata={data?.data?.seo_metadata} />
+      <PageSEO seoMetadata={data?.data?.seo_metadata} pageContent={pageContent} />
 
       <div className="min-h-screen flex flex-col">
         <Header />
