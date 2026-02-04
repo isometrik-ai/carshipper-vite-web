@@ -27,15 +27,16 @@ import Blog from "./pages/Blog";
 import Quote from "./pages/Quote";
 import CaliforniaShipping from "./pages/CaliforniaShipping";
 import LosAngelesShipping from "./pages/LosAngelesShipping";
+import PurgeCache from "./pages/PurgeCache";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh for 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes - cache time (formerly cacheTime)
-      retry: 1, // Retry failed requests once
-      refetchOnWindowFocus: false, // Don't refetch on window focus
-      refetchOnReconnect: true, // Refetch when network reconnects
+      staleTime: 30 * 60 * 1000, // 30 minutes - data considered fresh, fewer API calls
+      gcTime: 2 * 60 * 60 * 1000, // 2 hours - keep cached data when unmounted
+      retry: 1,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
     },
   },
 });
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/quote" element={<Quote />} />
             <Route path="/california-car-shipping" element={<CaliforniaShipping />} />
             <Route path="/los-angeles-car-shipping" element={<LosAngelesShipping />} />
+            <Route path="/purge-cache" element={<PurgeCache />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
