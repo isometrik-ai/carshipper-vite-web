@@ -25,6 +25,5 @@ export const usePricing = () =>
     useQuery({
         queryKey: ["pricing"],
         queryFn: fetchPricing,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

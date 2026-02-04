@@ -25,6 +25,5 @@ export const usePrivacy = () =>
     useQuery({
         queryKey: ["privacy-policy"],
         queryFn: fetchPrivacy,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

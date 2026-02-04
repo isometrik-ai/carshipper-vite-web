@@ -25,6 +25,5 @@ export const useBlogPage = () =>
   useQuery({
     queryKey: ["blog-page"],
     queryFn: fetchBlogPage,
-    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });

@@ -25,6 +25,5 @@ export const useFAQ = () =>
     useQuery({
         queryKey: ["faq"],
         queryFn: fetchFAQ,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

@@ -25,6 +25,5 @@ export const useOpenTransport = () =>
     useQuery({
         queryKey: ["open-transport"],
         queryFn: fetchOpenTransport,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

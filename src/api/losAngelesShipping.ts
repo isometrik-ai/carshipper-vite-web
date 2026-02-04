@@ -25,6 +25,5 @@ export const useLosAngelesShipping = () =>
     useQuery({
         queryKey: ["los-angeles-car-shipping"],
         queryFn: fetchLosAngelesShipping,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

@@ -25,6 +25,5 @@ export const useHowItWorks = () =>
     useQuery({
         queryKey: ["how-it-work"],
         queryFn: fetchHowItWorks,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

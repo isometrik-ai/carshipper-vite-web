@@ -19,6 +19,5 @@ export const useQuoteForm = () =>
   useQuery({
     queryKey: ["quote-form"],
     queryFn: fetchQuoteForm,
-    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });

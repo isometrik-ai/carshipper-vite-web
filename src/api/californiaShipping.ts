@@ -25,6 +25,5 @@ export const useCaliforniaShipping = () =>
     useQuery({
         queryKey: ["california-shipping"],
         queryFn: fetchCaliforniaShipping,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

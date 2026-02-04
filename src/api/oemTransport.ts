@@ -25,6 +25,5 @@ export const useOEMTransport = () =>
     useQuery({
         queryKey: ["oem-transport"],
         queryFn: fetchOEMTransport,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

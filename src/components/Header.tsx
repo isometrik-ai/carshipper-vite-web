@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,6 +7,9 @@ import { useHeader } from "@/api/header";
 import { getIcon, DEFAULT_ICON } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
 import type { HeaderData, NavLink } from "@/types/Header.types";
+
+const isInternalLink = (href: string | null | undefined) =>
+  typeof href === "string" && href.startsWith("/") && !href.startsWith("//");
 
 // Constants
 const DEFAULT_LOGO_TEXT = "CarShippers";
@@ -31,8 +35,8 @@ interface LogoProps {
 }
 
 const Logo = ({ logoText, logoHighlight, logoIcon: LogoIcon }: LogoProps) => (
-  <a
-    href="/"
+  <Link
+    to="/"
     className="flex items-center gap-2"
     aria-label={`${logoText}${logoHighlight} - Home`}
   >
@@ -42,7 +46,7 @@ const Logo = ({ logoText, logoHighlight, logoIcon: LogoIcon }: LogoProps) => (
     <span className="text-xl font-bold text-foreground">
       {logoText}<span className="text-accent">{logoHighlight}</span>
     </span>
-  </a>
+  </Link>
 );
 
 interface NavigationProps {
@@ -59,16 +63,27 @@ const Navigation = ({ links, onLinkClick, isMobile = false }: NavigationProps) =
 
   return (
     <>
-      {displayLinks.map((link) => (
-        <a
-          key={link.id || link.href}
-          href={link.href}
-          className={baseClassName}
-          onClick={onLinkClick}
-        >
-          {link.label}
-        </a>
-      ))}
+      {displayLinks.map((link) =>
+        isInternalLink(link.href) ? (
+          <Link
+            key={link.id || link.href}
+            to={link.href}
+            className={baseClassName}
+            onClick={onLinkClick}
+          >
+            {link.label}
+          </Link>
+        ) : (
+          <a
+            key={link.id || link.href}
+            href={link.href}
+            className={baseClassName}
+            onClick={onLinkClick}
+          >
+            {link.label}
+          </a>
+        )
+      )}
     </>
   );
 };
@@ -116,7 +131,11 @@ const MobileMenu = ({
             </a>
             {ctaButtonLink ? (
               <Button variant="hero" size="lg" className="w-full" asChild>
-                <a href={ctaButtonLink}>{ctaButtonText}</a>
+                {isInternalLink(ctaButtonLink) ? (
+                  <Link to={ctaButtonLink}>{ctaButtonText}</Link>
+                ) : (
+                  <a href={ctaButtonLink}>{ctaButtonText}</a>
+                )}
               </Button>
             ) : (
               <Button variant="hero" size="lg" className="w-full">
@@ -209,7 +228,11 @@ const Header = () => {
             </a>
             {headerData.ctaButtonLink ? (
               <Button variant="hero" size="default" asChild>
-                <a href={headerData.ctaButtonLink}>{headerData.ctaButtonText}</a>
+                {isInternalLink(headerData.ctaButtonLink) ? (
+                  <Link to={headerData.ctaButtonLink}>{headerData.ctaButtonText}</Link>
+                ) : (
+                  <a href={headerData.ctaButtonLink}>{headerData.ctaButtonText}</a>
+                )}
               </Button>
             ) : (
               <Button variant="hero" size="default">
