@@ -23,8 +23,7 @@ const fetchFlatbedTransport = async (): Promise<FlatbedTransportResponse> => {
  */
 export const useFlatbedTransport = () =>
   useQuery({
-    queryKey: ["flatbed-transport"],
-    queryFn: fetchFlatbedTransport,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: false,
+queryKey: ["flatbed-transport"],
+        queryFn: fetchFlatbedTransport,
+        refetchOnWindowFocus: false,
   });

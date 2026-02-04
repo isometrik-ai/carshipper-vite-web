@@ -25,6 +25,5 @@ export const useHeavyHauling = () =>
   useQuery({
     queryKey: ["heavy-hauling"],
     queryFn: fetchHeavyHauling,
-    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });

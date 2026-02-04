@@ -25,6 +25,5 @@ export const useTrackShipment = () =>
     useQuery({
         queryKey: ["track-shipment"],
         queryFn: fetchTrackShipment,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

@@ -1,9 +1,13 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Phone, Mail } from "lucide-react";
 import { useFooter } from "@/api/footer";
 import { getIcon, getSocialIcon, DEFAULT_ICON } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
 import type { RichTextBlock } from "@/types/common.types";
+
+const isInternalLink = (href: string | null | undefined) =>
+  typeof href === "string" && href.startsWith("/") && !href.startsWith("//");
 
 // Constants
 const DEFAULT_LOGO_TEXT = "CarShippers";
@@ -70,14 +74,14 @@ interface LogoProps {
 }
 
 const Logo = ({ logoText, logoHighlight, logoIcon: LogoIcon }: LogoProps) => (
-  <a href="/" className="flex items-center gap-2 mb-6" aria-label={`${logoText}${logoHighlight} - Home`}>
+  <Link to="/" className="flex items-center gap-2 mb-6" aria-label={`${logoText}${logoHighlight} - Home`}>
     <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
       <LogoIcon className="w-6 h-6 text-primary-foreground" aria-hidden="true" />
     </div>
     <span className="text-xl font-bold">
       {logoText}<span className="text-accent">{logoHighlight}</span>
     </span>
-  </a>
+  </Link>
 );
 
 interface SocialLinkItem {
@@ -133,12 +137,21 @@ const LinkGroup = ({ heading, links }: LinkGroupProps) => (
     <ul className="space-y-3">
       {links.map((link) => (
         <li key={link.id || link.label}>
-          <a
-            href={link.href}
-            className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-          >
-            {link.label}
-          </a>
+          {isInternalLink(link.href) ? (
+            <Link
+              to={link.href}
+              className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+            >
+              {link.label}
+            </Link>
+          ) : (
+            <a
+              href={link.href}
+              className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+            >
+              {link.label}
+            </a>
+          )}
         </li>
       ))}
     </ul>
@@ -158,21 +171,36 @@ const SeoLinkGroup = ({ groupTitle, viewAllLabel, viewAllHref, links }: SeoLinkG
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
       {links.map((link, index) => (
         <span key={link.id || link.label} className="flex items-center">
-          <a
-            href={link.href}
-            className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
-          >
-            {link.label}
-          </a>
-          {index < links.length - 1 && (
-            <span className="text-primary-foreground/30 ml-2" aria-hidden="true">|</span>
+          {isInternalLink(link.href) ? (
+            <Link
+              to={link.href}
+              className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
+            >
+              {link.label}
+            </Link>
+          ) : (
+            <a
+              href={link.href}
+              className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
+            >
+              {link.label}
+            </a>
           )}
+          {index < links.length - 1 ? (
+            <span className="text-primary-foreground/30 ml-2" aria-hidden="true">|</span>
+          ) : null}
         </span>
       ))}
       <span className="text-primary-foreground/30" aria-hidden="true">|</span>
-      <a href={viewAllHref} className="text-accent hover:text-accent/80 transition-colors">
-        {viewAllLabel}
-      </a>
+      {isInternalLink(viewAllHref) ? (
+        <Link to={viewAllHref} className="text-accent hover:text-accent/80 transition-colors">
+          {viewAllLabel}
+        </Link>
+      ) : (
+        <a href={viewAllHref} className="text-accent hover:text-accent/80 transition-colors">
+          {viewAllLabel}
+        </a>
+      )}
     </div>
   </div>
 );
@@ -342,21 +370,31 @@ const Footer = () => {
             <p>
               {copyrightText} | {footerData.mcNumber} | {footerData.dotNumber}
             </p>
-            {footerData.bottomLinks.length > 0 && (
+            {footerData.bottomLinks.length > 0 ? (
               <nav aria-label="Footer bottom links">
                 <div className="flex items-center gap-4">
-                  {footerData.bottomLinks.map((link) => (
-                    <a
-                      key={link.id || link.label}
-                      href={link.href}
-                      className="hover:text-primary-foreground transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  ))}
+                  {footerData.bottomLinks.map((link) =>
+                    isInternalLink(link.href) ? (
+                      <Link
+                        key={link.id || link.label}
+                        to={link.href}
+                        className="hover:text-primary-foreground transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        key={link.id || link.label}
+                        href={link.href}
+                        className="hover:text-primary-foreground transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    )
+                  )}
                 </div>
               </nav>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

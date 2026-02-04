@@ -25,6 +25,5 @@ export const useContact = () =>
   useQuery({
     queryKey: ["contact"],
     queryFn: fetchContact,
-    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });

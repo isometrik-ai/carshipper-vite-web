@@ -25,6 +25,5 @@ export const useChatWidget = () =>
   useQuery({
     queryKey: ["chat-widget"],
     queryFn: fetchChatWidget,
-    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });

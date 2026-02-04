@@ -25,6 +25,5 @@ export const useTerms = () =>
   useQuery({
     queryKey: ["terms"],
     queryFn: fetchTerms,
-    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });

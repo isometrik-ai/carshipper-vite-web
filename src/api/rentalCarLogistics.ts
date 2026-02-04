@@ -25,6 +25,5 @@ export const useRentalCarLogistics = () =>
     useQuery({
         queryKey: ["rental-car-logistics"],
         queryFn: fetchRentalCarLogistics,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

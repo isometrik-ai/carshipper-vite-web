@@ -23,8 +23,7 @@ const fetchAutoAuctionShipping = async (): Promise<AutoAuctionShippingResponse> 
  */
 export const useAutoAuctionShipping = () =>
   useQuery({
-    queryKey: ["auto-auction-shipping"],
-    queryFn: fetchAutoAuctionShipping,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: false,
+queryKey: ["auto-auction-shipping"],
+        queryFn: fetchAutoAuctionShipping,
+        refetchOnWindowFocus: false,
   });

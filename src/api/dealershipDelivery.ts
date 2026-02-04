@@ -25,6 +25,5 @@ export const useDealershipDelivery = () =>
   useQuery({
     queryKey: ["dealership-delivery"],
     queryFn: fetchDealershipDelivery,
-    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });

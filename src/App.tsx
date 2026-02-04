@@ -32,8 +32,8 @@ import PurgeCache from "./pages/PurgeCache";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30 * 60 * 1000, // 30 minutes - data considered fresh, fewer API calls
-      gcTime: 2 * 60 * 60 * 1000, // 2 hours - keep cached data when unmounted
+      staleTime: 3 * 24 * 60 * 60 * 1000, // 3 days - data considered fresh
+      gcTime: 3 * 24 * 60 * 60 * 1000, // 3 days - keep cached data when unmounted
       retry: 1,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,

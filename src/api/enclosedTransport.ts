@@ -25,6 +25,5 @@ export const useEnclosedTransport = () =>
     useQuery({
         queryKey: ["enclosed-transport"],
         queryFn: fetchEnclosedTransport,
-        staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });
