@@ -6,7 +6,7 @@
 export const getStrapiMediaUrl = (url: string | null | undefined): string | null => {
   if (!url) return null;
   
-  const STRAPI_API_URL = import.meta.env.VITE_API_URL || "http://localhost:1337";
+  const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:1337";
   
   // If URL already includes http/https, return as-is
   if (url.startsWith("http://") || url.startsWith("https://")) {

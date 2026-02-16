@@ -1,5 +1,7 @@
+'use client';
+
 import { useState, useMemo, useCallback } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,7 +38,7 @@ interface LogoProps {
 
 const Logo = ({ logoText, logoHighlight, logoIcon: LogoIcon }: LogoProps) => (
   <Link
-    to="/"
+    href="/"
     className="flex items-center gap-2"
     aria-label={`${logoText}${logoHighlight} - Home`}
   >
@@ -67,7 +69,7 @@ const Navigation = ({ links, onLinkClick, isMobile = false }: NavigationProps) =
         isInternalLink(link.href) ? (
           <Link
             key={link.id || link.href}
-            to={link.href}
+            href={link.href}
             className={baseClassName}
             onClick={onLinkClick}
           >
@@ -132,7 +134,7 @@ const MobileMenu = ({
             {ctaButtonLink ? (
               <Button variant="hero" size="lg" className="w-full" asChild>
                 {isInternalLink(ctaButtonLink) ? (
-                  <Link to={ctaButtonLink}>{ctaButtonText}</Link>
+                  <Link href={ctaButtonLink}>{ctaButtonText}</Link>
                 ) : (
                   <a href={ctaButtonLink}>{ctaButtonText}</a>
                 )}
@@ -229,7 +231,7 @@ const Header = () => {
             {headerData.ctaButtonLink ? (
               <Button variant="hero" size="default" asChild>
                 {isInternalLink(headerData.ctaButtonLink) ? (
-                  <Link to={headerData.ctaButtonLink}>{headerData.ctaButtonText}</Link>
+                  <Link href={headerData.ctaButtonLink}>{headerData.ctaButtonText}</Link>
                 ) : (
                   <a href={headerData.ctaButtonLink}>{headerData.ctaButtonText}</a>
                 )}

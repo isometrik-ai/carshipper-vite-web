@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { RentalCarLogisticsResponse } from "@/types/RentalCarLogistics.types";
 
-const STRAPI_API_URL = import.meta.env.VITE_API_URL || "http://localhost:1337";
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:1337";
 
 /**
  * Fetches Rental Car Logistics page data from Strapi with full population

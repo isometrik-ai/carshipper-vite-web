@@ -1,7 +1,9 @@
+'use client';
+
 import { motion } from "framer-motion";
 import { getIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { ProcessStep } from "@/types/LandingPage.types";
 import type { LucideIcon } from "lucide-react";
@@ -20,7 +22,7 @@ interface ProcessStepsSectionProps {
 }
 
 const ProcessStepsSection = ({ sectionTitle, sectionSubtitle, steps, ctaButton }: ProcessStepsSectionProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleCtaClick = () => {
     if (ctaButton?.button_link) {
@@ -28,7 +30,7 @@ const ProcessStepsSection = ({ sectionTitle, sectionSubtitle, steps, ctaButton }
       if (link.startsWith("http") || link.startsWith("tel:") || link.startsWith("mailto:")) {
         window.location.href = link;
       } else {
-        navigate(link);
+        router.push(link);
       }
     }
   };

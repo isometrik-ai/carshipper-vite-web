@@ -12,11 +12,13 @@ export * from "./api.types";
 // Domain-specific types
 export * from "./about.types";
 export * from "./CaliforniaShipping.types";
-export * from "./faq.types";
+// Export FAQ types but exclude FAQItem (already in common.types and LandingPage.types)
+export type { FAQHero, FAQCategory, FAQResponse } from "./FAQ.types";
 export * from "./FleetTransport.types";
 export * from "./FlatbedTransport.types";
-export * from "./footer.types";
-export * from "./header.types";
+export * from "./Footer.types";
+// Export Header types but exclude NavLink (already in common.types)
+export type { HeaderData, HeaderResponse } from "./Header.types";
 export * from "./HeavyHauling.types";
 export * from "./hero.types";
 export * from "./how-it-works.types";

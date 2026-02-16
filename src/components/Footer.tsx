@@ -1,5 +1,7 @@
+'use client';
+
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Phone, Mail } from "lucide-react";
 import { useFooter } from "@/api/footer";
 import { getIcon, getSocialIcon, DEFAULT_ICON } from "@/lib/icons";
@@ -74,7 +76,7 @@ interface LogoProps {
 }
 
 const Logo = ({ logoText, logoHighlight, logoIcon: LogoIcon }: LogoProps) => (
-  <Link to="/" className="flex items-center gap-2 mb-6" aria-label={`${logoText}${logoHighlight} - Home`}>
+  <Link href="/" className="flex items-center gap-2 mb-6" aria-label={`${logoText}${logoHighlight} - Home`}>
     <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
       <LogoIcon className="w-6 h-6 text-primary-foreground" aria-hidden="true" />
     </div>
@@ -139,7 +141,7 @@ const LinkGroup = ({ heading, links }: LinkGroupProps) => (
         <li key={link.id || link.label}>
           {isInternalLink(link.href) ? (
             <Link
-              to={link.href}
+              href={link.href}
               className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
             >
               {link.label}
@@ -173,7 +175,7 @@ const SeoLinkGroup = ({ groupTitle, viewAllLabel, viewAllHref, links }: SeoLinkG
         <span key={link.id || link.label} className="flex items-center">
           {isInternalLink(link.href) ? (
             <Link
-              to={link.href}
+              href={link.href}
               className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
             >
               {link.label}
@@ -193,7 +195,7 @@ const SeoLinkGroup = ({ groupTitle, viewAllLabel, viewAllHref, links }: SeoLinkG
       ))}
       <span className="text-primary-foreground/30" aria-hidden="true">|</span>
       {isInternalLink(viewAllHref) ? (
-        <Link to={viewAllHref} className="text-accent hover:text-accent/80 transition-colors">
+        <Link href={viewAllHref} className="text-accent hover:text-accent/80 transition-colors">
           {viewAllLabel}
         </Link>
       ) : (
@@ -377,7 +379,7 @@ const Footer = () => {
                     isInternalLink(link.href) ? (
                       <Link
                         key={link.id || link.label}
-                        to={link.href}
+                        href={link.href}
                         className="hover:text-primary-foreground transition-colors"
                       >
                         {link.label}

@@ -1,6 +1,7 @@
-import { useMemo } from "react";
-import { Helmet } from "react-helmet-async";
-import { useLocation } from "react-router-dom";
+'use client';
+
+import { useMemo, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import type { SeoMetadata, PageContentComponent } from "@/types/LandingPage.types";
 import { extractSeoMetadata, generateStructuredDataSchemas, type JsonLdSchema } from "@/utils/seo";
 
@@ -12,57 +13,89 @@ interface PageSEOProps {
 
 /**
  * SEO component: meta tags, Open Graph, Twitter Card, and JSON-LD structured data (production-ready)
+ * Note: For Next.js App Router, this uses client-side meta tag injection.
+ * For better SEO, consider using metadata exports in page.tsx files.
  */
 export const PageSEO = ({ seoMetadata, pageContent, isMainPage }: PageSEOProps) => {
   const seo = extractSeoMetadata(seoMetadata);
-  const location = useLocation();
-  const isHomePage = isMainPage ?? location.pathname === "/";
+  const pathname = usePathname();
+  const isHomePage = isMainPage ?? pathname === "/";
 
   const structuredDataSchemas = useMemo(
     () => generateStructuredDataSchemas(isHomePage, seoMetadata, pageContent),
     [isHomePage, seoMetadata, pageContent]
   );
 
-  return (
-    <Helmet>
-      <title>{seo.meta_title}</title>
-      <meta name="description" content={seo.description} />
-      {seo.keywords ? <meta name="keywords" content={seo.keywords} /> : null}
-      {seo.canonical ? <link rel="canonical" href={seo.canonical} /> : null}
-      <meta name="robots" content={seo.robots} />
+  useEffect(() => {
+    // Update document title
+    if (seo.meta_title) {
+      document.title = seo.meta_title;
+    }
 
-      {seo.ogTitle ? <meta property="og:title" content={seo.ogTitle} /> : null}
-      {seo.ogDescription ? <meta property="og:description" content={seo.ogDescription} /> : null}
-      {seo.ogType ? <meta property="og:type" content={seo.ogType} /> : null}
-      {seo.ogUrl ? <meta property="og:url" content={seo.ogUrl} /> : null}
-      {seo.ogImage ? <meta property="og:image" content={seo.ogImage} /> : null}
-      {seo.ogImageWidth != null ? (
-        <meta property="og:image:width" content={String(seo.ogImageWidth)} />
-      ) : null}
-      {seo.ogImageHeight != null ? (
-        <meta property="og:image:height" content={String(seo.ogImageHeight)} />
-      ) : null}
-      {seo.ogImageAlt ? <meta property="og:image:alt" content={seo.ogImageAlt} /> : null}
+    // Update or create meta tags
+    const updateMetaTag = (name: string, content: string, attribute: string = 'name') => {
+      let element = document.querySelector(`meta[${attribute}="${name}"]`) as HTMLMetaElement;
+      if (!element) {
+        element = document.createElement('meta');
+        element.setAttribute(attribute, name);
+        document.head.appendChild(element);
+      }
+      element.setAttribute('content', content);
+    };
 
-      {seo.twitterCard ? <meta name="twitter:card" content={seo.twitterCard} /> : null}
-      {seo.twitterTitle ? <meta name="twitter:title" content={seo.twitterTitle} /> : null}
-      {seo.twitterDescription ? (
-        <meta name="twitter:description" content={seo.twitterDescription} />
-      ) : null}
-      {seo.twitterImage ? <meta name="twitter:image" content={seo.twitterImage} /> : null}
+    // Update meta tags
+    if (seo.description) updateMetaTag('description', seo.description);
+    if (seo.keywords) updateMetaTag('keywords', seo.keywords);
+    if (seo.robots) updateMetaTag('robots', seo.robots);
+    
+    // Open Graph tags
+    if (seo.ogTitle) updateMetaTag('og:title', seo.ogTitle, 'property');
+    if (seo.ogDescription) updateMetaTag('og:description', seo.ogDescription, 'property');
+    if (seo.ogType) updateMetaTag('og:type', seo.ogType, 'property');
+    if (seo.ogUrl) updateMetaTag('og:url', seo.ogUrl, 'property');
+    if (seo.ogImage) updateMetaTag('og:image', seo.ogImage, 'property');
+    if (seo.ogImageWidth != null) updateMetaTag('og:image:width', String(seo.ogImageWidth), 'property');
+    if (seo.ogImageHeight != null) updateMetaTag('og:image:height', String(seo.ogImageHeight), 'property');
+    if (seo.ogImageAlt) updateMetaTag('og:image:alt', seo.ogImageAlt, 'property');
 
-      {structuredDataSchemas.map((schema: JsonLdSchema, index) => {
-        const type = (schema["@type"] as string) ?? "Schema";
-        return (
-          <script key={`ld+json-${type}-${index}`} type="application/ld+json">
-            {JSON.stringify(schema)}
-          </script>
-        );
-      })}
+    // Twitter tags
+    if (seo.twitterCard) updateMetaTag('twitter:card', seo.twitterCard);
+    if (seo.twitterTitle) updateMetaTag('twitter:title', seo.twitterTitle);
+    if (seo.twitterDescription) updateMetaTag('twitter:description', seo.twitterDescription);
+    if (seo.twitterImage) updateMetaTag('twitter:image', seo.twitterImage);
 
-      {seo.structuredData != null && structuredDataSchemas.length === 0 && (
-        <script type="application/ld+json">{JSON.stringify(seo.structuredData)}</script>
-      )}
-    </Helmet>
-  );
+    // Update canonical link
+    if (seo.canonical) {
+      let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+      if (!canonicalLink) {
+        canonicalLink = document.createElement('link');
+        canonicalLink.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonicalLink);
+      }
+      canonicalLink.setAttribute('href', seo.canonical);
+    }
+
+    // Remove existing JSON-LD scripts
+    const existingScripts = document.querySelectorAll('script[type="application/ld+json"]');
+    existingScripts.forEach(script => script.remove());
+
+    // Add JSON-LD structured data
+    structuredDataSchemas.forEach((schema: JsonLdSchema, index) => {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.id = `ld+json-${index}`;
+      script.textContent = JSON.stringify(schema);
+      document.head.appendChild(script);
+    });
+
+    if (seo.structuredData != null && structuredDataSchemas.length === 0) {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.textContent = JSON.stringify(seo.structuredData);
+      document.head.appendChild(script);
+    }
+  }, [seo, structuredDataSchemas]);
+
+  // This component doesn't render anything
+  return null;
 };
