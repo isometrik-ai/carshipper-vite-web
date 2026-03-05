@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-// import { EditPickupDateDialog } from "./dialogs/EditPickupDateDialog";
-// import { EditVehicleDialog, Vehicle } from "./dialogs/EditVehicleDialog";
-// import { EditAddressDialog } from "./dialogs/EditAddressDialog";
-// import { EditTransportTypeDialog } from "./dialogs/EditTransportTypeDialog";
+import { EditPickupDateDialog } from "@/components/ui/dialogs/EditPickupDateDialog";
+import { EditVehicleDialog, Vehicle } from "@/components/ui/dialogs/EditVehicleDialog";
+import { EditAddressDialog } from "@/components/ui/dialogs/EditAddressDialog";
+import { EditTransportTypeDialog } from "@/components/booking/EditTransportTypeDialog";
 
 interface ShippingMethodStepProps {
   quoteData: {
@@ -81,15 +81,15 @@ export function ShippingMethodStep({
   // Editable state
   const [pickupDate, setPickupDate] = useState(new Date(2026, 0, 9)); // 09/01/2026
   const [schedulingNotes, setSchedulingNotes] = useState("");
-  // const [vehicles, setVehicles] = useState<Vehicle[]>([{
-  //   id: "1",
-  //   year: quoteData.vehicle.year,
-  //   make: quoteData.vehicle.make,
-  //   model: quoteData.vehicle.model,
-  //   type: "SUV",
-  //   operational: true,
-  //   personalItems: "None or less than 100 lbs.",
-  // }]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([{
+    id: "1",
+    year: quoteData.vehicle.year,
+    make: quoteData.vehicle.make,
+    model: quoteData.vehicle.model,
+    type: "SUV",
+    operational: true,
+    personalItems: "None or less than 100 lbs.",
+  }]);
   const [pickupAddress, setPickupAddress] = useState(quoteData.origin);
   const [deliveryAddress, setDeliveryAddress] = useState(quoteData.destination);
   const [transportType, setTransportType] = useState<"Open" | "Enclosed">("Open");
@@ -101,10 +101,10 @@ export function ShippingMethodStep({
   const [deliveryAddressDialogOpen, setDeliveryAddressDialogOpen] = useState(false);
   const [transportDialogOpen, setTransportDialogOpen] = useState(false);
 
-  // const primaryVehicle = vehicles[0];
-  // const vehicleDisplay = vehicles.length === 1 
-  //   ? `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`
-  //   : `${vehicles.length} vehicles`;
+  const primaryVehicle = vehicles[0];
+  const vehicleDisplay = vehicles.length === 1 
+    ? `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`
+    : `${vehicles.length} vehicles`;
 
   const detailRows = [
     { 
@@ -117,18 +117,18 @@ export function ShippingMethodStep({
     { 
       icon: Car, 
       label: "Vehicle", 
-      // value: vehicleDisplay,
+      value: vehicleDisplay,
       editable: true,
       onEdit: () => setVehicleDialogOpen(true),
     },
     { 
       label: "Condition", 
-      // value: primaryVehicle.operational ? "Runs and Drives" : "Inoperable",
+      value: primaryVehicle.operational ? "Runs and Drives" : "Inoperable",
       indent: true,
     },
     { 
       label: "Personal Items", 
-      // value: primaryVehicle.personalItems,
+      value: primaryVehicle.personalItems,
       indent: true,
     },
     { 
@@ -378,7 +378,7 @@ export function ShippingMethodStep({
       </div>
 
       {/* Edit Dialogs */}
-      {/* <EditPickupDateDialog
+      <EditPickupDateDialog
         open={dateDialogOpen}
         onOpenChange={setDateDialogOpen}
         currentDate={pickupDate}
@@ -387,37 +387,37 @@ export function ShippingMethodStep({
           setPickupDate(date);
           setSchedulingNotes(notes);
         }}
-      /> */}
+      />
 
-      {/* <EditVehicleDialog
+      <EditVehicleDialog
         open={vehicleDialogOpen}
         onOpenChange={setVehicleDialogOpen}
         vehicles={vehicles}
         onSave={setVehicles}
-      /> */}
+      />
 
-      {/* <EditAddressDialog
+      <EditAddressDialog
         open={pickupAddressDialogOpen}
         onOpenChange={setPickupAddressDialogOpen}
         type="pickup"
         currentAddress={pickupAddress}
         onSave={setPickupAddress}
-      /> */}
+      />
 
-      {/* <EditAddressDialog
+      <EditAddressDialog
         open={deliveryAddressDialogOpen}
         onOpenChange={setDeliveryAddressDialogOpen}
         type="delivery"
         currentAddress={deliveryAddress}
         onSave={setDeliveryAddress}
-      /> */}
+      />
 
-      {/* <EditTransportTypeDialog
+      <EditTransportTypeDialog
         open={transportDialogOpen}
         onOpenChange={setTransportDialogOpen}
         currentType={transportType}
         onSave={setTransportType}
-      /> */}
+      />
     </>
   );
 }
