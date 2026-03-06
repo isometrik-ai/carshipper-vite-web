@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ContactResponse } from "@/types/Contact.types";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:1337";
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /**
  * Fetches Contact page data from Strapi with full population

@@ -10,17 +10,17 @@ const nextConfig = {
     // Temporarily ignore ESLint errors during build
     ignoreDuringBuilds: true,
   },
-  images: {
-    domains: ['localhost'],
-    remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '1337',
-        pathname: '/uploads/**',
-      },
-    ],
-  },
+  // images: {
+  //   domains: ['localhost'],
+  //   remotePatterns: [
+  //     {
+  //       protocol: 'http',
+  //       hostname: 'localhost',
+  //       port: '1337',
+  //       pathname: '/uploads/**',
+  //     },
+  //   ],
+  // },
   // Keep existing path alias support
   webpack: (config) => {
     config.resolve.alias = {
