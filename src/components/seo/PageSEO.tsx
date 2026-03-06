@@ -7,7 +7,7 @@ import { extractSeoMetadata, generateStructuredDataSchemas, type JsonLdSchema } 
 
 interface PageSEOProps {
   seoMetadata: SeoMetadata | null | undefined;
-  pageContent?: PageContentComponent[] | null;
+  pageContent?: any | null;
   isMainPage?: boolean;
 }
 

@@ -1,3 +1,27 @@
 {
-  "/page": "app/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/purge-cache/page": "app/purge-cache/page.js",
+  "/book/[quoteId]/page": "app/book/[quoteId]/page.js",
+  "/auto-auction-shipping/page": "app/auto-auction-shipping/page.js",
+  "/blog/page": "app/blog/page.js",
+  "/about/page": "app/about/page.js",
+  "/california-car-shipping/page": "app/california-car-shipping/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/dealership-delivery/page": "app/dealership-delivery/page.js",
+  "/enclosed-transport/page": "app/enclosed-transport/page.js",
+  "/faq/page": "app/faq/page.js",
+  "/los-angeles-car-shipping/page": "app/los-angeles-car-shipping/page.js",
+  "/flatbed-transport/page": "app/flatbed-transport/page.js",
+  "/fleet-transport/page": "app/fleet-transport/page.js",
+  "/oem-transport/page": "app/oem-transport/page.js",
+  "/heavy-hauling/page": "app/heavy-hauling/page.js",
+  "/how-it-works/page": "app/how-it-works/page.js",
+  "/page": "app/page.js",
+  "/privacy/page": "app/privacy/page.js",
+  "/open-transport/page": "app/open-transport/page.js",
+  "/quote/page": "app/quote/page.js",
+  "/pricing/page": "app/pricing/page.js",
+  "/rental-car-logistics/page": "app/rental-car-logistics/page.js",
+  "/terms/page": "app/terms/page.js",
+  "/track/page": "app/track/page.js"
 }
