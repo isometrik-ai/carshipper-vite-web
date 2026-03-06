@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { LandingPageResponse } from "@/types/LandingPage.types";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:1337";
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /**
  * Fetches How It Works page data from Strapi with full population
