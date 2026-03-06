@@ -118,14 +118,14 @@ export default function Blog() {
               className="max-w-3xl mx-auto text-center"
             >
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                {pageData.hero?.main_headline || "Blog"}{" "}
-                {pageData.hero?.highlighted_text ? (
-                  <span className="text-primary">{pageData.hero.highlighted_text}</span>
+                {pageData?.hero?.title || "Blog"}{" "}
+                {pageData?.hero?.title_highlight ? (
+                  <span className="text-primary">{pageData?.hero?.title_highlight}</span>
                 ) : null}
               </h1>
-              {pageData.hero?.description ? (
+              {pageData?.hero?.subtitle ? (
                 <p className="text-lg md:text-xl text-muted-foreground mb-8">
-                  {pageData.hero.description}
+                  {pageData?.hero?.subtitle}
                 </p>
               ) : null}
               <div className="relative max-w-md mx-auto">

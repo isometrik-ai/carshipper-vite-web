@@ -8,6 +8,7 @@ export interface BlogHero {
   id: number;
   title: string | null;
   title_highlight: string | null;
+  subtitle: string | null;
   description: string | null;
   search_placeholder: string | null;
 }
