@@ -135,6 +135,31 @@
   }
 }
 
+    /* width  and heigh is needed for horizontal scroll bar thumb*/
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+      background: #005fb834;
+      border-radius: 8px;
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+      background: #005fb890;
+      border-radius: 8px;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-aqua-primary);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent;
