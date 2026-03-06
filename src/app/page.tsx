@@ -1,35 +1,31 @@
-'use client';
+import type { Metadata } from "next";
+import { generatePageMetadata } from "@/utils/metadata";
+import HomePageClient from "./HomePageClient";
 
-import { useMemo } from "react";
-import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { useLandingPage } from "@/api/landingPage";
-import { usePageContentRenderer } from "@/utils/componentMapper";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:1337";
 
-// Force dynamic rendering (no static generation)
-export const dynamic = 'force-dynamic';
-
-/**
- * Landing/Home page component
- * 
- * Fetches page content from Strapi CMS and renders dynamic sections.
- * All content is managed through Strapi, including SEO metadata and page sections.
- */
-export default function HomePage() {
-  const { data, isLoading } = useLandingPage();
-
-  // Extract page content components
-  const pageContent = useMemo(() => {
-    return data?.data?.page_content || [];
-  }, [data]);
-
-  // Render page content components
-  const renderedContent = usePageContentRenderer(pageContent);
-
-  // Show loading state while fetching initial data
-  if (isLoading && !data) {
-    return <PageSkeleton />;
+async function getLandingPageData() {
+  try {
+    const res = await fetch(
+      `${API_URL}/api/landing-page?populate[seo_metadata]=*&populate[seo_metadata][populate][og_image][fields][0]=url&populate[seo_metadata][populate][og_image][fields][1]=alternativeText&populate[seo_metadata][populate][og_image][fields][2]=width&populate[seo_metadata][populate][og_image][fields][3]=height&populate[seo_metadata][populate][twitter_image][fields][0]=url&populate[seo_metadata][populate][twitter_image][fields][1]=alternativeText&populate[seo_metadata][populate][twitter_image][fields][2]=width&populate[seo_metadata][populate][twitter_image][fields][3]=height`,
+      { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
   }
-
-  return <>{renderedContent}</>;
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const data = await getLandingPageData();
+  return generatePageMetadata(
+    data?.data?.seo_metadata,
+    "CarShippers.ai | Ship Your Car in 30 Seconds | Instant Auto Transport Quotes",
+    "Get an instant car shipping quote in 30 seconds. Licensed carriers, door-to-door service, no hidden fees. Ship your car anywhere in the US with CarShippers.ai."
+  );
+}
+
+export default function HomePage() {
+  return <HomePageClient />;
+}
