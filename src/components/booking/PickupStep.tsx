@@ -412,8 +412,11 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
                 useNationalMode={false}
                 onPhoneNumberChanges={(value) => {
                   const mobile = value?.mobile ?? "";
-                  setValue("pickupBackupPhone", mobile, { shouldValidate: true });
-            
+                  setValue("pickupBackupPhone", mobile, {
+                    shouldValidate: false,
+                    shouldDirty: true,
+                  });
+
                   // Only validate if user actually typed something
                   if (mobile && !value?.isValid) {
                     setError("pickupBackupPhone", {

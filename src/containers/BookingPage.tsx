@@ -42,6 +42,7 @@ export interface BookingFormData {
   deliveryBusinessName: string;
   deliveryContactName: string;
   deliveryContactPhone: string;
+  deliveryBackupPhone: string;
   // Confirmation
   agreedToTerms: boolean;
   smsUpdates: boolean;
@@ -73,6 +74,7 @@ const initialFormData: BookingFormData = {
   deliveryBusinessName: "",
   deliveryContactName: "",
   deliveryContactPhone: "",
+  deliveryBackupPhone: "",
   agreedToTerms: false,
   smsUpdates: true,
 };

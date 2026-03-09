@@ -21,6 +21,8 @@ import {
 import { BookingFormData } from "@/containers/BookingPage";
 import { cn } from "@/lib/utils";
 import { OrderSummaryPanel } from "./OrderSummaryPanel";
+import CustomPhoneNumberInputField from "@/components/ui/customPhoneNumber/phoneInput";
+import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, PREFERRED_COUNTRY_CODES } from "@/lib/config";
 
 const deliverySchema = z.object({
   deliveryLocationType: z.string().min(1, "Please select a location type"),
@@ -81,6 +83,8 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
     handleSubmit,
     setValue,
     watch,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<DeliveryFormData>({
     resolver: zodResolver(deliverySchema),
@@ -93,6 +97,7 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
       deliveryBusinessName: "",
       deliveryContactName: `${formData.firstName} ${formData.lastName}`,
       deliveryContactPhone: formData.phone,
+      deliveryBackupPhone: formData.deliveryBackupPhone,
       deliveryNotes: formData.deliveryNotes,
       deliveryWillBePresent: true,
     },
@@ -107,6 +112,9 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
       deliveryCity: data.deliveryCity,
       deliveryState: data.deliveryState,
       deliveryZip: data.deliveryZip,
+      deliveryContactName: data.deliveryContactName,
+      deliveryContactPhone: data.deliveryContactPhone,
+      deliveryBackupPhone: data.deliveryBackupPhone || "",
       deliveryNotes: data.deliveryNotes,
     });
     onNext();
@@ -264,20 +272,128 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="deliveryContactPhone">Contact Phone *</Label>
-              <Input
+              {/* Hidden input to register with react-hook-form / zod */}
+              <input type="hidden" {...register("deliveryContactPhone")} />
+              <CustomPhoneNumberInputField
+                name="deliveryContact.phoneNumber"
+                countryCodeName="deliveryContact.countryCode"
+                defaultCountryCode={DEFAULT_COUNTRY_CODE}
+                required
                 id="deliveryContactPhone"
+                customPhoneNumberFieldStructure="w-full"
+                customPhoneNumberFieldWrapper="w-full"
+                intlInputFieldId="deliveryContactPhone"
+                phoneNumberValue={formData.deliveryContactPhone || ""}
+                phoneNumberDefaultValue={formData.deliveryContactPhone || ""}
+                customIntlTelInputContainer="
+                  intl-tel-input separate-dial-code w-full
+                  border border-input rounded-md bg-background
+                  text-sm shadow-sm
+                  focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1
+                "
+                customIntlTelInputWrapper="
+                  w-full bg-transparent border-0
+                  px-3 py-2
+                  text-sm text-foreground
+                  placeholder:text-muted-foreground
+                  focus-visible:outline-none
+                "
+                useSeparateDialCode={true}
+                useNationalMode={false}
+                onPhoneNumberChanges={(value) => {
+                  const mobile = value?.mobile ?? "";
+
+                  // update RHF value but DO NOT trigger schema validation yet
+                  setValue("deliveryContactPhone", mobile, {
+                    shouldValidate: false,
+                    shouldDirty: true,
+                  });
+
+                  // manual live validation based on intl-tel
+                  if (!mobile) {
+                    // user cleared the field → clear live error, Zod will handle "required" on submit
+                    clearErrors("deliveryContactPhone");
+                    return;
+                  }
+
+                  if (!value?.isValid) {
+                    setError("deliveryContactPhone", {
+                      type: "manual",
+                      message: "Please enter a valid phone number",
+                    });
+                  } else {
+                    clearErrors("deliveryContactPhone");
+                  }
+                }}
+                initialCountry={DEFAULT_COUNTRY_CODE?.toUpperCase()}
+                onlyCountries={COUNTRY_CODES}
+                preferredCountries={PREFERRED_COUNTRY_CODES}
+                country={DEFAULT_COUNTRY_CODE}
                 placeholder="(770) 298-5828"
-                {...register("deliveryContactPhone")}
-                className={errors.deliveryContactPhone ? "border-destructive" : ""}
               />
+              {errors.deliveryContactPhone && (
+                <p className="text-sm text-destructive">
+                  {errors.deliveryContactPhone.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="deliveryBackupPhone">Backup Phone (Optional)</Label>
-              <Input
+              {/* Hidden input to register backup phone with react-hook-form / zod */}
+              <input type="hidden" {...register("deliveryBackupPhone")} />
+              <CustomPhoneNumberInputField
+                name="deliveryBackup.phoneNumber"
+                countryCodeName="deliveryBackup.countryCode"
+                defaultCountryCode={DEFAULT_COUNTRY_CODE}
                 id="deliveryBackupPhone"
+                customPhoneNumberFieldStructure="w-full"
+                customPhoneNumberFieldWrapper="w-full"
+                intlInputFieldId="deliveryBackupPhone"
+                phoneNumberValue={formData.deliveryBackupPhone}
+                phoneNumberDefaultValue={formData.deliveryBackupPhone}
+                customIntlTelInputContainer="
+                  intl-tel-input separate-dial-code w-full
+                  border border-input rounded-md bg-background
+                  text-sm shadow-sm
+                  focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1
+                "
+                customIntlTelInputWrapper="
+                  w-full bg-transparent border-0
+                  px-3 py-2
+                  text-sm text-foreground
+                  placeholder:text-muted-foreground
+                  focus-visible:outline-none
+                "
+                useSeparateDialCode={true}
+                useNationalMode={false}
+                onPhoneNumberChanges={(value) => {
+                  const mobile = value?.mobile ?? "";
+                  setValue("deliveryBackupPhone", mobile, {
+                    shouldValidate: false,
+                    shouldDirty: true,
+                  });
+
+                  // Only validate if user actually typed something
+                  if (mobile && !value?.isValid) {
+                    setError("deliveryBackupPhone", {
+                      type: "manual",
+                      message: "Please enter a valid backup phone number",
+                    });
+                  } else {
+                    clearErrors("deliveryBackupPhone");
+                  }
+                }}
+                initialCountry={DEFAULT_COUNTRY_CODE?.toUpperCase()}
+                onlyCountries={COUNTRY_CODES}
+                preferredCountries={PREFERRED_COUNTRY_CODES}
+                country={DEFAULT_COUNTRY_CODE}
                 placeholder="(000) 000-0000"
-                {...register("deliveryBackupPhone")}
               />
+              {errors.deliveryBackupPhone && (
+                <p className="text-sm text-destructive">
+                  {errors.deliveryBackupPhone.message}
+                </p>
+              )}
             </div>
           </div>
 
