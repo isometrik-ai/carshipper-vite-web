@@ -7,9 +7,9 @@ import { BookingHeader } from "@/components/booking/BookingHeader";
 import { BookingProgress } from "@/components/booking/BookingProgress";
 import { ShippingMethodStep } from "@/components/booking/ShippingMethodStep";
 // import { ContactStep } from "@/components/booking/ContactStep";
-// import { PickupStep } from "@/components/booking/PickupStep";
-// import { DeliveryStep } from "@/components/booking/DeliveryStep";
-// import { BookShipmentStep } from "@/components/booking/BookShipmentStep";
+import { PickupStep } from "@/components/booking/PickupStep";
+import { DeliveryStep } from "@/components/booking/DeliveryStep";
+import { BookShipmentStep } from "@/components/booking/BookShipmentStep";
 // import { BookingSummary } from "@/components/booking/BookingSummary";
 import { SuccessStep } from "@/components/booking/SuccessStep";
 
@@ -185,7 +185,7 @@ export default function BookingPage(props: { quoteId: string, initialTier?: "sav
                     onNext={nextStep}
                   />
                 )}
-                {/* {currentStep === 2 && (
+                {currentStep === 2 && (
                   <PickupStep
                     formData={formData}
                     updateFormData={updateFormData}
@@ -195,8 +195,8 @@ export default function BookingPage(props: { quoteId: string, initialTier?: "sav
                     tier={selectedTier}
                     price={price}
                   />
-                )} */}
-                {/* {currentStep === 3 && (
+                )}
+                {currentStep === 3 && (
                   <DeliveryStep
                     formData={formData}
                     updateFormData={updateFormData}
@@ -206,8 +206,8 @@ export default function BookingPage(props: { quoteId: string, initialTier?: "sav
                     tier={selectedTier}
                     price={price}
                   />
-                )} */}
-                {/* {currentStep === 4 && (
+                )}
+                {currentStep === 4 && (
                   <BookShipmentStep
                     formData={formData}
                     updateFormData={updateFormData}
@@ -218,7 +218,7 @@ export default function BookingPage(props: { quoteId: string, initialTier?: "sav
                     onTierChange={(newTier, newPrice) => setSelectedTier(newTier)}
                     quoteData={quoteData}
                   />
-                )} */}
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
