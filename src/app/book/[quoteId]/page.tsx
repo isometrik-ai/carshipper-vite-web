@@ -23,7 +23,6 @@ export default function Page({
         quoteId={params?.quoteId} 
         initialTier={searchParams?.tier as "saver" | "priority" | "rush" | undefined}
       />
-      <h1>Booking Page</h1>
     </Suspense>
   );
 }

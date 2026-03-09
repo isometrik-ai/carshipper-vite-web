@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useLandingPage } from "@/api/landingPage";
 import { usePageContentRenderer } from "@/utils/componentMapper";
-
+import QuotePage from "@/containers/QuotePage";
 // Force dynamic rendering (no static generation)
 export const dynamic = 'force-dynamic';
 
@@ -27,9 +27,15 @@ export default function HomePage() {
 
   // Show loading state while fetching initial data
   if (isLoading && !data) {
-    return <PageSkeleton />;
+    return(
+    <>
+     <PageSkeleton />
+     </>
+    );
   }
 
-  return <>{renderedContent}</>;
+  return <>
+   <QuotePage />
+  </>;
 }
 
