@@ -70,6 +70,8 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217 91% 60%;
+
+    --text-aqua-primary: #005fb8;
   }
 
   .dark {
@@ -183,3 +185,38 @@
   }
 }
 
+/* Intl-tel-input styles aligned with theme */
+.intl-tel-input {
+  width: 100%;
+}
+
+.intl-tel-input .selected-flag {
+  display: flex !important;
+  position: relative;
+  background-color: transparent !important;
+  width: 60px !important;
+  outline: none;
+}
+
+.intl-tel-input .selected-flag .iti-flag {
+  opacity: 0 !important;
+  width: 56px !important;
+  position: absolute;
+  left: 10px;
+}
+
+.intl-tel-input .selected-flag .selected-dial-code {
+  padding-left: 0 !important;
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+
+.intl-tel-input .country-list .country-name {
+  font-weight: 500;
+}
+
+.intl-tel-input .arrow {
+  font-size: 11px;
+  margin-left: 7px;
+  color: var(--text-aqua-primary);
+}

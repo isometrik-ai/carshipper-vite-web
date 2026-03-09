@@ -31,6 +31,7 @@ export interface BookingFormData {
   pickupBusinessName: string;
   pickupContactName: string;
   pickupContactPhone: string;
+  pickupBackupPhone: string;
   // Delivery Details
   deliveryAddress: string;
   deliveryCity: string;
@@ -62,6 +63,7 @@ const initialFormData: BookingFormData = {
   pickupBusinessName: "",
   pickupContactName: "",
   pickupContactPhone: "",
+  pickupBackupPhone: "",
   deliveryAddress: "",
   deliveryCity: "Duluth",
   deliveryState: "GA",
