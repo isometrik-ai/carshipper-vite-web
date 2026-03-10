@@ -11,7 +11,7 @@ import { Search, Phone, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getIcon } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
-import type { HeroSection, ServiceCards, CallToAction } from "@/types/LandingPage.types";
+import type { HeroSection, CallToAction } from "@/types/LandingPage.types";
 import type { TrackingForm, TrackingStepsSection } from "@/types/TrackShipment.types";
 
 export const dynamic = 'force-dynamic';
@@ -29,7 +29,7 @@ export default function TrackShipment() {
     const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
     const trackingForm = content.find(c => c.__component === "shared.tracking-form") as TrackingForm | undefined;
     const trackingSteps = content.find(c => c.__component === "shared.tracking-steps-section") as TrackingStepsSection | undefined;
-    const serviceCards = content.find(c => c.__component === "shared.service-cards") as ServiceCards | undefined;
+    const serviceCards = content.find(c => c.__component === "shared.service-cards") as any | undefined;
     const cta = content.find(c => c.__component === "shared.call-to-action") as CallToAction | undefined;
 
     return {
@@ -125,7 +125,7 @@ export default function TrackShipment() {
                 <TabsContent value="tracking-number">
                   <form onSubmit={handleTrackByNumber} className="space-y-4">
                     <Input
-                      placeholder={pageData.trackingForm?.tracking_number_placeholder || "Enter tracking number"}
+                      placeholder={pageData.trackingForm?.tracking_placeholder || "Enter tracking number"}
                       value={trackingNumber}
                       onChange={(e) => setTrackingNumber(e.target.value)}
                       className="h-12"
