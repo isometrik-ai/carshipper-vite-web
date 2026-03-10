@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,10 @@ import { useQuoteForm } from "@/api/quoteForm";
 import { getIcon } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
 import { PageSkeleton } from "./ui/page-skeleton";
+import AddressAutocomplete from "./custom-google-searchbar";
+import { DEFAULT_COUNTRY_CODE } from "@/lib/config";
+import { getFormattedAddressFromGooglePlace } from "@/lib/global";
+import { CreateNewQuotePostAPI } from "@/services/quote-services";
 
 interface QuoteFormProps {
   defaultOrigin?: string;
@@ -23,12 +28,18 @@ interface DropLocation {
   id: string;
   location: string;
   vehicleIds: string[];
+  city?: string;
+  state?: string;
+  zip?: string;
+  lat?: number;
+  lng?: number;
 }
 
 type Step = "vehicles" | "running" | "pickup" | "drops" | "transport" | "timeframe" | "contact";
 
 const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormProps) => {
   const { data, isLoading: isConfigLoading } = useQuoteForm();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<Step>("vehicles");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -98,6 +109,11 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
 
   // Locations
   const [pickupLocation, setPickupLocation] = useState(defaultOrigin);
+  const [pickupCity, setPickupCity] = useState("");
+  const [pickupState, setPickupState] = useState("");
+  const [pickupZip, setPickupZip] = useState("");
+  const [pickupLat, setPickupLat] = useState<number | null>(null);
+  const [pickupLng, setPickupLng] = useState<number | null>(null);
   const [dropLocations, setDropLocations] = useState<DropLocation[]>([
     { id: "1", location: defaultDestination, vehicleIds: [] }
   ]);
@@ -109,6 +125,8 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   // Contact info
   const [contactInfo, setContactInfo] = useState({
     name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     phone: ""
   });
@@ -172,7 +190,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       case "timeframe":
         return timeframe !== "";
       case "contact":
-        return contactInfo.name.trim().length > 0 && contactInfo.email.trim().length > 0;
+        return contactInfo.first_name.trim().length > 0 && contactInfo.email.trim().length > 0;
       default:
         return true;
     }
@@ -192,17 +210,97 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
     }
   }, [currentStep, STEPS]);
 
+  const toRadians = (value: number): number => (value * Math.PI) / 180;
+
+  const calculateDistanceMiles = (
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number
+  ): number => {
+    const R = 3958.8; // Earth radius in miles
+    const dLat = toRadians(lat2 - lat1);
+    const dLng = toRadians(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(lat1)) *
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLng / 2) *
+          Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const handleSubmit = async () => {
     if (!canProceed()) return;
 
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    toast.success(formConfig.successToastTitle, {
-      description: formConfig.successToastDescription,
-    });
+    try {
+      const primaryDrop = dropLocations[0];
 
-    setIsSubmitting(false);
+      let distanceMiles = 0;
+      if (
+        pickupLat != null &&
+        pickupLng != null &&
+        primaryDrop?.lat != null &&
+        primaryDrop?.lng != null
+      ) {
+        distanceMiles = Math.round(
+          calculateDistanceMiles(
+            pickupLat,
+            pickupLng,
+            primaryDrop.lat,
+            primaryDrop.lng
+          )
+        );
+      }
+
+      const payload = {
+        pickup_zip: pickupZip,
+        delivery_zip: primaryDrop?.zip || "",
+        distance_miles: distanceMiles,
+        transport_type: transportType === "enclosed" ? "Enclosed Transport" : "Open Transport",
+        customer_email: contactInfo.email,
+        customer_first_name: contactInfo.first_name || "", //contactInfo.name.split(" ")[0] || contactInfo.name,
+        customer_last_name: contactInfo.last_name || "", //contactInfo.name.split(" ").slice(1).join(" ") || "",
+        vehicles: vehicles.map((v) => ({
+          year: Number(v.year),
+          make: v.make,
+          model: v.model,
+          is_running: v.isRunning ?? true,
+        })),
+        pickup_city: pickupCity,
+        pickup_state: pickupState,
+        delivery_city: primaryDrop?.city || "",
+        delivery_state: primaryDrop?.state || "",
+      };
+
+      const response = await CreateNewQuotePostAPI(payload);
+
+      const quoteId =
+        response?.quote_id ||
+        response?.quoteId ||
+        response?.data?.quote_id ||
+        response?.data?.quoteId;
+
+      if (!quoteId) {
+        throw new Error("Quote ID not returned from API");
+      }
+
+      toast.success(formConfig.successToastTitle, {
+        description: formConfig.successToastDescription,
+      });
+
+      router.push(`/book/${quoteId}?tier=priority`);
+    } catch (error: any) {
+      console.error("Failed to create quote", error);
+      toast.error("Unable to create quote", {
+        description: "Please try again in a moment.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Get field value helper
@@ -393,15 +491,50 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
             <p className="text-muted-foreground text-center mb-6">
               {currentStepConfig?.step_description || "Enter the city or zipcode of your pickup location"}
             </p>
-
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
+              {/* <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" /> */}
+              {/* <Input
                 placeholder={getFieldValue("pickup_location", "pickup") || "e.g., Dallas, TX or 10007"}
                 value={pickupLocation}
                 onChange={(e) => setPickupLocation(e.target.value)}
                 className="pl-10 h-14 text-lg"
-              />
+              /> */}
+            <AddressAutocomplete
+              key={DEFAULT_COUNTRY_CODE}
+              countryCode={DEFAULT_COUNTRY_CODE}
+              AddressListContainerClassName="AddressListContainer"
+              googleSearchBarMainContainerClassName="w-full bg-text-input-primary AddressListContainer h-[49px] relative  z-[9]"
+              searchInputClassName="primaryFontNormalWeight bg-text-input-primary text-[14px] !pl-3 w-full h-[49px]"
+              showSearchIcon={false}
+              mainContainerHeight="49px"
+              placeValue={pickupLocation || ""}
+              showSearchPointNameReactNode={true}
+              searchPointNameReactNode={
+                <MapPin className="ml-2 w-5 h-5 text-muted-foreground" />
+              }
+              placeholderText={getFieldValue("pickup_location", "pickup") || "e.g., Dallas, TX or 10007"}
+              getSelectedAddressDetails={(
+                coordinates: any,
+                place: any,
+                fullAddress: string
+              ) => {
+                const formatted = getFormattedAddressFromGooglePlace(place);
+
+                const line1 = formatted?.addressLine1 || fullAddress || "";
+                const city  = formatted?.city || "";
+                const state = formatted?.stateCode || formatted?.state || "";
+                const zip   = formatted?.zipCode || "";
+
+                setPickupLocation(line1);
+                setPickupCity(city);
+                setPickupState(state);
+                setPickupZip(zip);
+                if (coordinates?.lat != null && coordinates?.lng != null) {
+                  setPickupLat(coordinates.lat);
+                  setPickupLng(coordinates.lng);
+                }
+              }}
+            />
             </div>
           </motion.div>
         )}
@@ -436,12 +569,48 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                           : formConfig.deliveryLocationLabelSingle}
                       </Label>
                       <div className="relative mt-1">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
+                        {/* <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /> */}
+                        {/* <Input
                           placeholder={getFieldValue("drop_location", "drops") || "e.g., Los Angeles, CA or 90210"}
                           value={drop.location}
                           onChange={(e) => updateDropLocation(drop.id, { location: e.target.value })}
                           className="pl-9"
+                        /> */}
+                        <AddressAutocomplete
+                          key={DEFAULT_COUNTRY_CODE}
+                          countryCode={DEFAULT_COUNTRY_CODE}
+                          AddressListContainerClassName="AddressListContainer"
+                          googleSearchBarMainContainerClassName="w-full bg-text-input-primary AddressListContainer h-[49px] relative  z-[9]"
+                          searchInputClassName="primaryFontNormalWeight bg-text-input-primary text-[14px] !pl-3 w-full h-[49px]"
+                          showSearchIcon={false}
+                          mainContainerHeight="49px"
+                          placeValue={drop.location || ""}
+                          showSearchPointNameReactNode={true}
+                          searchPointNameReactNode={
+                            <MapPin className="ml-2 w-5 h-5 text-muted-foreground" />
+                          }
+                          placeholderText={getFieldValue("drop_location", "drops") || "e.g., Los Angeles, CA or 90210"}
+                          getSelectedAddressDetails={(
+                            coordinates: any,
+                            place: any,
+                            fullAddress: string
+                          ) => {
+                            const formatted = getFormattedAddressFromGooglePlace(place);
+
+                            const line1 = formatted?.addressLine1 || fullAddress || "";
+                            const city  = formatted?.city || "";
+                            const state = formatted?.stateCode || formatted?.state || "";
+                            const zip   = formatted?.zipCode || "";
+
+                            updateDropLocation(drop.id, { 
+                              location: line1,
+                              city,
+                              state,
+                              zip,
+                              lat: coordinates?.lat,
+                              lng: coordinates?.lng,
+                            });
+                          }}
                         />
                       </div>
                     </div>
@@ -689,8 +858,29 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         <Lock className="w-4 h-4" />
         {formConfig.footerMessage}
       </p>
+      <style jsx global>{`
+        .AddressListContainer {
+          ul {
+            position: absolute;
+            left: 0;
+            background: var(--white_color);
+            font-family: var(--primary-font);
+            font-weight:500;
+            font-size: 14px;
+            box-shadow: -8px 8px 12px var(--background-secondary);
+            text-transform: capitalize;
+            color: var(--text-active-loads-primary);
+            width: 80%;
+            height: 100px;
+            overflow-y: auto; 
+            z-index: 99;
+            border: 1px solid var(--tabs-border-color);
+            border-radius: 5px;
+          }
+        }
+`}</style>
     </motion.div>
   );
-};
+}
 
 export default QuoteForm;
