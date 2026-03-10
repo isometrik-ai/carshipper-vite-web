@@ -217,7 +217,7 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
     <div className={googleSearchBarMainContainerClassName}>
       <div className={`flex items-center border-[1px]
         border-custom-text-input-border rounded-[8px] ${googleSearchBarMainWrapperClassName}`}>
-        {showSearchIcon && <div className='flex items-center justify-center w-[23px] h-[23px] ml-[5px]'>
+        {showSearchIcon && <div className='flex items-center justify-center w-[25px] h-[25px] ml-[15px] mt-1'>
           <KeyWordSearchIcon width={20.45} height={20} />
         </div>}
         {showSearchPointNameReactNode && <div className='searchPointNameReactNodeWrapper'>

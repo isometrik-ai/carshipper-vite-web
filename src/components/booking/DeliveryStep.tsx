@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 import { OrderSummaryPanel } from "./OrderSummaryPanel";
 import CustomPhoneNumberInputField from "@/components/ui/customPhoneNumber/phoneInput";
 import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, PREFERRED_COUNTRY_CODES } from "@/lib/config";
+import AddressAutocomplete from "../custom-google-searchbar";
+import { getFormattedAddressFromGooglePlace } from "@/lib/global";
 
 const deliverySchema = z.object({
   deliveryLocationType: z.string().min(1, "Please select a location type"),
@@ -172,7 +174,36 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
               id="deliveryAddress"
               placeholder="54 RBI Colony, 1st Main"
               {...register("deliveryAddress")}
-              className={errors.deliveryAddress ? "border-destructive" : ""}
+              className={`${errors.deliveryAddress ? "border-destructive" : ""} hidden`}
+            />
+            <AddressAutocomplete
+              key={DEFAULT_COUNTRY_CODE}
+              countryCode={DEFAULT_COUNTRY_CODE}
+              AddressListContainerClassName="AddressListContainer"
+              googleSearchBarMainContainerClassName="w-full bg-text-input-primary AddressListContainer h-[49px] relative  z-[9]"
+              searchInputClassName="primaryFontNormalWeight bg-text-input-primary text-[14px] !pl-3 w-full h-[49px]"
+              showSearchIcon={true}
+              mainContainerHeight="49px"
+              placeValue={formData.deliveryAddress || ""}
+              placeholderText="Search delivery address"
+              getSelectedAddressDetails={(
+                coordinates: any,
+                place: any,
+                fullAddress: string
+              ) => {
+                const formatted = getFormattedAddressFromGooglePlace(place);
+
+                const line1 = formatted?.addressLine1 || fullAddress || "";
+                const city  = formatted?.city || "";
+                const state = formatted?.stateCode || formatted?.state || "";
+                const zip   = formatted?.zipCode || "";
+
+                // Auto-fill RHF fields so Zod can validate them
+                setValue("deliveryAddress", line1, { shouldDirty: true, shouldValidate: true });
+                setValue("deliveryCity",    city,  { shouldDirty: true, shouldValidate: true });
+                setValue("deliveryState",   state, { shouldDirty: true, shouldValidate: true });
+                setValue("deliveryZip",     zip,   { shouldDirty: true, shouldValidate: true });
+              }}
             />
             {errors.deliveryAddress && (
               <p className="text-sm text-destructive">{errors.deliveryAddress.message}</p>
@@ -432,6 +463,25 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
         </p>
       </div>
       </form>
+      <style jsx global>{`
+        .AddressListContainer {
+            ul {
+                position: absolute;
+                left: 0;
+                background: var(--white_color);
+                font-family: var(--primary-font);
+                font-weight:500;
+                font-size: 14px;
+                box-shadow: -8px 8px 12px var(--background-secondary);
+                text-transform: capitalize;
+                color: var(--text-active-loads-primary);
+                width: 100%;
+                z-index: 99;
+                border: 1px solid var(--tabs-border-color);
+                border-radius: 5px;
+              }
+        }
+      `}</style>
     </div>
   );
 }

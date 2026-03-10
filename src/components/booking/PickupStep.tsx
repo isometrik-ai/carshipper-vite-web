@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { getFormattedAddressFromGooglePlace } from "@/lib/global";
 import {
   Select,
   SelectContent,
@@ -103,7 +104,7 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
       pickupState: formData.pickupState,
       pickupZip: formData.pickupZip,
       businessName: "",
-      pickupContactName: `${formData.firstName} ${formData.lastName}`,
+      pickupContactName: formData.pickupContactName,
       pickupContactPhone: formData.phone,
       pickupNotes: formData.pickupNotes,
       willBePresent: true,
@@ -179,33 +180,42 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
               id="pickupAddress"
               placeholder="131 Continental Dr"
               {...register("pickupAddress")}
-              className={errors.pickupAddress ? "border-destructive" : ""}
+              className={`${errors.pickupAddress ? "border-destructive" : ""} ${"hidden"}`}
             />
-            {errors.pickupAddress && (
-              <p className="text-sm text-destructive">{errors.pickupAddress.message}</p>
-            )}
           </div>
-
-          <AddressAutocomplete
+             <AddressAutocomplete
                 key={DEFAULT_COUNTRY_CODE}
                 countryCode={DEFAULT_COUNTRY_CODE}
-                googleSearchBarMainContainerClassName="w-full h-[49px] bg-custom-background-primary z-[9999]"
-                searchInputClassName="primaryFontNormalWeight text-[14px] w-full h-[49px]"
+                AddressListContainerClassName="AddressListContainer"
+                googleSearchBarMainContainerClassName="w-full bg-text-input-primary AddressListContainer h-[49px] relative  z-[9]"
+                searchInputClassName="primaryFontNormalWeight bg-text-input-primary text-[14px] !pl-3 w-full h-[49px]"
                 getSelectedAddressDetails={(
                   coOrdinates: any,
                   addressData: any,
                   address: string
                 ) => {
-                  console.log(coOrdinates, addressData, address,"address autocomplete");
+                  const formatted = getFormattedAddressFromGooglePlace(addressData);
+                  const line1 =  address || formatted?.addressLine1 || "";
+                  const city  = formatted?.city || "";
+                  const state = formatted?.stateCode || formatted?.state || "";
+                  const zip   = formatted?.zipCode || "";
+                  setValue("pickupAddress", line1,  { shouldDirty: true, shouldValidate: false });
+                  setValue("pickupCity",    city,   { shouldDirty: true, shouldValidate: true });
+                  setValue("pickupState",   state,  { shouldDirty: true, shouldValidate: true });
+                  setValue("pickupZip",     zip,    { shouldDirty: true, shouldValidate: true });
                   // parseAddressComponents(coOrdinates, addressData, address);
                 }}
+                restrictToCitiesOnly={false}
                 setIsSearchAddress={(value: boolean) => {
-                  // setIsSearchAddress(value);
+                  // setValue("pickupAddress", "");
                 }}
-                // placeValue={addedAddressPoints?.addressLine1 || ""}
+                placeValue={formData.pickupAddress || ""}
                 mainContainerHeight="49px"
                 showSearchIcon={true}
               />
+              {errors.pickupAddress && (
+               <p className="text-sm text-destructive">{errors.pickupAddress.message}</p>
+               )}
 
           {/* City, State, Zip */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -330,6 +340,7 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
             <Input
               id="pickupContactName"
               placeholder="John Doe"
+              defaultValue={formData.pickupContactName}
               {...register("pickupContactName")}
               className={errors.pickupContactName ? "border-destructive" : ""}
             />
@@ -341,16 +352,16 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
               {/* Hidden input to register with react-hook-form / zod */}
               <input type="hidden" {...register("pickupContactPhone")} />
               <CustomPhoneNumberInputField
-                name="pickupContact.phoneNumber"
-                countryCodeName="pickupContact.countryCode"
+                name="pickupContactPhone"
+                countryCodeName={DEFAULT_COUNTRY_CODE}
                 defaultCountryCode={DEFAULT_COUNTRY_CODE}
                 required
                 id="pickupContactPhone"
                 customPhoneNumberFieldStructure="w-full"
                 customPhoneNumberFieldWrapper="w-full"
                 intlInputFieldId="pickupContactPhone"
-                phoneNumberValue={formData.phone}
-                phoneNumberDefaultValue={formData.phone}
+                phoneNumberValue={formData.pickupContactPhone}
+                phoneNumberDefaultValue={formData.pickupContactPhone}
                 customIntlTelInputContainer="
                   intl-tel-input separate-dial-code w-full
                   border border-input rounded-md bg-background
@@ -498,6 +509,25 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
         </p>
       </div>
       </form>
+      <style jsx global>{`
+        .AddressListContainer {
+            ul {
+                position: absolute;
+                left: 0;
+                background: var(--white_color);
+                font-family: var(--primary-font);
+                font-weight:500;
+                font-size: 14px;
+                box-shadow: -8px 8px 12px var(--background-secondary);
+                text-transform: capitalize;
+                color: var(--text-active-loads-primary);
+                width: 100%;
+                z-index: 99;
+                border: 1px solid var(--tabs-border-color);
+                border-radius: 5px;
+              }
+        }
+      `}</style>
     </div>
   );
 }
