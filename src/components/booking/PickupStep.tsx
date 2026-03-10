@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { OrderSummaryPanel } from "@/components/booking/OrderSummaryPanel";
 import CustomPhoneNumberInputField from "@/components/ui/customPhoneNumber/phoneInput";
 import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, PREFERRED_COUNTRY_CODES } from "@/lib/config";
+import AddressAutocomplete from "../custom-google-searchbar";
 
 const pickupSchema = z.object({
   pickupLocationType: z.string().min(1, "Please select a location type"),
@@ -184,6 +185,27 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
               <p className="text-sm text-destructive">{errors.pickupAddress.message}</p>
             )}
           </div>
+
+          <AddressAutocomplete
+                key={DEFAULT_COUNTRY_CODE}
+                countryCode={DEFAULT_COUNTRY_CODE}
+                googleSearchBarMainContainerClassName="w-full h-[49px] bg-custom-background-primary z-[9999]"
+                searchInputClassName="primaryFontNormalWeight text-[14px] w-full h-[49px]"
+                getSelectedAddressDetails={(
+                  coOrdinates: any,
+                  addressData: any,
+                  address: string
+                ) => {
+                  console.log(coOrdinates, addressData, address,"address autocomplete");
+                  // parseAddressComponents(coOrdinates, addressData, address);
+                }}
+                setIsSearchAddress={(value: boolean) => {
+                  // setIsSearchAddress(value);
+                }}
+                // placeValue={addedAddressPoints?.addressLine1 || ""}
+                mainContainerHeight="49px"
+                showSearchIcon={true}
+              />
 
           {/* City, State, Zip */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

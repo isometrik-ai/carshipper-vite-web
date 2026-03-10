@@ -5,6 +5,8 @@ import { NON_DIGIT_REGEX, US_PHONE_FORMAT_REGEX } from '@/lib/regx.constant';
 import { getPhoneNumberLengthRange} from "@/lib/global";
 import { PHONE_NUMBER_MAX_DIGITS } from "@/lib/config";
 import { isValidNumber } from "libphonenumber-js";
+// import 'react-phone-number-input/style.css'
+// import PhoneInput from 'react-phone-number-input'
 
 const CustomPhoneNumberInputField = (props) =>{
     const {

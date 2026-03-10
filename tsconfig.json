@@ -27,6 +27,6 @@
     "noUnusedLocals": false,
     "strictNullChecks": false
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/ui/customPhoneNumber/phoneInput.jsx"],
   "exclude": ["node_modules", "src/pages-old", "src/pages", "src/App.tsx", "src/App.tsx.old", "src/main.tsx", "src/main.tsx.old", "vite.config.ts"]
 }
