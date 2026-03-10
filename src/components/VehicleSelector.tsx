@@ -28,6 +28,7 @@ import { Car, Hash, Loader2, Trash2, Check, ChevronsUpDown } from "lucide-react"
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { VehicleFieldConfig } from "@/types/QuoteForm.types";
+import { VinNumberDetails } from "@/services/quote-services";
 
 // Generate years from current year + 1 down to 1980
 const currentYear = new Date().getFullYear();
@@ -120,16 +121,16 @@ export const VehicleSelector = ({
     onUpdate({ vinLookupLoading: true });
 
     try {
-      const response = await fetch(
-        `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`
-      );
-      const data = await response.json();
-
-      if (data.Results && data.Results[0]) {
-        const result = data.Results[0];
-        const year = result.ModelYear || "";
-        const make = result.Make || "";
-        const model = result.Model || "";
+      // const response = await fetch(
+      //   `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`
+      // );
+      // const data = await response.json();
+      const response = await VinNumberDetails({ vin: vin });
+      const data = response?.data;
+      if (Object.keys(data).length > 0) {
+        const year = data?.year || "";
+        const make = data?.make || "";
+        const model = data?.model || "";
 
         if (make && model) {
           onUpdate({

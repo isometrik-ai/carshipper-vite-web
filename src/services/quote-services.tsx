@@ -14,7 +14,7 @@ export const CreateNewQuotePostAPI = async (
     }
 };
 
-export const QuoteGetDetailsPostAPI = async (
+export const QuoteGetDetailsAPI = async (
   quoteId: string,
   signal?: AbortSignal
 ) => {
