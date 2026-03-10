@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ReadonlyURLSearchParams, useParams, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookingHeader } from "@/components/booking/BookingHeader";
@@ -12,6 +12,7 @@ import { DeliveryStep } from "@/components/booking/DeliveryStep";
 import { BookShipmentStep } from "@/components/booking/BookShipmentStep";
 // import { BookingSummary } from "@/components/booking/BookingSummary";
 import { SuccessStep } from "@/components/booking/SuccessStep";
+import { QuoteGetDetailsAPI } from "@/services/quote-services";
 
 export interface BookingFormData {
   // Contact Info
@@ -111,16 +112,37 @@ const steps = [
   { id: 5, name: "Thank You", shortName: "Done" },
 ];
 
-export default function BookingPage(props: { quoteId: string, initialTier?: "saver" | "priority" | "rush" }) {
+export default function BookingPage(props: { quoteId: string; initialTier?: "saver" | "priority" | "rush" }) {
   const quoteId: string | undefined = useParams().quoteId as string;
   const searchParams: ReadonlyURLSearchParams = useSearchParams();
-  
+
   const initialTier = (searchParams.get("tier") as "saver" | "priority" | "rush") || "priority";
-  
+
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedTier, setSelectedTier] = useState<"saver" | "priority" | "rush">(initialTier);
   const [formData, setFormData] = useState<BookingFormData>(initialFormData);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [quoteDetails, setQuoteDetails] = useState<any | null>(null);
+
+  useEffect(() => {
+    const effectiveQuoteId = props.quoteId || quoteId;
+
+    if (!effectiveQuoteId) return;
+
+    const controller = new AbortController();
+
+    QuoteGetDetailsAPI(effectiveQuoteId, controller.signal)
+      .then((response) => {
+        setQuoteDetails((response as any)?.data ?? response);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch quote details", error);
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [props.quoteId, quoteId]);
 
   const price = quoteData.prices[selectedTier];
 
@@ -144,7 +166,7 @@ export default function BookingPage(props: { quoteId: string, initialTier?: "sav
 
   const handleSubmit = () => {
     // In production, this would submit to an API
-    console.log("Booking submitted:", { formData, tier: selectedTier, quoteId });
+    console.log("Booking submitted:", { formData, tier: selectedTier, quoteId, quoteDetails });
     setIsSubmitted(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

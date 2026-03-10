@@ -16,7 +16,6 @@ export const dynamic = 'force-dynamic';
  */
 export default function HomePage() {
   const { data, isLoading } = useLandingPage();
-  console.log('data', data)
   // Extract page content components
   const pageContent = useMemo(() => {
     return data?.data?.page_content || [];
