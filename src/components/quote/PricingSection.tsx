@@ -1,6 +1,7 @@
 import { PricingCard } from "@/components/quote/PricingCard";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations/AnimationWrappers";
 
+
 interface PricingSectionProps {
   quoteId: string;
   prices: {
@@ -51,6 +52,7 @@ const pricingTiers = [
 ];
 
 export function PricingSection({ quoteId, prices }: PricingSectionProps) {
+
   return (
     <section id="pricing" className="py-16 md:py-24 bg-background">
       <div className="container">
