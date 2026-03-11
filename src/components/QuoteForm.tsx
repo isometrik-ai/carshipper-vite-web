@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ import AddressAutocomplete from "./custom-google-searchbar";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/config";
 import { getFormattedAddressFromGooglePlace } from "@/lib/global";
 import { CreateNewQuotePostAPI } from "@/services/quote-services";
+import CustomPhoneNumberInputField from "@/components/ui/customPhoneNumber/phoneInput";
+import { emailValidator } from "@/lib/helpers";
 
 interface QuoteFormProps {
   defaultOrigin?: string;
@@ -42,6 +44,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<Step>("vehicles");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const requestAbortRef = useRef<AbortController | null>(null);
 
   // Extract form config with fallbacks
   const formConfig = useMemo(() => {
@@ -130,6 +133,12 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
     email: "",
     phone: ""
   });
+  const [contactErrors, setContactErrors] = useState<{
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+  }>({});
 
   const currentStepIndex = STEPS.indexOf(currentStep);
   const progress = ((currentStepIndex + 1) / STEPS.length) * 100;
@@ -190,11 +199,27 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       case "timeframe":
         return timeframe !== "";
       case "contact":
-        return contactInfo.first_name.trim().length > 0 && contactInfo.email.trim().length > 0;
+        return (
+          contactInfo?.first_name?.trim()?.length > 0 &&
+          contactInfo?.last_name?.trim()?.length > 0 &&
+          contactInfo?.email?.trim()?.length > 0 &&
+          !contactErrors?.email &&
+          !contactErrors?.phone
+        );
       default:
         return true;
     }
-  }, [currentStep, vehicles, pickupLocation, dropLocations, transportType, timeframe, contactInfo]);
+  }, [
+    currentStep,
+    vehicles,
+    pickupLocation,
+    dropLocations,
+    transportType,
+    timeframe,
+    contactInfo,
+    contactErrors.email,
+    contactErrors.phone,
+  ]);
 
   const nextStep = useCallback(() => {
     const idx = STEPS.indexOf(currentStep);
@@ -209,6 +234,14 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       setCurrentStep(STEPS[idx - 1]);
     }
   }, [currentStep, STEPS]);
+
+  const handleBackClick = () => {
+    if (requestAbortRef?.current) {
+      requestAbortRef?.current?.abort();
+    }
+    setIsSubmitting(false);
+    prevStep();
+  };
 
   const toRadians = (value: number): number => (value * Math.PI) / 180;
 
@@ -232,8 +265,38 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   };
 
   const handleSubmit = async () => {
-    if (!canProceed()) return;
+    // Guard: ensure required contact fields are present + valid before starting loader
+    if (currentStep === "contact") {
+      const nextErrors: typeof contactErrors = {};
 
+      if (!contactInfo?.first_name?.trim()) nextErrors.first_name = "First name is required";
+      if (!contactInfo?.last_name?.trim()) nextErrors.last_name = "Last name is required";
+
+      if (!contactInfo?.email?.trim()) {
+        nextErrors.email = "Email is required";
+      } else if (!emailValidator(contactInfo?.email?.trim())) {
+        nextErrors.email = "Please enter a valid email address";
+      }
+
+      // If phone is marked required by config, enforce it
+      const phoneFieldRequired =
+        currentStepConfig?.fields?.some(
+          (f) => f.field_key === "phone" && f.is_required
+        ) ?? false;
+      if (phoneFieldRequired) {
+        if (!contactInfo?.phone?.trim()) nextErrors.phone = "Phone number is required";
+        else if (contactErrors?.phone) nextErrors.phone = contactErrors?.phone;
+      }
+
+      if (Object.keys(nextErrors)?.length > 0) {
+        setContactErrors((prev) => ({ ...prev, ...nextErrors }));
+        return;
+      }
+    }
+
+    if (!canProceed()) return;
+    const controller = new AbortController();
+    requestAbortRef.current = controller;
     setIsSubmitting(true);
 
     try {
@@ -276,7 +339,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         delivery_state: primaryDrop?.state || "",
       };
 
-      const response = await CreateNewQuotePostAPI(payload);
+      const response = await CreateNewQuotePostAPI(payload,controller.signal);
 
       const quoteId =
         response?.quote_id ||
@@ -300,6 +363,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       });
     } finally {
       setIsSubmitting(false);
+      requestAbortRef.current = null;
     }
   };
 
@@ -323,6 +387,26 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
     enter: { opacity: 0, x: 20 },
     center: { opacity: 1, x: 0 },
     exit: { opacity: 0, x: -20 }
+  };
+
+  const handleContactChange = (key: string, value: string) => {
+    setContactInfo((prev) => ({ ...prev, [key]: value }));
+
+    // Minimal email validation: don't block typing, just set an error string.
+    if (key === "email") {
+      const ok = !value || emailValidator(value);
+      setContactErrors((prev) => ({
+        ...prev,
+        email: ok ? "" : "Please enter a valid email address",
+      }));
+    }
+
+    // Clear required-field errors as user types
+    if (key === "first_name" || key === "last_name") {
+      if (value.trim().length > 0) {
+        setContactErrors((prev) => ({ ...prev, [key]: "" }));
+      }
+    }
   };
 
   return (
@@ -780,15 +864,82 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                       {field.label || field.field_key}
                       {!isRequired ? <span className="text-muted-foreground"> (optional)</span> : null}
                     </Label>
-                    <Input
-                      id={fieldId}
-                      type={field.field_key === "email" ? "email" : field.field_key === "phone" ? "tel" : "text"}
-                      placeholder={field.placeholder || ""}
-                      value={fieldValue}
-                      onChange={(e) => setContactInfo({ ...contactInfo, [field.field_key]: e.target.value })}
-                      className="mt-1"
-                      required={isRequired}
-                    />
+                    {field.field_key === "phone" ? (
+                      <div className="mt-1">
+                        <CustomPhoneNumberInputField
+                          intlInputFieldId={fieldId}
+                          intlInputFieldName="phone"
+                          customIntlTelInputContainer="
+                          intl-tel-input separate-dial-code w-full
+                          border border-input rounded-md bg-background
+                          text-sm shadow-sm
+                          focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1
+                         "
+                         customIntlTelInputWrapper="
+                          w-full bg-transparent border-0
+                          px-3 py-2
+                          text-sm text-foreground
+                          placeholder:text-muted-foreground
+                          focus-visible:outline-none
+                         "
+                          phoneNumberValue={contactInfo.phone}
+                          phoneNumberDefaultValue={contactInfo.phone}
+                          useSeparateDialCode={true}
+                          useNationalMode={false}
+                          country={DEFAULT_COUNTRY_CODE}
+                          onPhoneNumberChanges={(value: any) => {
+                            const mobile = value?.mobile ?? "";
+                            handleContactChange("phone", mobile);
+
+                            // Minimal validation (no RHF here): show error if user typed something invalid.
+                            if (!mobile) {
+                              setContactErrors((prev) => ({ ...prev, phone: "" }));
+                              return;
+                            }
+
+                            if (value?.isValid === false) {
+                              setContactErrors((prev) => ({
+                                ...prev,
+                                phone: "Please enter a valid phone number",
+                              }));
+                            } else {
+                              setContactErrors((prev) => ({ ...prev, phone: "" }));
+                            }
+                          }}
+                        />
+                        {contactErrors.phone ? (
+                          <p className="text-sm text-destructive mt-1">
+                            {contactErrors.phone}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <Input
+                        id={fieldId}
+                        type={field.field_key === "email" ? "email" : "text"}
+                        placeholder={field.placeholder || ""}
+                        value={fieldValue}
+                        name={field.field_key}
+                        onChange={(e) => handleContactChange(field.field_key, e.target.value)}
+                        className={`mt-1 ${
+                          (field.field_key === "email" && contactErrors.email) ||
+                          (field.field_key === "first_name" && contactErrors.first_name) ||
+                          (field.field_key === "last_name" && contactErrors.last_name)
+                            ? "border-destructive"
+                            : ""
+                        }`}
+                        required={isRequired}
+                      />
+                    )}
+                    {field.field_key === "first_name" && contactErrors.first_name ? (
+                      <p className="text-sm text-destructive mt-1">{contactErrors.first_name}</p>
+                    ) : null}
+                    {field.field_key === "last_name" && contactErrors.last_name ? (
+                      <p className="text-sm text-destructive mt-1">{contactErrors.last_name}</p>
+                    ) : null}
+                    {field.field_key === "email" && contactErrors.email ? (
+                      <p className="text-sm text-destructive mt-1">{contactErrors.email}</p>
+                    ) : null}
                     {field.helper_text ? (
                       <p className="text-xs text-muted-foreground mt-1">{field.helper_text}</p>
                     ) : null}
@@ -807,7 +958,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
             type="button"
             variant="outline"
             className="flex-1"
-            onClick={prevStep}
+            onClick={handleBackClick}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             {formConfig.buttonTexts.back_button}
