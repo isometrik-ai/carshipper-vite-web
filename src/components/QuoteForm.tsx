@@ -126,12 +126,20 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   const [timeframe, setTimeframe] = useState("");
 
   // Contact info
-  const [contactInfo, setContactInfo] = useState({
+  const [contactInfo, setContactInfo] = useState<{
+    name: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    phone_country_code?: string;
+  }>({
     name: "",
     first_name: "",
     last_name: "",
     email: "",
-    phone: ""
+    phone: "",
+    phone_country_code: undefined,
   });
   const [contactErrors, setContactErrors] = useState<{
     first_name?: string;
@@ -325,8 +333,10 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         distance_miles: distanceMiles,
         transport_type: transportType === "enclosed" ? "Enclosed Transport" : "Open Transport",
         customer_email: contactInfo.email,
-        customer_first_name: contactInfo.first_name || "", //contactInfo.name.split(" ")[0] || contactInfo.name,
-        customer_last_name: contactInfo.last_name || "", //contactInfo.name.split(" ").slice(1).join(" ") || "",
+        customer_first_name: contactInfo.first_name || "",
+        customer_last_name: contactInfo.last_name || "",
+        customer_phone: contactInfo.phone || "",
+        customer_country_code: contactInfo.phone_country_code || "",
         vehicles: vehicles.map((v) => ({
           year: Number(v.year),
           make: v.make,
@@ -335,8 +345,14 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         })),
         pickup_city: pickupCity,
         pickup_state: pickupState,
+        pickup_addLine1: pickupLocation || "",
+        pickup_addLine2: "",
+        pickup_country: DEFAULT_COUNTRY_CODE,
         delivery_city: primaryDrop?.city || "",
         delivery_state: primaryDrop?.state || "",
+        delivery_addLine1: primaryDrop?.location || "",
+        delivery_addLine2: "",
+        delivery_country: DEFAULT_COUNTRY_CODE,
       };
 
       const response = await CreateNewQuotePostAPI(payload,controller.signal);
@@ -889,7 +905,9 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                           country={DEFAULT_COUNTRY_CODE}
                           onPhoneNumberChanges={(value: any) => {
                             const mobile = value?.mobile ?? "";
+                            const countryCode = value?.countryCode ?? "";
                             handleContactChange("phone", mobile);
+                            handleContactChange("phone_country_code", countryCode);
 
                             // Minimal validation (no RHF here): show error if user typed something invalid.
                             if (!mobile) {
