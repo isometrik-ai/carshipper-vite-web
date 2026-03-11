@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
+const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://5.161.218.11:7008';
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  async rewrites() {
+    return [
+      { source: '/api/backend/:path*', destination: `${backendUrl}/:path*` },
+    ];
+  },
   typescript: {
     // Temporarily ignore type errors during build
     ignoreBuildErrors: true,

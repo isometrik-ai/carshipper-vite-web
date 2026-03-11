@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useLandingPage } from "@/api/landingPage";
 import { usePageContentRenderer } from "@/utils/componentMapper";
-import QuotePage from "@/containers/QuotePage";
+import { getAllActivePricingRulesList } from "@/services/pricing-services";
 // Force dynamic rendering (no static generation)
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +16,6 @@ export const dynamic = 'force-dynamic';
  */
 export default function HomePage() {
   const { data, isLoading } = useLandingPage();
-
   // Extract page content components
   const pageContent = useMemo(() => {
     return data?.data?.page_content || [];
@@ -24,6 +23,10 @@ export default function HomePage() {
 
   // Render page content components
   const renderedContent = usePageContentRenderer(pageContent);
+
+  useEffect(()=>{
+    getAllActivePricingRulesList('');
+  })
 
   // Show loading state while fetching initial data
   if (isLoading && !data) {
@@ -35,7 +38,7 @@ export default function HomePage() {
   }
 
   return <>
-   <QuotePage />
+   {renderedContent}
   </>;
 }
 
