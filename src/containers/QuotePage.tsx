@@ -157,7 +157,8 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
     : "";
 
   const rawQuoteId = quoteDetails?.data?.quote?.quote_number || "";
-  const safeDisplayQuoteId = getSafeQuoteId(rawQuoteId) ?? "";
+  const normalizedQuoteId = rawQuoteId.replace(/^#/, "");
+  const safeDisplayQuoteId = getSafeQuoteId(normalizedQuoteId) ?? "";
   return (
     <div className="min-h-screen bg-background">
       <QuoteHeader quoteId={safeDisplayQuoteId} />
