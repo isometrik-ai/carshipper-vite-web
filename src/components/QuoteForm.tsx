@@ -20,6 +20,7 @@ import { getFormattedAddressFromGooglePlace } from "@/lib/global";
 import { CreateNewQuotePostAPI } from "@/services/quote-services";
 import CustomPhoneNumberInputField from "@/components/ui/customPhoneNumber/phoneInput";
 import { emailValidator } from "@/lib/helpers";
+import { getSafeQuoteRoute } from "@/shared/routes";
 
 interface QuoteFormProps {
   defaultOrigin?: string;
@@ -371,7 +372,13 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         description: formConfig.successToastDescription,
       });
 
-      router.push(`/book/${quoteId}?tier=priority`);
+      const quoteRoute = getSafeQuoteRoute(String(quoteId));
+
+      if (quoteRoute) {
+        router.push(quoteRoute);
+      } else {
+        toast.error("Invalid quote ID");
+      }
     } catch (error: any) {
       console.error("Failed to create quote", error);
       toast.error("Unable to create quote", {
