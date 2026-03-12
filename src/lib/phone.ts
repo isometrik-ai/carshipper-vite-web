@@ -30,15 +30,15 @@ export const getPhoneConstraints = (
 ): { min: number; max: number } => {
   try {
     const range = getPhoneNumberLengthRange(iso2Upper as CountryCode);
-    if (range && (range.min || range.max)) {
+    if (range && typeof range.min === 'number' && typeof range.max === 'number') {
       return range;
     }
   } catch {
     // fall through to default
-    return {
-      min: PHONE_NUMBER_MAX_DIGITS,
-      max: PHONE_NUMBER_MAX_DIGITS,
-    };
   }
+  // Return default range if getPhoneNumberLengthRange fails or returns invalid data
+  return {
+    min: PHONE_NUMBER_MAX_DIGITS,
+    max: PHONE_NUMBER_MAX_DIGITS,
+  };
 };
-
