@@ -30,6 +30,7 @@ interface QuoteFormProps {
 interface DropLocation {
   id: string;
   location: string;
+  displayLocation?: string;
   vehicleIds: string[];
   city?: string;
   state?: string;
@@ -113,6 +114,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
 
   // Locations
   const [pickupLocation, setPickupLocation] = useState(defaultOrigin);
+  const [pickupDisplayLocation, setPickupDisplayLocation] = useState(defaultOrigin);
   const [pickupCity, setPickupCity] = useState("");
   const [pickupState, setPickupState] = useState("");
   const [pickupZip, setPickupZip] = useState("");
@@ -200,9 +202,20 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       case "running":
         return vehicles.every(v => v.isRunning !== null);
       case "pickup":
-        return pickupLocation.trim().length > 0;
+        return (
+          pickupLocation.trim().length > 0 &&
+          pickupCity.trim().length > 0 &&
+          pickupState.trim().length > 0 &&
+          pickupZip.trim().length > 0
+        );
       case "drops":
-        return dropLocations.every(d => d.location.trim().length > 0);
+        return dropLocations.every(
+          (d) =>
+            d.location.trim().length > 0 &&
+            (d.city || "").trim().length > 0 &&
+            (d.state || "").trim().length > 0 &&
+            (d.zip || "").trim().length > 0
+        );
       case "transport":
         return transportType !== null;
       case "timeframe":
@@ -222,6 +235,9 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
     currentStep,
     vehicles,
     pickupLocation,
+    pickupCity,
+    pickupState,
+    pickupZip,
     dropLocations,
     transportType,
     timeframe,
@@ -623,7 +639,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
               searchInputClassName="primaryFontNormalWeight bg-text-input-primary text-[14px] !pl-3 w-full h-[49px]"
               showSearchIcon={false}
               mainContainerHeight="49px"
-              placeValue={pickupLocation || ""}
+              placeValue={pickupDisplayLocation || pickupLocation || ""}
               showSearchPointNameReactNode={true}
               searchPointNameReactNode={
                 <MapPin className="ml-2 w-5 h-5 text-muted-foreground" />
@@ -640,7 +656,8 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                 const city  = formatted?.city || "";
                 const state = formatted?.stateCode || formatted?.state || "";
                 const zip   = formatted?.zipCode || "";
-
+                const display = fullAddress || "";
+                setPickupDisplayLocation(display);
                 setPickupLocation(line1);
                 setPickupCity(city);
                 setPickupState(state);
@@ -651,6 +668,11 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                 }
               }}
             />
+            {(!pickupCity || !pickupState || !pickupZip) && (pickupDisplayLocation || pickupLocation) ? (
+              <p className="text-sm text-destructive mt-1">
+                Please select a full address including city, state, and ZIP from the suggestions.
+              </p>
+            ) : null}
             </div>
           </motion.div>
         )}
@@ -700,7 +722,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                           searchInputClassName="primaryFontNormalWeight bg-text-input-primary text-[14px] !pl-3 w-full h-[49px]"
                           showSearchIcon={false}
                           mainContainerHeight="49px"
-                          placeValue={drop.location || ""}
+                          placeValue={drop.displayLocation || drop.location || ""}
                           showSearchPointNameReactNode={true}
                           searchPointNameReactNode={
                             <MapPin className="ml-2 w-5 h-5 text-muted-foreground" />
@@ -717,8 +739,10 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                             const city  = formatted?.city || "";
                             const state = formatted?.stateCode || formatted?.state || "";
                             const zip   = formatted?.zipCode || "";
+                            const display = fullAddress || "";
 
-                            updateDropLocation(drop.id, { 
+                            updateDropLocation(drop.id, {
+                              displayLocation: display, 
                               location: line1,
                               city,
                               state,
@@ -728,6 +752,11 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                             });
                           }}
                         />
+                        {(!drop.city || !drop.state || !drop.zip) && (drop.displayLocation || drop.location) ? (
+                          <p className="text-sm text-destructive mt-1">
+                            Please select a full address including city, state, and ZIP from the suggestions.
+                          </p>
+                        ) : null}
                       </div>
                     </div>
                     {dropLocations.length > 1 ? (
@@ -900,8 +929,9 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                       <div className="mt-1">
                         <CustomPhoneNumberInputField
                           intlInputFieldId={fieldId}
-                          intlInputFieldName="phone"
+                          intlInputFieldName="phone_number"
                           customIntlTelInputContainer="
+                          flex
                           intl-tel-input separate-dial-code w-full
                           border border-input rounded-md bg-background
                           text-sm shadow-sm
