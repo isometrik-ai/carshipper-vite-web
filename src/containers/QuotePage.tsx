@@ -10,7 +10,8 @@ import { QuoteFooter } from "@/components/quote/QuoteFooter";
 import { useEffect, useState } from "react";
 import { QuoteGetDetailsAPI } from "@/services/quote-services";
 import { formatDisplayDate, getFirstNumberFromString } from "@/lib/helpers";
-import { SAFE_QUOTE_ID_REGEX, UNSAFE_QUOTE_ID_CHARS_REGEX } from "@/lib/regx.constant";
+import { getSafeQuoteId } from "@/shared/routes";
+import { UNSAFE_QUOTE_ID_CHARS_REGEX } from "@/lib/regx.constant";
 // Sample quote data - in production this would come from API/props
 
 type Route = {
@@ -70,18 +71,12 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
   const [quoteDetails, setQuoteDetails] = useState<QuoteResponse | null>(null);
 
   useEffect(() => {
-    const effectiveQuoteId = quoteId;
+    const safeQuoteId = getSafeQuoteId(quoteId);
 
-    if (!effectiveQuoteId) return;
-
-    // Validate quoteId to avoid unsafe characters in API calls and URLs
-    if (typeof effectiveQuoteId !== "string" || !SAFE_QUOTE_ID_REGEX.test(effectiveQuoteId)) {
+    if (!safeQuoteId) {
       console.error("Invalid quoteId");
       return;
     }
-
-    // Sanitize any unexpected characters defensively
-    const safeQuoteId = effectiveQuoteId.replace(UNSAFE_QUOTE_ID_CHARS_REGEX, "");
 
     const controller = new AbortController();
 

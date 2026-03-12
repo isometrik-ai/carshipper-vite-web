@@ -20,7 +20,7 @@ import { getFormattedAddressFromGooglePlace } from "@/lib/global";
 import { CreateNewQuotePostAPI } from "@/services/quote-services";
 import CustomPhoneNumberInputField from "@/components/ui/customPhoneNumber/phoneInput";
 import { emailValidator } from "@/lib/helpers";
-import { ROUTES_LIST, getQuoteRoute } from "@/shared/routes";
+import { getSafeQuoteRoute } from "@/shared/routes";
 
 interface QuoteFormProps {
   defaultOrigin?: string;
@@ -328,6 +328,11 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         );
       }
 
+      const defaultCountryName:string = 
+      DEFAULT_COUNTRY_CODE ? 
+      DEFAULT_COUNTRY_CODE?.toLowerCase() === "us" ? 
+      "USA" : (DEFAULT_COUNTRY_CODE || "") : "";
+
       const payload = {
         pickup_zip: pickupZip,
         delivery_zip: primaryDrop?.zip || "",
@@ -348,12 +353,16 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         pickup_state: pickupState,
         pickup_addLine1: pickupLocation || "",
         pickup_addLine2: "",
-        pickup_country: DEFAULT_COUNTRY_CODE,
+        pickup_country: defaultCountryName,
         delivery_city: primaryDrop?.city || "",
         delivery_state: primaryDrop?.state || "",
         delivery_addLine1: primaryDrop?.location || "",
         delivery_addLine2: "",
-        delivery_country: DEFAULT_COUNTRY_CODE,
+        delivery_country: defaultCountryName,
+        pickup_latitude: pickupLat ?? null,
+        pickup_longitude: pickupLng ?? null,
+        delivery_latitude: primaryDrop?.lat ?? null,
+        delivery_longitude: primaryDrop?.lng ?? null,
       };
 
       const response = await CreateNewQuotePostAPI(payload,controller.signal);
@@ -372,10 +381,12 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         description: formConfig.successToastDescription,
       });
 
-      if (quoteId) {
-        router.push(getQuoteRoute(String(quoteId)));
+      const quoteRoute = getSafeQuoteRoute(String(quoteId));
+
+      if (quoteRoute) {
+        router.push(quoteRoute);
       } else {
-        toast.error("Failed to retrieve quote ID");
+        toast.error("Invalid quote ID");
       }
     } catch (error: any) {
       console.error("Failed to create quote", error);

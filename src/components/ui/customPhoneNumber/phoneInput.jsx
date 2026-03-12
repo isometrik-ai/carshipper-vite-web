@@ -1,10 +1,11 @@
-import React, { useEffect,useRef, useState } from "react";
-import 'react-intl-tel-input/dist/main.css';
-import IntlTelInput from "react-intl-tel-input";
-import { NON_DIGIT_REGEX, US_PHONE_FORMAT_REGEX } from '@/lib/regx.constant';
-import { getPhoneNumberLengthRange} from "@/lib/global";
-import { PHONE_NUMBER_MAX_DIGITS } from "@/lib/config";
+import React, { useEffect, useRef, useState } from "react";
+import { NON_DIGIT_REGEX, US_PHONE_FORMAT_REGEX } from "@/lib/regx.constant";
 import { isValidNumber } from "libphonenumber-js";
+import {
+  resolveCountryIso2,
+  resolveDialCode,
+  getPhoneConstraints,
+} from "@/lib/phone";
 // import 'react-phone-number-input/style.css'
 // import PhoneInput from 'react-phone-number-input'
 
@@ -38,53 +39,31 @@ const CustomPhoneNumberInputField = (props) =>{
 
     useEffect(() => {
         if (inputRef.current) {
-          const inputElement = inputRef.current.querySelector('input');
+          const inputElement = inputRef.current.querySelector("input");
           if (inputElement) {
             inputElement.tabIndex = tabindex;
             inputElement.onkeydown = (e) => {
-    
-              const cleaned = inputElement?.value?.replace(NON_DIGIT_REGEX, '');
-              if (cleaned?.length >= 10 && /\d/.test(e?.key)) {
+              const cleaned = inputElement?.value?.replace(NON_DIGIT_REGEX, "") || "";
+              const iso2Lower = resolveCountryIso2(country);
+              const { max } = getPhoneConstraints(iso2Lower.toUpperCase());
+
+              if (cleaned?.length >= max && /\d/.test(e?.key)) {
                 e?.preventDefault();
               }
-    
-              if (e.key === 'Enter') {
+
+              if (e.key === "Enter") {
                 e.preventDefault();
-                const nextElement = document.querySelector(`[tabindex="${tabindex + 1}"]`);
+                const nextElement = document.querySelector(
+                  `[tabindex="${tabindex + 1}"]`
+                );
                 if (nextElement) {
                   nextElement.focus();
                 }
               }
             };
-
-            inputElement.onblur = () => {
-                const rawValue = inputElement.value?.replace(NON_DIGIT_REGEX, '') || '';
-                const startsWith5 = rawValue.charAt(0) === '5';
-        
-                if (!rawValue || rawValue.length < 9) {
-                  // trigger red border (error)
-                  props.setFieldErrors?.((prev) => ({
-                    ...prev,
-                    phoneNumberValue: true,
-                  }));
-        
-                  props.setPhoneNumberSignUpData?.((prev) => ({
-                    ...prev,
-                    validateErrorMsg: rawValue.length === 0
-                      ? props.locale?.phoneNumberRequired || "Phone number is required"
-                        : props.locale?.phoneNumberInvalid || "Phone number is not valid"
-                  }));
-                } else {
-                  // clear error
-                  props.setFieldErrors?.((prev) => ({
-                    ...prev,
-                    phoneNumberValue: false,
-                  }));
-                }
-            }
           }
         }
-      }, [inputRef, tabindex, props]);
+      }, [inputRef, tabindex, country]);
 
     const formatPhoneNumber = (value) => {
         if (!value) return value;
@@ -99,16 +78,13 @@ const CustomPhoneNumberInputField = (props) =>{
         return value;
     };
 
-    const handlePhoneNumberChange = (...args) => {
-        const isValidNumberFromIntl  = args[0];
-        let value = args[1];
-        let phoneStartWithZero = 0
-        const countryData = args[2];
-        let maxDigitForPhoneNumber = {
-            min: PHONE_NUMBER_MAX_DIGITS,
-            max: PHONE_NUMBER_MAX_DIGITS
-        };
-        if (value?.startsWith(0)) phoneStartWithZero = 1
+    const handlePhoneNumberChange = (e) => {
+        let value = e?.target?.value ?? "";
+        let phoneStartWithZero = 0;
+        const iso2Lower = resolveCountryIso2(country);
+        const iso2Upper = iso2Lower.toUpperCase();
+        const { max: maxDigits } = getPhoneConstraints(iso2Upper);
+        if (value?.startsWith(0)) phoneStartWithZero = 1;
 
         // Get old formatted value and cursor position BEFORE any processing
         const inputElement = document.getElementById(intlInputFieldId);
@@ -116,10 +92,11 @@ const CustomPhoneNumberInputField = (props) =>{
         const oldCursorPos = inputElement ? inputElement.selectionStart : 0;
 
         value = value.replace(NON_DIGIT_REGEX, '');
-        if(value?.length > 0 && args[2].iso2?.length > 0){
-            maxDigitForPhoneNumber = getPhoneNumberLengthRange(args[2]?.iso2?.toUpperCase());
+        // Enforce max digits based on shared constraints
+        if (value?.length > maxDigits) {
+            value = value.slice(0, maxDigits);
         }
-        
+
         const formattedNumber = formatPhoneNumber(value);
         setPhoneNumber(formattedNumber);
 
@@ -189,78 +166,75 @@ const CustomPhoneNumberInputField = (props) =>{
                 inputElement.setSelectionRange(newCursorPos, newCursorPos);
             }, 0);
         }
-        const isValidLibPhone = isValidNumber(value, countryData?.iso2?.toUpperCase());
+        const isValidLibPhone = isValidNumber(value, iso2Upper);
+        const dialCode = resolveDialCode(iso2Lower);
         const phoneObjectData = {
             mobile: formattedNumber,
-            countryCode: `+${countryData?.dialCode || ''}`,
-            sortCountryCode: countryData?.iso2?.toUpperCase(),
-            isValid: isValidLibPhone || isValidNumberFromIntl 
+            countryCode: dialCode,
+            sortCountryCode: iso2Upper,
+            isValid: isValidLibPhone
         };
-        onPhoneNumberChanges && onPhoneNumberChanges(phoneObjectData, args);
+        onPhoneNumberChanges && onPhoneNumberChanges(phoneObjectData, []);
     };
-    const handlePhoneNumberFlagChange = (...args) => {
-        const isValidNumber = args[3];
-        const countryData = args[1];
-        const phoneObjectData = {
-            countryCode: `+${countryData?.dialCode || ''}`,
-            sortCountryCode: countryData?.iso2?.toUpperCase(),
-            isValid:isValidNumber
-        };
-        onPhoneNumberFlagChanges && onPhoneNumberFlagChanges(phoneObjectData, args);
+
+    const handleBlur = () => {
+        const inputElement = document.getElementById(intlInputFieldId);
+        const rawValue = (inputElement?.value || "")?.replace(NON_DIGIT_REGEX, "") || "";
+        const iso2Lower = resolveCountryIso2(country);
+        const { min } = getPhoneConstraints(iso2Lower.toUpperCase());
+
+        if (!rawValue || rawValue.length < min) {
+            props.setFieldErrors?.((prev) => ({
+                ...prev,
+                phoneNumberValue: true,
+            }));
+
+            props.setPhoneNumberSignUpData?.((prev) => ({
+                ...prev,
+                validateErrorMsg:
+                    rawValue.length === 0
+                        ? props.locale?.phoneNumberRequired || "Phone number is required"
+                        : props.locale?.phoneNumberInvalid || "Phone number is not valid",
+            }));
+        } else {
+            props.setFieldErrors?.((prev) => ({
+                ...prev,
+                phoneNumberValue: false,
+            }));
+        }
     };
 
     return (
         <div className={customPhoneNumberFieldStructure} ref={inputRef}>
             <div className={customPhoneNumberFieldWrapper}>
-                <IntlTelInput
-                    containerClassName={customIntlTelInputContainer}
-                    inputClassName={customIntlTelInputWrapper}
-                    fieldName={intlInputFieldName}
-                    fieldId={intlInputFieldId}
-                    value={phoneNumber}
-                    defaultValue={phoneNumberDefaultValue}
-                    separateDialCode={useSeparateDialCode || false}
-                    nationalMode={useNationalMode || false}
-                    onPhoneNumberChange={handlePhoneNumberChange}
-                    type="number"
-                    onSelectFlag={handlePhoneNumberFlagChange}
-                    onlyCountries={onlyCountries}
-                    preferredCountries={preferredCountries}
-                    defaultCountry={country}
-                    tabIndex={tabindex} 
-                    onKeyDown={onKeyDown}
-                    disabled={readonly}
-                    placeholder="XXX-XXX-XXXX"
-                />
+                <div className={customIntlTelInputContainer}>
+                    {/* Dial code box (kept for layout compatibility with prior component) */}
+                    {useSeparateDialCode ? (
+                        <div
+                            className="flex items-center justify-center px-3 select-none text-sm text-muted-foreground"
+                            aria-hidden="true"
+                            style={{ width: 60 }}
+                        >
+                            {resolveDialCode(resolveCountryIso2()) || ""}
+                        </div>
+                    ) : null}
+                    <input
+                        id={intlInputFieldId}
+                        name={intlInputFieldName}
+                        className={customIntlTelInputWrapper}
+                        value={phoneNumber || ""}
+                        defaultValue={phoneNumberDefaultValue}
+                        onChange={handlePhoneNumberChange}
+                        onBlur={handleBlur}
+                        onKeyDown={onKeyDown}
+                        tabIndex={tabindex}
+                        disabled={readonly}
+                        inputMode="numeric"
+                        autoComplete="tel"
+                        placeholder={props.placeholder || "XXX-XXX-XXXX"}
+                    />
+                </div>
             </div>
-            <style jsx>{`
-                :global(.selected-flag) {
-                    display: flex !important;
-                    position: relative;
-                    pointer-events: none;
-                    background-color: transparent !important;
-                    width: 60px !important;
-                    outline: none;
-                    font-family: var(--primary-font) !important;
-                }
-                :global(.selected-flag .iti-flag) {
-                    opacity: 0 !important;
-                    width: 56px !important;
-                    position: absolute;
-                    left: 10px;
-                }
-                :global(.flag-container .country-list .country-name) { 
-                  font-family: var(--primary-font) !important;
-                  font-weight: 600 !important;
-                }
-                :global(.selected-flag .selected-dial-code) {
-                    padding-left: 0px !important;
-                    color: var(--button-secondary-text) !important;
-                }
-                :global(.arrow) {
-                    display: none;
-                }
-            `}</style>
         </div>
     )
 
