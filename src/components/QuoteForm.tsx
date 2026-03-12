@@ -327,6 +327,8 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         );
       }
 
+      const defaultCountryName = DEFAULT_COUNTRY_CODE?.toLowerCase() === "us" ? "USA" : (DEFAULT_COUNTRY_CODE || "");
+
       const payload = {
         pickup_zip: pickupZip,
         delivery_zip: primaryDrop?.zip || "",
@@ -347,12 +349,16 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         pickup_state: pickupState,
         pickup_addLine1: pickupLocation || "",
         pickup_addLine2: "",
-        pickup_country: DEFAULT_COUNTRY_CODE,
+        pickup_country: defaultCountryName,
         delivery_city: primaryDrop?.city || "",
         delivery_state: primaryDrop?.state || "",
         delivery_addLine1: primaryDrop?.location || "",
         delivery_addLine2: "",
-        delivery_country: DEFAULT_COUNTRY_CODE,
+        delivery_country: defaultCountryName,
+        pickup_latitude: pickupLat ?? null,
+        pickup_longitude: pickupLng ?? null,
+        delivery_latitude: primaryDrop?.lat ?? null,
+        delivery_longitude: primaryDrop?.lng ?? null,
       };
 
       const response = await CreateNewQuotePostAPI(payload,controller.signal);
