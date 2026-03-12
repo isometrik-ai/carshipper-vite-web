@@ -17,9 +17,9 @@ interface HeroSectionProps {
     make: string;
     model: string;
   };
-  distance: string;
-  transitTime: string;
-  earliestPickup: string;
+  distance: string | number;
+  transitTime: string | number;
+  earliestPickup: string | number;
 }
 
 export function HeroSection({
@@ -32,13 +32,13 @@ export function HeroSection({
 }: HeroSectionProps) {
   return (
     <section className="pt-20 md:pt-24 gradient-hero text-primary-foreground">
-      <div className="container py-12 md:py-16 lg:py-20">
+      <div className="container py-12 md:py-16 lg:py-20 bg-blue-700 rounded-md ">
         <div className="grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
           {/* Left Content */}
           <div className="lg:col-span-3 space-y-6">
             {/* Status Badge */}
             <FadeIn delay={0.1}>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success/20 text-success-foreground border border-success/30">
+              <div className="inline-flex  items-center gap-2 px-4 py-2 rounded-full bg-success/20 text-success-foreground border border-success/30">
                 <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
                 <span className="text-sm font-medium">Quote Ready - Valid for 30 Days</span>
               </div>
