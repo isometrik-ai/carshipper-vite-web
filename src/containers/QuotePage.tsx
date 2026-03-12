@@ -165,6 +165,7 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
   const rawQuoteId = quoteDetails?.data?.quote?.quote_number || "";
   // Remove any characters that are not allowed in our safe ID pattern
   const safeDisplayQuoteId = rawQuoteId.replace(UNSAFE_QUOTE_ID_CHARS_REGEX, "");
+  const vehicle = quoteDetails?.data?.quote?.vehicle[0] || {};
   return (
     <div className="min-h-screen bg-background">
       <QuoteHeader quoteId={safeDisplayQuoteId} />
@@ -173,7 +174,7 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
         <HeroSection
           origin={origin}
           destination={destination}
-          vehicle={{ year: 0, make: "", model: "" }}
+          vehicle={vehicle}
           distance={distance}
           transitTime={transitTime}
           earliestPickup={earliestPickup}

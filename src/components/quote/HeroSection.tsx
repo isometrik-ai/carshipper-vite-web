@@ -17,6 +17,7 @@ interface HeroSectionProps {
     year: number;
     make: string;
     model: string;
+    is_running?: boolean;
   };
   distance: string | number;
   transitTime: string | number;
