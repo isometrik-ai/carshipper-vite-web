@@ -35,7 +35,7 @@ export const getSafeQuoteRoute = (rawId: string): string | null => {
  * Remove the # from the quote id
  */
 export const removeHashFromQuoteId = (rawId: string): string | null => {
-  if (typeof rawId !== "string" || !rawId) {
+  if (typeof rawId !== "string") {
     return null;
   }
   return rawId.trim().replace(/^#/, "");
