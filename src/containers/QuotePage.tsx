@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { QuoteGetDetailsAPI } from "@/services/quote-services";
 import { formatDisplayDate, getFirstNumberFromString } from "@/lib/helpers";
 import { getSafeQuoteId } from "@/shared/routes";
+import { UNSAFE_QUOTE_ID_CHARS_REGEX } from "@/lib/regx.constant";
 // Sample quote data - in production this would come from API/props
 
 type Route = {
@@ -157,7 +158,9 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
     : "";
 
   const rawQuoteId = quoteDetails?.data?.quote?.quote_number || "";
-  const safeDisplayQuoteId = getSafeQuoteId(rawQuoteId) ?? "";
+  // Remove any characters that are not allowed in our safe ID pattern
+  const safeDisplayQuoteId = rawQuoteId.replace(UNSAFE_QUOTE_ID_CHARS_REGEX, "");
+  const vehicle = quoteDetails?.data?.quote?.vehicle[0] || {};
   return (
     <div className="min-h-screen bg-background">
       <QuoteHeader quoteId={safeDisplayQuoteId} />
@@ -166,7 +169,7 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
         <HeroSection
           origin={origin}
           destination={destination}
-          vehicle={{ year: 0, make: "", model: "" }}
+          vehicle={vehicle}
           distance={distance}
           transitTime={transitTime}
           earliestPickup={earliestPickup}
