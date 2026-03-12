@@ -230,7 +230,7 @@ const CustomPhoneNumberInputField = (props) =>{
                         tabIndex={tabindex}
                         disabled={readonly}
                         inputMode="numeric"
-                        autoComplete="tel"
+                        autoComplete="off"
                         placeholder={props.placeholder || "XXX-XXX-XXXX"}
                     />
                 </div>
