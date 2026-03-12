@@ -6,8 +6,12 @@ export const emailValidator = (input: string): boolean => {
 };
 
 export const getFirstNumberFromString = (value: string): number => {
-  const match = value?.match(NUMBER_FROM_STRING_REGEX);
-  return match ? Number(match[0]) : 1;
+  const match = value.match(NUMBER_FROM_STRING_REGEX);
+  if (match && match[0]) {
+      const num = Number(match[0]);
+      return isNaN(num) ? 1 : num;
+  }
+  return 1;
 };
 
 // Shared helper for consistent date display across the app
