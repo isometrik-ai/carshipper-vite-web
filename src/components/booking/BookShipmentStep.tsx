@@ -14,7 +14,7 @@ interface BookShipmentStepProps {
   formData: BookingFormData;
   updateFormData: (data: Partial<BookingFormData>) => void;
   onBack: () => void;
-  onSubmit: () => void;
+  onSubmit: () => Promise<void> | void;
   tier: "saver" | "priority" | "rush";
   price: number;
   onTierChange?: (tier: "saver" | "priority" | "rush", price: number) => void;
@@ -58,12 +58,14 @@ export function BookShipmentStep({
   };
 
   const handleSubmit = async () => {
-    if (!formData.agreedToTerms) return;
-    
+    if (!formData.agreedToTerms || isSubmitting) return;
+
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    onSubmit();
+    try {
+      await onSubmit();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handlePriceChange = (newTier: "saver" | "priority" | "rush") => {
