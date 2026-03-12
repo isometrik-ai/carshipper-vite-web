@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { NON_DIGIT_REGEX, US_PHONE_FORMAT_REGEX } from '@/lib/regx.constant';
-import { getPhoneNumberLengthRange} from "@/lib/global";
-import { PHONE_NUMBER_MAX_DIGITS } from "@/lib/config";
+import { NON_DIGIT_REGEX, US_PHONE_FORMAT_REGEX } from "@/lib/regx.constant";
 import { isValidNumber } from "libphonenumber-js";
+import {
+  resolveCountryIso2,
+  resolveDialCode,
+  getPhoneConstraints,
+} from "@/lib/phone";
 // import 'react-phone-number-input/style.css'
 // import PhoneInput from 'react-phone-number-input'
 
@@ -36,53 +39,31 @@ const CustomPhoneNumberInputField = (props) =>{
 
     useEffect(() => {
         if (inputRef.current) {
-          const inputElement = inputRef.current.querySelector('input');
+          const inputElement = inputRef.current.querySelector("input");
           if (inputElement) {
             inputElement.tabIndex = tabindex;
             inputElement.onkeydown = (e) => {
-    
-              const cleaned = inputElement?.value?.replace(NON_DIGIT_REGEX, '');
-              if (cleaned?.length >= 10 && /\d/.test(e?.key)) {
+              const cleaned = inputElement?.value?.replace(NON_DIGIT_REGEX, "") || "";
+              const iso2Lower = resolveCountryIso2(country);
+              const { max } = getPhoneConstraints(iso2Lower.toUpperCase());
+
+              if (cleaned?.length >= max && /\d/.test(e?.key)) {
                 e?.preventDefault();
               }
-    
-              if (e.key === 'Enter') {
+
+              if (e.key === "Enter") {
                 e.preventDefault();
-                const nextElement = document.querySelector(`[tabindex="${tabindex + 1}"]`);
+                const nextElement = document.querySelector(
+                  `[tabindex="${tabindex + 1}"]`
+                );
                 if (nextElement) {
                   nextElement.focus();
                 }
               }
             };
-
-            inputElement.onblur = () => {
-                const rawValue = inputElement.value?.replace(NON_DIGIT_REGEX, '') || '';
-                const startsWith5 = rawValue.charAt(0) === '5';
-        
-                if (!rawValue || rawValue.length < 9) {
-                  // trigger red border (error)
-                  props.setFieldErrors?.((prev) => ({
-                    ...prev,
-                    phoneNumberValue: true,
-                  }));
-        
-                  props.setPhoneNumberSignUpData?.((prev) => ({
-                    ...prev,
-                    validateErrorMsg: rawValue.length === 0
-                      ? props.locale?.phoneNumberRequired || "Phone number is required"
-                        : props.locale?.phoneNumberInvalid || "Phone number is not valid"
-                  }));
-                } else {
-                  // clear error
-                  props.setFieldErrors?.((prev) => ({
-                    ...prev,
-                    phoneNumberValue: false,
-                  }));
-                }
-            }
           }
         }
-      }, [inputRef, tabindex, props]);
+      }, [inputRef, tabindex, country]);
 
     const formatPhoneNumber = (value) => {
         if (!value) return value;
@@ -97,27 +78,12 @@ const CustomPhoneNumberInputField = (props) =>{
         return value;
     };
 
-    const resolveCountryIso2 = () => {
-        // Keep existing props API; default to US since the app config uses `us`
-        const iso2 = (country || defaultCountryCode || "us").toString().toLowerCase();
-        return iso2;
-    };
-
-    const resolveDialCode = (iso2Lower) => {
-        // Minimal mapping for current usage (onlyCountries=['us'])
-        if (iso2Lower === "us") return "+1";
-        return "";
-    };
-
     const handlePhoneNumberChange = (e) => {
         let value = e?.target?.value ?? "";
         let phoneStartWithZero = 0;
-        const iso2Lower = resolveCountryIso2();
+        const iso2Lower = resolveCountryIso2(country);
         const iso2Upper = iso2Lower.toUpperCase();
-        let maxDigitForPhoneNumber = {
-            min: PHONE_NUMBER_MAX_DIGITS,
-            max: PHONE_NUMBER_MAX_DIGITS
-        };
+        const { max: maxDigits } = getPhoneConstraints(iso2Upper);
         if (value?.startsWith(0)) phoneStartWithZero = 1;
 
         // Get old formatted value and cursor position BEFORE any processing
@@ -126,13 +92,9 @@ const CustomPhoneNumberInputField = (props) =>{
         const oldCursorPos = inputElement ? inputElement.selectionStart : 0;
 
         value = value.replace(NON_DIGIT_REGEX, '');
-        if(value?.length > 0 && iso2Upper?.length > 0){
-            maxDigitForPhoneNumber = getPhoneNumberLengthRange(iso2Upper);
-        }
-        
-        // Enforce max digits (keeping prior behavior)
-        if (value?.length > (maxDigitForPhoneNumber?.max || PHONE_NUMBER_MAX_DIGITS)) {
-            value = value.slice(0, (maxDigitForPhoneNumber?.max || PHONE_NUMBER_MAX_DIGITS));
+        // Enforce max digits based on shared constraints
+        if (value?.length > maxDigits) {
+            value = value.slice(0, maxDigits);
         }
 
         const formattedNumber = formatPhoneNumber(value);
@@ -217,8 +179,11 @@ const CustomPhoneNumberInputField = (props) =>{
 
     const handleBlur = () => {
         const inputElement = document.getElementById(intlInputFieldId);
-        const rawValue = (inputElement?.value || '')?.replace(NON_DIGIT_REGEX, '') || '';
-        if (!rawValue || rawValue.length < 9) {
+        const rawValue = (inputElement?.value || "")?.replace(NON_DIGIT_REGEX, "") || "";
+        const iso2Lower = resolveCountryIso2(country);
+        const { min } = getPhoneConstraints(iso2Lower.toUpperCase());
+
+        if (!rawValue || rawValue.length < min) {
             props.setFieldErrors?.((prev) => ({
                 ...prev,
                 phoneNumberValue: true,
@@ -226,9 +191,10 @@ const CustomPhoneNumberInputField = (props) =>{
 
             props.setPhoneNumberSignUpData?.((prev) => ({
                 ...prev,
-                validateErrorMsg: rawValue.length === 0
-                    ? props.locale?.phoneNumberRequired || "Phone number is required"
-                    : props.locale?.phoneNumberInvalid || "Phone number is not valid"
+                validateErrorMsg:
+                    rawValue.length === 0
+                        ? props.locale?.phoneNumberRequired || "Phone number is required"
+                        : props.locale?.phoneNumberInvalid || "Phone number is not valid",
             }));
         } else {
             props.setFieldErrors?.((prev) => ({

@@ -328,7 +328,10 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         );
       }
 
-      const defaultCountryName = DEFAULT_COUNTRY_CODE?.toLowerCase() === "us" ? "USA" : (DEFAULT_COUNTRY_CODE || "");
+      const defaultCountryName:string = 
+      DEFAULT_COUNTRY_CODE ? 
+      DEFAULT_COUNTRY_CODE?.toLowerCase() === "us" ? 
+      "USA" : (DEFAULT_COUNTRY_CODE || "") : "";
 
       const payload = {
         pickup_zip: pickupZip,
