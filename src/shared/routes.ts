@@ -38,5 +38,5 @@ export const removeHashFromQuoteId = (rawId: string): string | null => {
   if (typeof rawId !== "string" || !rawId) {
     return null;
   }
-  return rawId.replace(/^#/, "");
+  return rawId.trim().replace(/^#/, "");
 };
