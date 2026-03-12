@@ -1,5 +1,6 @@
 import { MapPin, Flag, Calendar, Package } from "lucide-react";
 import { FadeIn, ScaleIn } from "@/components/animations/AnimationWrappers";
+import { formatDisplayDate } from "@/lib/helpers";
 
 interface HeroSectionProps {
   origin: {
@@ -30,6 +31,34 @@ export function HeroSection({
   transitTime,
   earliestPickup,
 }: HeroSectionProps) {
+  // Safe formatting helpers to avoid rendering null/undefined/raw timestamps
+  const formattedDistance = (() => {
+    if (distance === null || distance === undefined) return "N/A";
+    if (typeof distance === "number") {
+      return `${distance?.toLocaleString()} miles`;
+    }
+    const value = String(distance)?.trim();
+    if (!value) return "N/A";
+    // If caller already added units, don't duplicate
+    return value?.toLowerCase()?.includes("mile") ? value : `${value} miles`;
+  })();
+
+  const formattedTransitTime = (() => {
+    if (transitTime === null || transitTime === undefined) return "N/A";
+    const value = String(transitTime)?.trim();
+    return value || "N/A";
+  })();
+
+  const formattedEarliestPickup = (() => {
+    if (earliestPickup === null || earliestPickup === undefined) return "TBD";
+    if (typeof earliestPickup === "number") {
+      // Treat numeric values as timestamps and format via shared helper
+      return formatDisplayDate(earliestPickup);
+    }
+    const value = String(earliestPickup)?.trim();
+    return value || "TBD";
+  })();
+
   return (
     <section className="pt-20 md:pt-24 gradient-hero text-primary-foreground">
       <div className="container py-12 md:py-16 lg:py-20 bg-blue-700 rounded-md ">
@@ -77,8 +106,8 @@ export function HeroSection({
                     <div className="hidden md:block h-px flex-1 bg-primary-foreground/30" />
                     <div className="text-center">
                       <span className="text-2xl">→</span>
-                      <p className="text-xs text-primary-foreground/70">{distance}</p>
-                      <p className="text-xs text-primary-foreground/70">{transitTime}</p>
+                      <p className="text-xs text-primary-foreground/70">{formattedDistance}</p>
+                      <p className="text-xs text-primary-foreground/70">{formattedTransitTime}</p>
                     </div>
                     <div className="hidden md:block h-px flex-1 bg-primary-foreground/30" />
                   </div>
@@ -129,14 +158,14 @@ export function HeroSection({
                       <Calendar className="w-4 h-4" />
                       Earliest Pickup
                     </span>
-                    <span className="font-semibold">{earliestPickup}</span>
+                    <span className="font-semibold">{formattedEarliestPickup}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-2 text-muted-foreground">
                       <span>⏱️</span>
                       Estimated Transit
                     </span>
-                    <span className="font-semibold">{transitTime}</span>
+                    <span className="font-semibold">{formattedTransitTime}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-2 text-muted-foreground">

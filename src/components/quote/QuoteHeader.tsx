@@ -19,7 +19,7 @@ export function QuoteHeader({ quoteId }: QuoteHeaderProps) {
           <div className="flex items-center px-2 sm:px-3 py-1 sm:py-1.5 bg-primary/10 text-primary rounded-md text-xs sm:text-sm font-medium">
             <span className="sm:hidden">#</span>
             <span className="hidden sm:inline">Quote  </span>
-              &nbsp;{quoteId}
+              &nbsp;#{quoteId}
           </div>
         </div>
         

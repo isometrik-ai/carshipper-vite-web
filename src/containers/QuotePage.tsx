@@ -7,9 +7,10 @@ import { TimelineSection } from "@/components/quote/TimelineSection";
 import { FAQSection } from "@/components/quote/FAQSection";
 import { ContactSection } from "@/components/quote/ContactSection";
 import { QuoteFooter } from "@/components/quote/QuoteFooter";
-import { QuoteGetDetailsAPI } from "@/services/quote-services";
 import { useEffect, useState } from "react";
-import { getFirstNumberFromString } from "@/lib/helpers";
+import { QuoteGetDetailsAPI } from "@/services/quote-services";
+import { formatDisplayDate, getFirstNumberFromString } from "@/lib/helpers";
+import { SAFE_QUOTE_ID_REGEX, UNSAFE_QUOTE_ID_CHARS_REGEX } from "@/lib/regx.constant";
 // Sample quote data - in production this would come from API/props
 
 type Route = {
@@ -73,12 +74,23 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
 
     if (!effectiveQuoteId) return;
 
+    // Validate quoteId to avoid unsafe characters in API calls and URLs
+    if (typeof effectiveQuoteId !== "string" || !SAFE_QUOTE_ID_REGEX.test(effectiveQuoteId)) {
+      console.error("Invalid quoteId");
+      return;
+    }
+
+    // Sanitize any unexpected characters defensively
+    const safeQuoteId = effectiveQuoteId.replace(UNSAFE_QUOTE_ID_CHARS_REGEX, "");
+
     const controller = new AbortController();
 
     const fetchQuoteDetails = async () => {
       try {
-        const response = await QuoteGetDetailsAPI(effectiveQuoteId, controller.signal);
-        setQuoteDetails((response as any)?.data ?? response);
+        const response = await QuoteGetDetailsAPI(safeQuoteId, controller.signal);
+        if (!controller.signal.aborted) {
+          setQuoteDetails((response as any)?.data ?? response);
+        }
       } catch (error) {
         console.error("Failed to fetch quote details", error);
       }
@@ -95,17 +107,17 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
   // Map API data to component props with fallbacks
   const origin = quoteDetails?.data?.quote?.route
     ? {
-        city: quoteDetails?.data?.quote?.route?.from_city || "",
-        state: quoteDetails?.data?.quote?.route?.from_state || "",
-        zip: quoteDetails?.data?.quote?.route?.from_zip || "",
+        city: quoteDetails?.data?.quote?.route?.pickup?.city || "",
+        state: quoteDetails?.data?.quote?.route?.pickup?.state || "",
+        zip: quoteDetails?.data?.quote?.route?.pickup?.zip || "",
       }
     : { city: "", state: "", zip: "" };
 
   const destination = quoteDetails?.data?.quote?.route
     ? {
-        city: quoteDetails?.data?.quote?.route?.to_city || "",
-        state: quoteDetails?.data?.quote?.route?.to_state || "",
-        zip: quoteDetails?.data?.quote?.route?.to_zip || "",
+        city: quoteDetails?.data?.quote?.route?.drop?.city || "",
+        state: quoteDetails?.data?.quote?.route?.drop?.state || "",
+        zip: quoteDetails?.data?.quote?.route?.drop?.zip || "",
       }
     : { city: "", state: "", zip: "" };
 
@@ -119,25 +131,21 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
     : "";
 
   // Format earliest pickup date (use created_at + minimum pickup days from rush tier)
-   const earliestPickup = quoteDetails?.data?.quote?.created_at
-    ? (() => {
-      const createdDate = new Date(quoteDetails?.data?.quote?.created_at);
+  const earliestPickup =
+    quoteDetails?.data?.quote && quoteDetails?.data?.quote?.created_at
+      ? (() => {
+          const createdDate = new Date(quoteDetails?.data?.quote?.created_at);
 
-      const rushDays = getFirstNumberFromString(
-        quoteDetails?.data?.quote?.pricing_tiers?.rush?.estimated_pickup_days || "1"
-      );
+          const rushDays = getFirstNumberFromString(
+            quoteDetails?.data?.quote?.pricing_tiers?.rush?.estimated_pickup_days || "1",
+          );
 
-      const pickupDate = new Date(createdDate);
+          const pickupDate = new Date(createdDate);
+          pickupDate.setDate(pickupDate.getDate() + rushDays);
 
-      pickupDate.setDate(pickupDate.getDate() + rushDays);
-
-      return pickupDate.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    })()
-  : "";
+          return formatDisplayDate(pickupDate);
+        })()
+      : "";
 
 
   // Map pricing tiers from API or use fallback
@@ -151,17 +159,15 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
 
   // Format expiration date
   const expirationDate = quoteDetails?.data?.quote?.expires_at
-    ? new Date(quoteDetails?.data?.quote?.expires_at).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
+    ? formatDisplayDate(quoteDetails?.data?.quote?.expires_at)
     : "";
 
-  const displayQuoteId = quoteDetails?.data?.quote?.quote_number;
+  const rawQuoteId = quoteDetails?.data?.quote?.quote_number || "";
+  // Remove any characters that are not allowed in our safe ID pattern
+  const safeDisplayQuoteId = rawQuoteId.replace(UNSAFE_QUOTE_ID_CHARS_REGEX, "");
   return (
     <div className="min-h-screen bg-background">
-      <QuoteHeader quoteId={displayQuoteId} />
+      <QuoteHeader quoteId={safeDisplayQuoteId} />
       
       <main>
         <HeroSection
@@ -175,10 +181,7 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
         
         <TrustSection />
         
-        <PricingSection
-          quoteId={displayQuoteId?.replace('#', '/')}
-          prices={prices}
-        />
+        <PricingSection quoteId={safeDisplayQuoteId} prices={prices} />
         
         <FeaturesSection />
         
@@ -190,7 +193,7 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
       </main>
       
       <QuoteFooter
-        quoteId={displayQuoteId?.replace('#', '')}
+        quoteId={safeDisplayQuoteId}
         expirationDate={expirationDate}
       />
     </div>
