@@ -18,8 +18,8 @@ export function QuoteHeader({ quoteId }: QuoteHeaderProps) {
           </div>
           <div className="flex items-center px-2 sm:px-3 py-1 sm:py-1.5 bg-primary/10 text-primary rounded-md text-xs sm:text-sm font-medium">
             <span className="sm:hidden">#</span>
-            <span className="hidden sm:inline">Quote #</span>
-            {quoteId}
+            <span className="hidden sm:inline">Quote  </span>
+              &nbsp;#{quoteId}
           </div>
         </div>
         
@@ -36,7 +36,7 @@ export function QuoteHeader({ quoteId }: QuoteHeaderProps) {
             <a href="#pricing">Select & Book →</a>
           </Button>
           
-          <button className="md:hidden p-2 text-muted-foreground">
+          <button  className="md:hidden p-2 text-muted-foreground">
             <Menu className="w-6 h-6" />
           </button>
         </div>
