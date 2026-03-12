@@ -30,3 +30,13 @@ export const getSafeQuoteRoute = (rawId: string): string | null => {
   const safeId = getSafeQuoteId(rawId);
   return safeId ? getQuoteRoute(safeId) : null;
 };
+
+/**
+ * Remove the # from the quote id
+ */
+export const removeHashFromQuoteId = (rawId: string): string | null => {
+  if (typeof rawId !== "string" || !rawId) {
+    return null;
+  }
+  return rawId.replace(/^#/, "");
+};

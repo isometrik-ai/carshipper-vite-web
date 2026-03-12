@@ -10,7 +10,7 @@ import { QuoteFooter } from "@/components/quote/QuoteFooter";
 import { useEffect, useState } from "react";
 import { QuoteGetDetailsAPI } from "@/services/quote-services";
 import { formatDisplayDate, getFirstNumberFromString } from "@/lib/helpers";
-import { getSafeQuoteId } from "@/shared/routes";
+import { getSafeQuoteId, removeHashFromQuoteId } from "@/shared/routes";
 import { UNSAFE_QUOTE_ID_CHARS_REGEX } from "@/lib/regx.constant";
 // Sample quote data - in production this would come from API/props
 
@@ -158,7 +158,7 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
     : "";
 
   const rawQuoteId = quoteDetails?.data?.quote?.quote_number || "";
-  const normalizedQuoteId = rawQuoteId.replace(/^#/, "");
+  const normalizedQuoteId = removeHashFromQuoteId(rawQuoteId);
   const safeDisplayQuoteId = getSafeQuoteId(normalizedQuoteId) ?? "";
   // // Remove any characters that are not allowed in our safe ID pattern
   // const safeDisplayQuoteId = rawQuoteId.replace(UNSAFE_QUOTE_ID_CHARS_REGEX, "");
