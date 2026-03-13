@@ -14,7 +14,7 @@ interface BookShipmentStepProps {
   formData: BookingFormData;
   updateFormData: (data: Partial<BookingFormData>) => void;
   onBack: () => void;
-  onSubmit: () => void;
+  onSubmit: () => Promise<void> | void;
   tier: "saver" | "priority" | "rush";
   price: number;
   onTierChange?: (tier: "saver" | "priority" | "rush", price: number) => void;
@@ -57,13 +57,18 @@ export function BookShipmentStep({
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const handleSubmit = async () => {
-    if (!formData.agreedToTerms) return;
-    
+const handleSubmit = async () => {
+    if (!formData.agreedToTerms || isSubmitting) return;
+
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    onSubmit();
+    try {
+      await onSubmit();
+    } catch (error) {
+      // Optionally, set an error state to inform the user
+      console.error('Submission failed:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handlePriceChange = (newTier: "saver" | "priority" | "rush") => {
