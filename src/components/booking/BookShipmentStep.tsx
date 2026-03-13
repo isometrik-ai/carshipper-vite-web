@@ -57,12 +57,15 @@ export function BookShipmentStep({
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
     if (!formData.agreedToTerms || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
       await onSubmit();
+    } catch (error) {
+      // Optionally, set an error state to inform the user
+      console.error('Submission failed:', error);
     } finally {
       setIsSubmitting(false);
     }
