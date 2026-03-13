@@ -21,6 +21,8 @@ export const postWithToken = async (
     return axiosInstance.post(isCustomURL || getUrl(endpoint), data, {
       headers: { ...commonHeader, ...otherHeaders },
       signal
+    }).catch((err)=>{
+      return err
     });
 };
 
@@ -57,14 +59,16 @@ export const deleteRequestWithPayload = async (endpoint: string, data: object, o
   });
 };
 // PATCH REQUEST
-export const patchRequest = async (
+export const patchWithToken = async (
   endpoint: string,
   data: object,
   otherHeaders = {},
-  isCustomURL: string
+  isCustomURL: string,
+  signal?: AbortSignal
 ) => {
   return axiosInstance.patch(isCustomURL || getUrl(endpoint), data, {
       headers: { ...commonHeader, ...otherHeaders },
+      signal
   }).catch((err)=>{
     return err
   });

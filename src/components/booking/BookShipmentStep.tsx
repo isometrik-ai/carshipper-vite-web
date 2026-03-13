@@ -24,6 +24,11 @@ interface BookShipmentStepProps {
     destination: { city: string; state: string; zip: string };
     earliestPickup: string;
     transportType: string;
+    customer?: {
+      name: string;
+      email: string;
+      phone: string;
+    };
   };
 }
 
@@ -76,6 +81,12 @@ const handleSubmit = async () => {
       onTierChange(newTier, tierPrices[newTier]);
     }
   };
+
+  const shipperName =
+    quoteData.customer?.name ||
+    `${formData.firstName} ${formData.lastName}`.trim();
+  const shipperEmail = quoteData.customer?.email || formData.email;
+  const shipperPhone = quoteData.customer?.phone || formData.phone;
 
   return (
     <div className="grid lg:grid-cols-2 gap-6">
@@ -344,7 +355,7 @@ const handleSubmit = async () => {
                   <div>
                     <p className="font-medium text-foreground">Shipper</p>
                     <p className="text-sm text-muted-foreground">
-                      {formData.firstName} {formData.lastName}
+                      {shipperName}
                     </p>
                   </div>
                 </div>
@@ -359,13 +370,13 @@ const handleSubmit = async () => {
               {expandedSections.shipper && (
                 <div className="mt-4 ml-8 p-4 bg-muted/30 rounded-xl border-l-4 border-primary/30 space-y-2">
                   <p className="text-sm text-foreground">
-                    <span className="text-muted-foreground">Name:</span> {formData.firstName} {formData.lastName}
+                    <span className="text-muted-foreground">Name:</span> {shipperName}
                   </p>
                   <p className="text-sm text-foreground">
-                    <span className="text-muted-foreground">Email:</span> {formData.email}
+                    <span className="text-muted-foreground">Email:</span> {shipperEmail}
                   </p>
                   <p className="text-sm text-foreground">
-                    <span className="text-muted-foreground">Phone:</span> {formData.phone}
+                    <span className="text-muted-foreground">Phone:</span> {shipperPhone}
                   </p>
                 </div>
               )}

@@ -1,5 +1,5 @@
-import { CREATE_NEW_QUOTE, GET_QUOTE_DETAILS, VIN_NUMBER_DETAILS } from "@/lib/api.endpoint-constants";
-import { getWithToken, postWithToken } from "./axios-request";
+import { CREATE_NEW_QUOTE, GET_QUOTE_DETAILS, UPDATE_QUOTE, VIN_NUMBER_DETAILS } from "@/lib/api.endpoint-constants";
+import { getWithToken, patchWithToken, postWithToken } from "./axios-request";
 
 export const CreateNewQuotePostAPI = async (
     payload: any,
@@ -37,5 +37,21 @@ export const VinNumberDetails = async (
     return response?.data;
   } catch (error) {
     return error;
+  }
+};
+
+export const UpdateQuote = async (payload: any) => {
+  try {
+    const endpoint = UPDATE_QUOTE;
+    const response = await patchWithToken(
+      endpoint,
+      payload,
+      { "Content-Type": "application/json" },
+      ""
+    );
+    return (response as any)?.data ?? response;
+  } catch (error) {
+    console.error('Error updating quote:', error);
+    return { success: false, error };
   }
 };

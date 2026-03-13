@@ -120,6 +120,7 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
       pickupCity: data.pickupCity,
       pickupState: data.pickupState,
       pickupZip: data.pickupZip,
+      pickupBusinessName: data.businessName || "",
       pickupContactName: data.pickupContactName,
       pickupContactPhone: data.pickupContactPhone,
       pickupBackupPhone: data.pickupBackupPhone || "",
