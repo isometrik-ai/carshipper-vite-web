@@ -55,6 +55,7 @@ export type Quote = {
   customer_email: string;
   route: Route;
   pricing_tiers: PricingTiers;
+  tiers: PricingTiers;
   expires_at: string;
   expired: boolean;
   created_at: string;
@@ -121,8 +122,8 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
     : "";
 
   // Derive transit time from priority tier (most popular) or use default
-  const transitTime = quoteDetails?.data?.quote?.pricing_tiers?.priority?.estimated_pickup_days
-    ? quoteDetails?.data?.quote?.pricing_tiers?.priority?.estimated_pickup_days
+  const transitTime = quoteDetails?.data?.pricing?.tiers?.priority?.estimated_pickup_days
+    ? quoteDetails?.data?.pricing?.tiers?.priority?.estimated_pickup_days
     : "";
 
   // Format earliest pickup date (use created_at + minimum pickup days from rush tier)
@@ -132,7 +133,7 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
           const createdDate = new Date(quoteDetails?.data?.quote?.created_at);
 
           const rushDays = getFirstNumberFromString(
-            quoteDetails?.data?.quote?.pricing_tiers?.rush?.estimated_pickup_days || "1",
+            quoteDetails?.data?.pricing?.tiers?.rush?.estimated_pickup_days || "1",
           );
 
           const pickupDate = new Date(createdDate);
@@ -144,11 +145,11 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
 
 
   // Map pricing tiers from API or use fallback
-  const prices = quoteDetails?.data?.quote?.pricing_tiers
+  const prices = quoteDetails?.data?.quote?.pricing?.tiers
     ? {
-        saver: quoteDetails?.data?.quote?.pricing_tiers?.saver?.price,
-        priority: quoteDetails?.data?.quote?.pricing_tiers?.priority?.price,
-        rush: quoteDetails?.data?.quote?.pricing_tiers?.rush?.price,
+        saver: quoteDetails?.data?.quote?.pricing?.tiers?.saver?.price,
+        priority: quoteDetails?.data?.quote?.pricing?.tiers?.priority?.price,
+        rush: quoteDetails?.data?.quote?.pricing?.tiers?.rush?.price,
       }
     : { saver: 0, priority: 0, rush: 0 };
 

@@ -82,28 +82,117 @@ const initialFormData: BookingFormData = {
   smsUpdates: true,
 };
 
-// Quote data (would come from API in production)
-const quoteData = {
-  quoteId: "23117135",
-  vehicle: {
-    year: 2026,
-    make: "Buick",
-    model: "Encore GX",
-  },
-  origin: { city: "Beverly Hills", state: "CA", zip: "90210" },
-  destination: { city: "Duluth", state: "GA", zip: "30097" },
-  distance: "2,100 miles",
-  transitTime: "6-9 days",
-  earliestPickup: "01/09/2026",
-  condition: "Runs and Drives",
-  personalItems: "0 to 100 lbs",
-  transportType: "Open",
-  serviceType: "Door to door",
-  prices: {
-    saver: 931,
-    priority: 1275,
-    rush: 1900,
-  },
+// Quote data mapped from API response
+type BookingQuoteData = {
+  quoteId: string;
+  vehicle: { year: number; make: string; model: string };
+  origin: { city: string; state: string; zip: string };
+  destination: { city: string; state: string; zip: string };
+  distance: string;
+  transitTime: string;
+  earliestPickup: string;
+  condition: string;
+  personalItems: string;
+  transportType: string;
+  serviceType: string;
+  prices: { saver: number; priority: number; rush: number };
+  customer?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+};
+
+const mapQuoteDetailsToBookingQuoteData = (
+  quoteDetails: any | null
+): BookingQuoteData | null => {
+  const quote = (quoteDetails as any)?.data?.quote ?? (quoteDetails as any)?.quote;
+  if (!quote) return null;
+
+  const route = quote.route ?? {};
+  const pickup = route.pickup ?? {};
+  const drop = route.drop ?? {};
+  const customerDetails = (quote as any)?.customerDetails ?? {};
+
+  const distanceMiles = route.distance_miles;
+  const distance =
+    typeof distanceMiles === "number"
+      ? `${distanceMiles.toLocaleString()} miles`
+      : "";
+
+  console.log('pricing', quote);
+  const priorityTier = quote.pricing?.tiers?.priority;
+  const rushTier = quote.pricing?.tiers?.rush;
+
+  const transitTime = priorityTier?.estimated_pickup_days || "";
+
+  let earliestPickup = "";
+  if (quote.created_at) {
+    const createdDate = new Date(quote.created_at);
+    const rushDaysStr = rushTier?.estimated_pickup_days || "1";
+    const rushDaysMatch = rushDaysStr.match(/\d+/);
+    const rushDays = rushDaysMatch ? parseInt(rushDaysMatch[0], 10) : 1;
+    const pickupDate = new Date(createdDate);
+    pickupDate.setDate(pickupDate.getDate() + rushDays);
+    earliestPickup = `${(pickupDate.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}/${pickupDate
+      .getDate()
+      .toString()
+      .padStart(2, "0")}/${pickupDate.getFullYear()}`;
+  }
+
+  const vehicle = Array.isArray(quote.vehicle) ? quote.vehicle[0] ?? {} : {};
+
+  const customerName =
+    customerDetails.full_name ||
+    [customerDetails.first_name || customerDetails.firstName, customerDetails.last_name || customerDetails.lastName]
+      .filter(Boolean)
+      .join(" ") ||
+    customerDetails.name ||
+    "";
+
+  const customerEmail = quote.customer_email || customerDetails.email || "";
+  const customerPhone =
+    customerDetails.phone || customerDetails.phone_number || customerDetails.mobile || "";
+
+  return {
+    quoteId: quote.quote_number || "",
+    vehicle: {
+      year: vehicle.year ?? 0,
+      make: vehicle.make ?? "",
+      model: vehicle.model ?? "",
+    },
+    origin: {
+      city: pickup.city ?? "",
+      state: pickup.state ?? "",
+      zip: pickup.zip ?? "",
+    },
+    destination: {
+      city: drop.city ?? "",
+      state: drop.state ?? "",
+      zip: drop.zip ?? "",
+    },
+    distance,
+    transitTime,
+    earliestPickup,
+    condition: vehicle.condition || "Runs and Drives",
+    personalItems: vehicle.personal_items_weight || "0 to 100 lbs",
+    transportType:
+      quote.transport_type ||
+      (quote.pricing_tiers?.priority?.transport_type || "Open"),
+    serviceType: "Door to door",
+    prices: {
+      saver: quote.pricing?.tiers?.saver?.price ?? 0,
+      priority: quote.pricing?.tiers?.priority?.price ?? 0,
+      rush: quote.pricing?.tiers?.rush?.price ?? 0,
+    },
+    customer: {
+      name: customerName,
+      email: customerEmail,
+      phone: customerPhone,
+    },
+  };
 };
 
 const steps = [
@@ -125,6 +214,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
   const [formData, setFormData] = useState<BookingFormData>(initialFormData);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [quoteDetails, setQuoteDetails] = useState<any | null>(null);
+  const mappedQuoteData = mapQuoteDetailsToBookingQuoteData(quoteDetails);
 
   useEffect(() => {
     const effectiveQuoteId = props.quoteId || quoteId;
@@ -146,7 +236,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
     };
   }, [props.quoteId, quoteId]);
 
-  const price = quoteData.prices[selectedTier];
+  const price = mappedQuoteData?.prices[selectedTier] ?? 0;
 
   const updateFormData = (data: Partial<BookingFormData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
@@ -167,6 +257,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
   };
 
   const handleSubmit = async () => {
+    console.log('data')
     try {
       const effectiveQuoteId = props.quoteId || quoteId;
       const quote: any =
@@ -198,9 +289,9 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
             }))
           : [
               {
-                year: quoteData.vehicle.year,
-                make: quoteData.vehicle.make,
-                model: quoteData.vehicle.model,
+                year: quoteDetails.vehicle.year,
+                make: quoteDetails.vehicle.make,
+                model: quoteDetails.vehicle.model,
                 type: "SUV",
                 condition: "runs_and_drives",
                 personal_items_weight: "0-100",
@@ -233,24 +324,64 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       const hasCompany =
         !!formData.pickupBusinessName || !!formData.deliveryBusinessName;
 
+      // Prefer customer details from quote API, fall back to form
+      const customerDetails: any = (quote as any)?.customerDetails ?? {};
+      const customerFirstName =
+        customerDetails.first_name ||
+        customerDetails.firstName ||
+        formData.firstName;
+      const customerLastName =
+        customerDetails.last_name ||
+        customerDetails.lastName ||
+        formData.lastName;
+      const customerEmail =
+        quote.customer_email || customerDetails.email || formData.email;
+      const customerPhone =
+        customerDetails.phone ||
+        customerDetails.phone_number ||
+        customerDetails.mobile ||
+        formData.phone;
+
+      // Determine earliest pickup date for shipment:
+      // 1. Use explicitly selected pickup date from the booking flow (if set)
+      // 2. Fallback to the value that exists on the original quote (if present)
+      // 3. Otherwise let it be null so the API can validate
+      const earliestPickupDateFromForm = formData.pickupDate || "";
+      const earliestPickupDateFromQuote =
+        (quote as any)?.shipment?.updated_at ||
+        (quote as any)?.updated_at ||
+        "";
+
+      const resolvedEarliestPickupDate =
+        earliestPickupDateFromForm || earliestPickupDateFromQuote || null;
+
+      // Normalize transport type to simple backend-friendly values: "open" or "enclosed"
+      const rawTransportType =
+        quote.transport_type ||
+        quote.pricing?.tiers?.priority?.transport_type ||
+        quote.pricing_tiers?.priority?.transport_type ||
+        (quoteDetails as any)?.transportType ||
+        "";
+
+      const normalizedTransportType = /enclosed/i.test(rawTransportType)
+        ? "enclosed"
+        : "open";
+
       const payload = {
         quote_id: quote._id || effectiveQuoteId,
         quote_number: quote.quote_number || "",
         selected_tier: selectedTier,
         vehicle: vehiclePayload,
         shipment: {
-          earliest_pickup_date: formData.pickupDate || null,
-          transport_type:
-            quote.transport_type ||
-            (quoteData.transportType || "").toLowerCase() ||
-            "open",
+          earliest_pickup_date: resolvedEarliestPickupDate,
+          transport_type: normalizedTransportType,
           service_type: "door_to_door",
           insurance_included: true,
         },
         pickup: {
           location_type: formData.pickupLocationType || "private_residence",
           address: pickupAddress,
-          business_info: { name: formData.pickupBusinessName || "" },
+          business_info: { name: formData.pickupBusinessName || fullName || "N/A" },
           contact: {
             name: formData.pickupContactName || fullName,
             phone: formData.pickupContactPhone || formData.phone,
@@ -269,8 +400,8 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
           },
         },
         payment: {
-          stripe_payment_method_id: "",
-          cardholder_name: fullName,
+          stripe_payment_method_id: "pm_xxx",
+          cardholder_name: fullName || "sowmya sv",
           billing_address: {
             street: pickupAddress.street,
             city: pickupAddress.city,
@@ -281,15 +412,15 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         },
         terms: {
           accepted: formData.agreedToTerms,
-          electronic_signature: fullName,
-          ip_address: "",
+          electronic_signature: "John Doe",
+          ip_address: "127.0.0.1",
           accepted_at: new Date().toISOString(),
         },
         customer: {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
+          first_name: customerFirstName,
+          last_name: customerLastName,
+          email: customerEmail,
+          phone: customerPhone,
           company_name:
             formData.pickupBusinessName || formData.deliveryBusinessName || "",
           account_type: hasCompany ? "business" : "personal",
@@ -298,7 +429,15 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
 
       const response = await createNewShipmentBooking(payload);
 
-      if ((response as any)?.error) {
+      // Guard against completely missing response
+      if (!response) {
+        throw new Error("No response received from booking service");
+      }
+
+      const status = (response as any)?.status;
+      const hasError = (response as any)?.error;
+
+      if (status !== 200 || hasError) {
         throw response;
       }
 
@@ -309,7 +448,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       setIsSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
-      console.error("Booking submission failed", error);
+      console.log("Booking submission failed", error);
       toast.error("Unable to complete booking", {
         description: "Please try again in a moment.",
       });
@@ -319,13 +458,19 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-muted">
-        <BookingHeader quoteId={quoteId || quoteData.quoteId} />
+        <BookingHeader quoteId={quoteId || mappedQuoteData?.quoteId || ""} />
         <SuccessStep 
           formData={formData} 
-          quoteId={quoteId || quoteData.quoteId}
+          quoteId={quoteId || mappedQuoteData?.quoteId || ""}
           tier={selectedTier}
           price={price}
-          vehicle={quoteData.vehicle}
+          vehicle={
+            mappedQuoteData?.vehicle ?? {
+              year: 0,
+              make: "",
+              model: "",
+            }
+          }
         />
       </div>
     );
@@ -333,7 +478,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
 
   return (
     <div className="min-h-screen bg-muted">
-      <BookingHeader quoteId={quoteId || quoteData.quoteId} />
+      <BookingHeader quoteId={quoteId || mappedQuoteData?.quoteId || ""} />
       <main className="pt-20 pb-12">
         <div className="container">
           {/* Progress Bar */}
@@ -350,7 +495,22 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               >
                 {currentStep === 1 && (
                   <ShippingMethodStep
-                    quoteData={quoteData}
+                    quoteData={
+                      mappedQuoteData ?? {
+                        quoteId: quoteId || "",
+                        vehicle: { year: 0, make: "", model: "" },
+                        origin: { city: "", state: "", zip: "" },
+                        destination: { city: "", state: "", zip: "" },
+                        distance: "",
+                        transitTime: "",
+                        earliestPickup: "",
+                        condition: "",
+                        personalItems: "",
+                        transportType: "Open",
+                        serviceType: "Door to door",
+                        prices: { saver: 0, priority: 0, rush: 0 },
+                      }
+                    }
                     selectedTier={selectedTier}
                     onTierChange={setSelectedTier}
                     onNext={nextStep}
@@ -362,7 +522,22 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     updateFormData={updateFormData}
                     onNext={nextStep}
                     onBack={prevStep}
-                    quoteData={quoteData}
+                    quoteData={
+                      mappedQuoteData ?? {
+                        quoteId: quoteId || "",
+                        vehicle: { year: 0, make: "", model: "" },
+                        origin: { city: "", state: "", zip: "" },
+                        destination: { city: "", state: "", zip: "" },
+                        distance: "",
+                        transitTime: "",
+                        earliestPickup: "",
+                        condition: "",
+                        personalItems: "",
+                        transportType: "Open",
+                        serviceType: "Door to door",
+                        prices: { saver: 0, priority: 0, rush: 0 },
+                      }
+                    }
                     tier={selectedTier}
                     price={price}
                   />
@@ -373,7 +548,22 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     updateFormData={updateFormData}
                     onNext={nextStep}
                     onBack={prevStep}
-                    quoteData={quoteData}
+                    quoteData={
+                      mappedQuoteData ?? {
+                        quoteId: quoteId || "",
+                        vehicle: { year: 0, make: "", model: "" },
+                        origin: { city: "", state: "", zip: "" },
+                        destination: { city: "", state: "", zip: "" },
+                        distance: "",
+                        transitTime: "",
+                        earliestPickup: "",
+                        condition: "",
+                        personalItems: "",
+                        transportType: "Open",
+                        serviceType: "Door to door",
+                        prices: { saver: 0, priority: 0, rush: 0 },
+                      }
+                    }
                     tier={selectedTier}
                     price={price}
                   />
@@ -387,7 +577,23 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     tier={selectedTier}
                     price={price}
                     onTierChange={(newTier, newPrice) => setSelectedTier(newTier)}
-                    quoteData={quoteData}
+                    quoteData={
+                      mappedQuoteData ?? {
+                        quoteId: quoteId || "",
+                        vehicle: { year: 0, make: "", model: "" },
+                        origin: { city: "", state: "", zip: "" },
+                        destination: { city: "", state: "", zip: "" },
+                        distance: "",
+                        transitTime: "",
+                        earliestPickup: "",
+                        condition: "",
+                        personalItems: "",
+                        transportType: "Open",
+                        serviceType: "Door to door",
+                        prices: { saver: 0, priority: 0, rush: 0 },
+                        customer: { name: "", email: "", phone: "" },
+                      }
+                    }
                   />
                 )}
               </motion.div>

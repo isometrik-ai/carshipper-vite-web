@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { 
@@ -14,6 +14,7 @@ import { EditPickupDateDialog } from "@/components/ui/dialogs/EditPickupDateDial
 import { EditVehicleDialog, Vehicle } from "@/components/ui/dialogs/EditVehicleDialog";
 import { EditAddressDialog } from "@/components/ui/dialogs/EditAddressDialog";
 import { EditTransportTypeDialog } from "@/components/booking/EditTransportTypeDialog";
+import { UpdateQuote } from "@/services/quote-services";
 
 interface ShippingMethodStepProps {
   quoteData: {
@@ -79,7 +80,15 @@ export function ShippingMethodStep({
   onNext 
 }: ShippingMethodStepProps) {
   // Editable state
-  const [pickupDate, setPickupDate] = useState(new Date(2026, 0, 9)); // 09/01/2026
+  const [pickupDate, setPickupDate] = useState(() => {
+    if (quoteData.earliestPickup) {
+      const [month, day, year] = quoteData.earliestPickup.split("/").map(Number);
+      if (month && day && year) {
+        return new Date(year, month - 1, day);
+      }
+    }
+    return new Date();
+  });
   const [schedulingNotes, setSchedulingNotes] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([{
     id: "1",
@@ -93,6 +102,30 @@ export function ShippingMethodStep({
   const [pickupAddress, setPickupAddress] = useState(quoteData.origin);
   const [deliveryAddress, setDeliveryAddress] = useState(quoteData.destination);
   const [transportType, setTransportType] = useState<"Open" | "Enclosed">("Open");
+
+  // Sync local state when quoteData updates from API
+  useEffect(() => {
+    if (quoteData.earliestPickup) {
+      const [month, day, year] = quoteData.earliestPickup.split("/").map(Number);
+      if (month && day && year) {
+        setPickupDate(new Date(year, month - 1, day));
+      }
+    }
+
+    setVehicles([{
+      id: "1",
+      year: quoteData.vehicle.year,
+      make: quoteData.vehicle.make,
+      model: quoteData.vehicle.model,
+      type: "SUV",
+      operational: true,
+      personalItems: "None or less than 100 lbs.",
+    }]);
+
+    setPickupAddress(quoteData.origin);
+    setDeliveryAddress(quoteData.destination);
+    setTransportType(quoteData.transportType === "Enclosed" ? "Enclosed" : "Open");
+  }, [quoteData.quoteId]);
 
   // Dialog states
   const [dateDialogOpen, setDateDialogOpen] = useState(false);
@@ -163,6 +196,51 @@ export function ShippingMethodStep({
       value: "Included",
     },
   ];
+
+  const handleContinue = async () => {
+    try {
+      const payload = {
+        quote_number: quoteData.quoteId,
+        pickup_zip: pickupAddress.zip,
+        delivery_zip: deliveryAddress.zip,
+        distance_miles: undefined,
+        transport_type: transportType === "Open" ? "Open Transport" : "Enclosed Transport",
+        pickup_city: pickupAddress.city,
+        pickup_state: pickupAddress.state,
+        pickup_addLine1: "",
+        pickup_addLine2: "",
+        pickup_country: "USA",
+        pickup_latitude: undefined,
+        pickup_longitude: undefined,
+        delivery_city: deliveryAddress.city,
+        delivery_state: deliveryAddress.state,
+        delivery_addLine1: "",
+        delivery_addLine2: "",
+        delivery_country: "USA",
+        delivery_latitude: undefined,
+        delivery_longitude: undefined,
+        customer_email: undefined,
+        customer_name: undefined,
+        customer_first_name: undefined,
+        customer_last_name: undefined,
+        customer_company: undefined,
+        customer_phone: undefined,
+        customer_country_code: undefined,
+        vehicles: vehicles.map((v) => ({
+          year: v.year,
+          make: v.make,
+          model: v.model,
+          is_running: v.operational,
+        })),
+      };
+
+      await UpdateQuote(payload);
+    } catch (error) {
+      console.error("Failed to update quote", error);
+    }
+
+    onNext();
+  };
 
   return (
     <>
@@ -359,7 +437,7 @@ export function ShippingMethodStep({
 
           {/* Continue Button */}
           <div className="pt-4">
-            <Button onClick={onNext} size="lg" className="w-full gap-2">
+            <Button onClick={handleContinue} size="lg" className="w-full gap-2">
               Continue to Booking Details
               <ArrowRight className="w-4 h-4" />
             </Button>
