@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 interface OrderSummaryPanelProps {
   quoteData: {
     vehicle: { year: number; make: string; model: string };
-    origin: { city: string; state: string; zip: string };
-    destination: { city: string; state: string; zip: string };
+    origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
+    destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
     earliestPickup: string;
     transportType: string;
   };
@@ -51,12 +51,12 @@ export function OrderSummaryPanel({ quoteData, tier, price }: OrderSummaryPanelP
     {
       icon: ArrowLeft,
       label: "Pickup from",
-      value: `${quoteData.origin.city}, ${quoteData.origin.state}, ${quoteData.origin.zip}`,
+      value: `${quoteData.origin.addLine1}, ${quoteData.origin.addLine2 ? `${quoteData.origin.addLine2}, ` :"" } ${quoteData.origin.city}, ${quoteData.origin.state}, ${quoteData.origin.zip}`,
     },
     {
       icon: ArrowRight,
       label: "Deliver to",
-      value: `${quoteData.destination.city}, ${quoteData.destination.state}, ${quoteData.destination.zip}`,
+      value: `${quoteData.destination.addLine1}, ${quoteData.destination.addLine2 ? `${quoteData.destination.addLine2}, ` :"" } ${quoteData.destination.city}, ${quoteData.destination.state}, ${quoteData.destination.zip}`,
     },
     {
       icon: Truck,

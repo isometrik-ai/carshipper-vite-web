@@ -20,8 +20,8 @@ export const getPhoneNumberLengthRange = (countryCode:CountryCode) => {
    *
    * Returned shape:
    * {
-   *   addressLine1, // e.g. "1600 Amphitheatre Pkwy"
-   *   addressLine2, // e.g. "Mountain View"
+   *   addLine1, // e.g. "1600 Amphitheatre Pkwy"
+   *   addLine2, // e.g. "Mountain View"
    *   city,
    *   state,
    *   stateCode,
@@ -54,12 +54,12 @@ export const getFormattedAddressFromGooglePlace = (place: any) => {
     const streetNumber = streetNumberComp?.long_name || "";
     const route = routeComp?.long_name || "";
 
-    const addressLine1 = [streetNumber, route]
+    const addLine1 = [streetNumber, route]
       .filter(Boolean)
       .join(" ")
       .trim() || place.formatted_address || "";
 
-    const addressLine2 = subLocalityComp?.long_name || "";
+    const addLine2 = subLocalityComp?.long_name || "";
 
     const city = cityComp?.long_name || "";
     const state = stateComp?.long_name || "";
@@ -77,8 +77,8 @@ export const getFormattedAddressFromGooglePlace = (place: any) => {
         : place.geometry?.location?.lng;
 
     return {
-      addressLine1,
-      addressLine2,
+      addLine1,
+      addLine2,
       city,
       state,
       stateCode,

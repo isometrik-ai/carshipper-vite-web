@@ -22,6 +22,9 @@ export interface BookingFormData {
   lastName: string;
   email: string;
   phone: string;
+  // Payment (Stripe)
+  stripePaymentMethodId: string;
+  cardholderName: string;
   // Pickup Details
   pickupAddress: string;
   pickupCity: string;
@@ -56,6 +59,8 @@ const initialFormData: BookingFormData = {
   lastName: "",
   email: "",
   phone: "",
+  stripePaymentMethodId: "",
+  cardholderName: "",
   pickupAddress: "",
   pickupCity: "Beverly Hills",
   pickupState: "CA",
@@ -85,9 +90,10 @@ const initialFormData: BookingFormData = {
 // Quote data mapped from API response
 type BookingQuoteData = {
   quoteId: string;
+  quote_id: string;
   vehicle: { year: number; make: string; model: string };
-  origin: { city: string; state: string; zip: string };
-  destination: { city: string; state: string; zip: string };
+  origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
+  destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
   distance: string;
   transitTime: string;
   earliestPickup: string;
@@ -120,7 +126,6 @@ const mapQuoteDetailsToBookingQuoteData = (
       ? `${distanceMiles.toLocaleString()} miles`
       : "";
 
-  console.log('pricing', quote);
   const priorityTier = quote.pricing?.tiers?.priority;
   const rushTier = quote.pricing?.tiers?.rush;
 
@@ -158,17 +163,22 @@ const mapQuoteDetailsToBookingQuoteData = (
 
   return {
     quoteId: quote.quote_number || "",
+    quote_id: quote._id || quote.quote_number || "",
     vehicle: {
       year: vehicle.year ?? 0,
       make: vehicle.make ?? "",
       model: vehicle.model ?? "",
     },
     origin: {
+      addLine1: pickup.addLine1 ?? "",
+      addLine2: pickup.addLine2 ?? "",
       city: pickup.city ?? "",
       state: pickup.state ?? "",
       zip: pickup.zip ?? "",
     },
     destination: {
+      addLine1: drop.addLine1 ?? "",
+      addLine2: drop.addLine2 ?? "",
       city: drop.city ?? "",
       state: drop.state ?? "",
       zip: drop.zip ?? "",
@@ -236,6 +246,26 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
     };
   }, [props.quoteId, quoteId]);
 
+  const refreshQuoteDetails = async () => {
+    try {
+      const effectiveQuoteId = props.quoteId || quoteId;
+      const response = await QuoteGetDetailsAPI(effectiveQuoteId, undefined);
+      const responseData: any =
+        (response as any)?.data ?? null;
+
+      if (!responseData) return;
+
+      setQuoteDetails(responseData);
+
+      toast.success("Quote updated", {
+        description: "Prices and route details have been refreshed.",
+      });
+    } catch (error) {
+      console.error("Failed to refresh quote details", error);
+      toast.error("Unable to refresh quote details. Please try again.");
+    }
+  };
+
   const price = mappedQuoteData?.prices[selectedTier] ?? 0;
 
   const updateFormData = (data: Partial<BookingFormData>) => {
@@ -257,7 +287,6 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
   };
 
   const handleSubmit = async () => {
-    console.log('data')
     try {
       const effectiveQuoteId = props.quoteId || quoteId;
       const quote: any =
@@ -400,8 +429,8 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
           },
         },
         payment: {
-          stripe_payment_method_id: "pm_xxx",
-          cardholder_name: fullName || "sowmya sv",
+          stripe_payment_method_id: formData.stripePaymentMethodId || "",
+          cardholder_name: formData.cardholderName || fullName,
           billing_address: {
             street: pickupAddress.street,
             city: pickupAddress.city,
@@ -412,7 +441,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         },
         terms: {
           accepted: formData.agreedToTerms,
-          electronic_signature: "John Doe",
+          electronic_signature: formData.cardholderName,
           ip_address: "127.0.0.1",
           accepted_at: new Date().toISOString(),
         },
@@ -448,7 +477,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       setIsSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
-      console.log("Booking submission failed", error);
+      console.error("Booking submission failed", error);
       toast.error("Unable to complete booking", {
         description: "Please try again in a moment.",
       });
@@ -499,8 +528,8 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                       mappedQuoteData ?? {
                         quoteId: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
-                        origin: { city: "", state: "", zip: "" },
-                        destination: { city: "", state: "", zip: "" },
+                        origin: { addLine1: "", addLine2: "", city: "", state: "", zip: "" },
+                        destination: { addLine1: "", addLine2: "", city: "", state: "", zip: "" },
                         distance: "",
                         transitTime: "",
                         earliestPickup: "",
@@ -514,6 +543,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     selectedTier={selectedTier}
                     onTierChange={setSelectedTier}
                     onNext={nextStep}
+                    getQuoteDetails={refreshQuoteDetails}
                   />
                 )}
                 {currentStep === 2 && (
@@ -525,9 +555,10 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     quoteData={
                       mappedQuoteData ?? {
                         quoteId: quoteId || "",
+                        quote_id: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
-                        origin: { city: "", state: "", zip: "" },
-                        destination: { city: "", state: "", zip: "" },
+                        origin: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
+                        destination: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
                         distance: "",
                         transitTime: "",
                         earliestPickup: "",
@@ -551,9 +582,10 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     quoteData={
                       mappedQuoteData ?? {
                         quoteId: quoteId || "",
+                        quote_id: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
-                        origin: { city: "", state: "", zip: "" },
-                        destination: { city: "", state: "", zip: "" },
+                        origin: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
+                        destination: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
                         distance: "",
                         transitTime: "",
                         earliestPickup: "",
@@ -568,7 +600,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     price={price}
                   />
                 )}
-                {currentStep === 4 && (
+                {currentStep === 1 && (
                   <BookShipmentStep
                     formData={formData}
                     updateFormData={updateFormData}
@@ -580,9 +612,10 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     quoteData={
                       mappedQuoteData ?? {
                         quoteId: quoteId || "",
+                        quote_id: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
-                        origin: { city: "", state: "", zip: "" },
-                        destination: { city: "", state: "", zip: "" },
+                        origin: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
+                        destination: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
                         distance: "",
                         transitTime: "",
                         earliestPickup: "",

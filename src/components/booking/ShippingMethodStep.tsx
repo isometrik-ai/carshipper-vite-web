@@ -14,14 +14,15 @@ import { EditPickupDateDialog } from "@/components/ui/dialogs/EditPickupDateDial
 import { EditVehicleDialog, Vehicle } from "@/components/ui/dialogs/EditVehicleDialog";
 import { EditAddressDialog } from "@/components/ui/dialogs/EditAddressDialog";
 import { EditTransportTypeDialog } from "@/components/booking/EditTransportTypeDialog";
-import { UpdateQuote } from "@/services/quote-services";
+import { QuoteGetDetailsAPI, UpdateQuote } from "@/services/quote-services";
+import { toast } from "sonner";
 
 interface ShippingMethodStepProps {
   quoteData: {
     quoteId: string;
     vehicle: { year: number; make: string; model: string };
-    origin: { city: string; state: string; zip: string };
-    destination: { city: string; state: string; zip: string };
+    origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
+    destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
     distance: string;
     transitTime: string;
     earliestPickup: string;
@@ -34,6 +35,7 @@ interface ShippingMethodStepProps {
   selectedTier: "saver" | "priority" | "rush";
   onTierChange: (tier: "saver" | "priority" | "rush") => void;
   onNext: () => void;
+  getQuoteDetails: () => void;
 }
 
 const tiers = [
@@ -77,7 +79,8 @@ export function ShippingMethodStep({
   quoteData, 
   selectedTier, 
   onTierChange, 
-  onNext 
+  onNext,
+  getQuoteDetails
 }: ShippingMethodStepProps) {
   // Editable state
   const [pickupDate, setPickupDate] = useState(() => {
@@ -99,9 +102,10 @@ export function ShippingMethodStep({
     operational: true,
     personalItems: "None or less than 100 lbs.",
   }]);
-  const [pickupAddress, setPickupAddress] = useState(quoteData.origin);
-  const [deliveryAddress, setDeliveryAddress] = useState(quoteData.destination);
+  const [pickupAddress, setPickupAddress] = useState({ addLine1: quoteData.origin.addLine1, addLine2: quoteData.origin.addLine2, city: quoteData.origin.city, state: quoteData.origin.state, zip: quoteData.origin.zip });
+  const [deliveryAddress, setDeliveryAddress] = useState({ addLine1: quoteData.destination.addLine1, addLine2: quoteData.destination.addLine2, city: quoteData.destination.city, state: quoteData.destination.state, zip: quoteData.destination.zip });
   const [transportType, setTransportType] = useState<"Open" | "Enclosed">("Open");
+  const [currentPrices, setCurrentPrices] = useState(quoteData.prices);
 
   // Sync local state when quoteData updates from API
   useEffect(() => {
@@ -125,6 +129,7 @@ export function ShippingMethodStep({
     setPickupAddress(quoteData.origin);
     setDeliveryAddress(quoteData.destination);
     setTransportType(quoteData.transportType === "Enclosed" ? "Enclosed" : "Open");
+    setCurrentPrices(quoteData.prices);
   }, [quoteData.quoteId]);
 
   // Dialog states
@@ -138,6 +143,79 @@ export function ShippingMethodStep({
   const vehicleDisplay = vehicles.length === 1 
     ? `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`
     : `${vehicles.length} vehicles`;
+
+  const formatAddressWithEllipsis = (address: string, maxLength = 60) => {
+    if (!address) return "";
+    return address.length > maxLength ? `${address.slice(0, maxLength - 3)}...` : address;
+  };
+
+  const pickupFullAddress = `${pickupAddress.addLine1}, ${pickupAddress.addLine2 ? `${pickupAddress.addLine2}, ` : ""}${pickupAddress.city}, ${pickupAddress.state}, ${pickupAddress.zip}`;
+  const deliveryFullAddress = `${deliveryAddress.addLine1}, ${deliveryAddress.addLine2 ? `${deliveryAddress.addLine2}, ` : ""}${deliveryAddress.city}, ${deliveryAddress.state}, ${deliveryAddress.zip}`;
+
+  type AddressState = { addLine1: string; addLine2: string; city: string; state: string; zip: string };
+
+  const buildUpdatePayload = (overrides?: {
+    pickupAddress?: AddressState;
+    deliveryAddress?: AddressState;
+    vehicles?: Vehicle[];
+    transportType?: "Open" | "Enclosed";
+  }) => {
+    const effectivePickup = overrides?.pickupAddress ?? pickupAddress;
+    const effectiveDelivery = overrides?.deliveryAddress ?? deliveryAddress;
+    const effectiveVehicles = overrides?.vehicles ?? vehicles;
+    const effectiveTransportType = overrides?.transportType ?? transportType;
+
+    return {
+    quote_number: quoteData.quoteId,
+    pickup_zip: effectivePickup.zip,
+    delivery_zip: effectiveDelivery.zip,
+    distance_miles: undefined,
+    transport_type: effectiveTransportType === "Open" ? "Open Transport" : "Enclosed Transport",
+    pickup_city: effectivePickup.city,
+    pickup_state: effectivePickup.state,
+    pickup_addLine1: effectivePickup.addLine1,
+    pickup_addLine2: effectivePickup.addLine2,
+    pickup_country: "USA",
+    pickup_latitude: undefined,
+    pickup_longitude: undefined,
+    delivery_city: effectiveDelivery.city,
+    delivery_state: effectiveDelivery.state,
+    delivery_addLine1: effectiveDelivery.addLine1,
+    delivery_addLine2: effectiveDelivery.addLine2,
+    delivery_country: "USA",
+    delivery_latitude: undefined,
+    delivery_longitude: undefined,
+    customer_email: undefined,
+    customer_name: undefined,
+    customer_first_name: undefined,
+    customer_last_name: undefined,
+    customer_company: undefined,
+    customer_phone: undefined,
+    customer_country_code: undefined,
+    vehicles: effectiveVehicles.map((v) => ({
+      year: v.year,
+      make: v.make,
+      model: v.model,
+      is_running: v.operational,
+    })),
+    };
+  };
+
+  const syncQuoteWithServer = async (overrides?: {
+    pickupAddress?: AddressState;
+    deliveryAddress?: AddressState;
+    vehicles?: Vehicle[];
+    transportType?: "Open" | "Enclosed";
+  }) => {
+    try {
+      const payload = buildUpdatePayload(overrides);
+      await UpdateQuote(payload);
+      await getQuoteDetails();
+    } catch (error) {
+      console.error("Failed to update quote", error);
+      toast.error("Unable to update quote. Please try again.");
+    }
+  };
 
   const detailRows = [
     { 
@@ -167,14 +245,16 @@ export function ShippingMethodStep({
     { 
       icon: ArrowLeft, 
       label: "Pickup from", 
-      value: `${pickupAddress.city}, ${pickupAddress.state}, ${pickupAddress.zip}`,
+      value: formatAddressWithEllipsis(pickupFullAddress),
+      title: pickupFullAddress,
       editable: true,
       onEdit: () => setPickupAddressDialogOpen(true),
     },
     { 
       icon: ArrowRightIcon, 
       label: "Deliver to", 
-      value: `${deliveryAddress.city}, ${deliveryAddress.state}, ${deliveryAddress.zip}`,
+      value: formatAddressWithEllipsis(deliveryFullAddress),
+      title: deliveryFullAddress,
       editable: true,
       onEdit: () => setDeliveryAddressDialogOpen(true),
     },
@@ -199,41 +279,7 @@ export function ShippingMethodStep({
 
   const handleContinue = async () => {
     try {
-      const payload = {
-        quote_number: quoteData.quoteId,
-        pickup_zip: pickupAddress.zip,
-        delivery_zip: deliveryAddress.zip,
-        distance_miles: undefined,
-        transport_type: transportType === "Open" ? "Open Transport" : "Enclosed Transport",
-        pickup_city: pickupAddress.city,
-        pickup_state: pickupAddress.state,
-        pickup_addLine1: "",
-        pickup_addLine2: "",
-        pickup_country: "USA",
-        pickup_latitude: undefined,
-        pickup_longitude: undefined,
-        delivery_city: deliveryAddress.city,
-        delivery_state: deliveryAddress.state,
-        delivery_addLine1: "",
-        delivery_addLine2: "",
-        delivery_country: "USA",
-        delivery_latitude: undefined,
-        delivery_longitude: undefined,
-        customer_email: undefined,
-        customer_name: undefined,
-        customer_first_name: undefined,
-        customer_last_name: undefined,
-        customer_company: undefined,
-        customer_phone: undefined,
-        customer_country_code: undefined,
-        vehicles: vehicles.map((v) => ({
-          year: v.year,
-          make: v.make,
-          model: v.model,
-          is_running: v.operational,
-        })),
-      };
-
+      const payload = buildUpdatePayload();
       await UpdateQuote(payload);
     } catch (error) {
       console.error("Failed to update quote", error);
@@ -264,7 +310,12 @@ export function ShippingMethodStep({
                     <span className="text-sm">{row.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-foreground">{row.value}</span>
+                    <span
+                      className="text-sm font-medium text-foreground max-w-[260px] truncate"
+                      title={row.title || row.value}
+                    >
+                      {row.value}
+                    </span>
                     {row.editable && (
                       <button 
                         onClick={row.onEdit}
@@ -461,9 +512,10 @@ export function ShippingMethodStep({
         onOpenChange={setDateDialogOpen}
         currentDate={pickupDate}
         schedulingNotes={schedulingNotes}
-        onSave={(date, notes) => {
+        onSave={async (date, notes) => {
           setPickupDate(date);
           setSchedulingNotes(notes);
+          await syncQuoteWithServer();
         }}
       />
 
@@ -471,7 +523,10 @@ export function ShippingMethodStep({
         open={vehicleDialogOpen}
         onOpenChange={setVehicleDialogOpen}
         vehicles={vehicles}
-        onSave={setVehicles}
+        onSave={async (updatedVehicles) => {
+          setVehicles(updatedVehicles);
+          await syncQuoteWithServer({ vehicles: updatedVehicles });
+        }}
       />
 
       <EditAddressDialog
@@ -479,7 +534,10 @@ export function ShippingMethodStep({
         onOpenChange={setPickupAddressDialogOpen}
         type="pickup"
         currentAddress={pickupAddress}
-        onSave={setPickupAddress}
+        onSave={async (updatedAddress) => {
+          setPickupAddress(updatedAddress);
+          await syncQuoteWithServer({ pickupAddress: updatedAddress });
+        }}
       />
 
       <EditAddressDialog
@@ -487,14 +545,20 @@ export function ShippingMethodStep({
         onOpenChange={setDeliveryAddressDialogOpen}
         type="delivery"
         currentAddress={deliveryAddress}
-        onSave={setDeliveryAddress}
+        onSave={async (updatedAddress) => {
+          setDeliveryAddress(updatedAddress);
+          await syncQuoteWithServer({ deliveryAddress: updatedAddress });
+        }}
       />
 
       <EditTransportTypeDialog
         open={transportDialogOpen}
         onOpenChange={setTransportDialogOpen}
         currentType={transportType}
-        onSave={setTransportType}
+        onSave={async (type) => {
+          setTransportType(type);
+          await syncQuoteWithServer({ transportType: type });
+        }}
       />
     </>
   );

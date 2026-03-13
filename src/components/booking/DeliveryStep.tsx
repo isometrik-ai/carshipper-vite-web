@@ -49,8 +49,8 @@ interface DeliveryStepProps {
   onBack: () => void;
   quoteData: {
     vehicle: { year: number; make: string; model: string };
-    origin: { city: string; state: string; zip: string };
-    destination: { city: string; state: string; zip: string };
+    origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
+    destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
     earliestPickup: string;
     transportType: string;
   };
@@ -193,7 +193,7 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
               ) => {
                 const formatted = getFormattedAddressFromGooglePlace(place);
 
-                const line1 = formatted?.addressLine1 || fullAddress || "";
+                const line1 = formatted?.addLine1 || fullAddress || "";
                 const city  = formatted?.city || "";
                 const state = formatted?.stateCode || formatted?.state || "";
                 const zip   = formatted?.zipCode || "";
@@ -317,6 +317,7 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
                 phoneNumberValue={formData.deliveryContactPhone || ""}
                 phoneNumberDefaultValue={formData.deliveryContactPhone || ""}
                 customIntlTelInputContainer="
+                  flex
                   intl-tel-input separate-dial-code w-full
                   border border-input rounded-md bg-background
                   text-sm shadow-sm
@@ -383,7 +384,7 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
                 phoneNumberValue={formData.deliveryBackupPhone}
                 phoneNumberDefaultValue={formData.deliveryBackupPhone}
                 customIntlTelInputContainer="
-                  intl-tel-input separate-dial-code w-full
+                  intl-tel-input separate-dial-code w-full flex
                   border border-input rounded-md bg-background
                   text-sm shadow-sm
                   focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1

@@ -9,6 +9,10 @@ import { Label } from "@/components/ui/label";
 import { BookingFormData } from "@/containers/BookingPage";
 import { cn } from "@/lib/utils";
 import { EditPriceOptionDialog } from "@/components/ui/dialogs/EditPriceOptionDialog";
+import { getStripe } from "@/utils/stripe-utils";
+import AddNewCardsSection from "../addCards/addNewCard";
+import { Elements } from "@stripe/react-stripe-js";
+import RouteMap from "@/components/maps/RouteMap";
 
 interface BookShipmentStepProps {
   formData: BookingFormData;
@@ -20,8 +24,8 @@ interface BookShipmentStepProps {
   onTierChange?: (tier: "saver" | "priority" | "rush", price: number) => void;
   quoteData: {
     vehicle: { year: number; make: string; model: string };
-    origin: { city: string; state: string; zip: string };
-    destination: { city: string; state: string; zip: string };
+    origin: { addLine1:string, addLine2:string, city: string; state: string; zip: string };
+    destination: { addLine1:string, addLine2:string, city: string; state: string; zip: string };
     earliestPickup: string;
     transportType: string;
     customer?: {
@@ -88,6 +92,25 @@ const handleSubmit = async () => {
   const shipperEmail = quoteData.customer?.email || formData.email;
   const shipperPhone = quoteData.customer?.phone || formData.phone;
 
+  const originAddress = [
+    quoteData?.origin?.addLine1,
+    quoteData?.origin?.addLine2,
+    quoteData?.origin?.city,
+    quoteData?.origin?.state,
+    quoteData?.origin?.zip,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const destinationAddress = [
+    quoteData?.destination?.addLine1,
+    quoteData?.destination?.addLine2,
+    quoteData?.destination?.city,
+    quoteData?.destination?.state,
+    quoteData?.destination?.zip,
+  ]
+    .filter(Boolean)
+    .join(", ");
   return (
     <div className="grid lg:grid-cols-2 gap-6">
       {/* LEFT: Map & Agent */}
@@ -99,7 +122,13 @@ const handleSubmit = async () => {
               <div className="w-3 h-3 rounded-full bg-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Pickup</p>
-                <p className="font-semibold">{quoteData.origin.city}, {quoteData.origin.state}, {quoteData.origin.zip}</p>
+                <p className="font-semibold">
+                  {quoteData?.origin?.addLine1}, 
+                  {quoteData?.origin?.addLine2 ? `${quoteData?.origin?.addLine2}, ` :"" } 
+                  {quoteData?.origin?.city}, 
+                  {quoteData?.origin?.state}, 
+                  {quoteData?.origin?.zip}
+                  </p>
               </div>
             </div>
             <div className="ml-1.5 border-l-2 border-dashed border-muted-foreground/30 h-6" />
@@ -107,28 +136,19 @@ const handleSubmit = async () => {
               <div className="w-3 h-3 rounded-full bg-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Delivery</p>
-                <p className="font-semibold">{quoteData.destination.city}, {quoteData.destination.state}, {quoteData.destination.zip}</p>
+                <p className="font-semibold">
+                  {quoteData?.destination?.addLine1}, 
+                  {quoteData?.destination?.addLine2 ? `${quoteData?.destination?.addLine2}, ` :"" } 
+                  {quoteData?.destination?.city}, 
+                  {quoteData?.destination?.state}, 
+                  {quoteData?.destination?.zip}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Map Placeholder */}
-          <div className="aspect-video bg-gradient-to-br from-blue-100 to-green-100 dark:from-blue-950 dark:to-green-950 rounded-xl flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 opacity-50">
-              <svg className="w-full h-full" viewBox="0 0 400 200">
-                <path 
-                  d="M 50 100 Q 200 50 350 100" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth="3" 
-                  fill="none"
-                  strokeDasharray="8 4"
-                />
-                <circle cx="50" cy="100" r="8" fill="hsl(var(--primary))" />
-                <circle cx="350" cy="100" r="8" fill="hsl(var(--primary))" />
-              </svg>
-            </div>
-            <p className="text-muted-foreground text-sm z-10">Route Map</p>
-          </div>
+          {/* Route Map (non-interactive Google Map via JS API) */}
+          <RouteMap origin={originAddress} destination={destinationAddress} />
         </div>
 
         {/* Dedicated Agent */}
@@ -259,7 +279,7 @@ const handleSubmit = async () => {
                   <div>
                     <p className="font-medium text-foreground">Pickup From</p>
                     <p className="text-sm text-muted-foreground">
-                      {formData.pickupAddress || "131 Continental Dr"}, {formData.pickupCity}, {formData.pickupState} {formData.pickupZip}
+                      {quoteData?.origin?.addLine1}, {quoteData?.origin?.addLine2 ? `${quoteData?.origin?.addLine2}, ` :"" } {quoteData?.origin?.city}, {quoteData?.origin?.state} {quoteData?.origin?.zip}
                     </p>
                   </div>
                 </div>
@@ -276,7 +296,7 @@ const handleSubmit = async () => {
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
                     <span className="text-sm text-foreground">
-                      {formData.pickupAddress || "131 Continental Dr"}, {formData.pickupCity}, {formData.pickupState} {formData.pickupZip}
+                      {quoteData?.origin?.addLine1}, {quoteData?.origin?.addLine2 ? `${quoteData?.origin?.addLine2}, ` :"" } {quoteData?.origin?.city}, {quoteData?.origin?.state} {quoteData?.origin?.zip}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
@@ -463,7 +483,7 @@ const handleSubmit = async () => {
             </div>
 
             {/* Card Input Fields (Placeholder for Stripe) */}
-            <div className="space-y-4 pt-2">
+            {/* <div className="space-y-4 pt-2">
               <div>
                 <Label htmlFor="cardNumber" className="text-sm font-medium text-foreground">Card Number</Label>
                 <div className="mt-1.5 relative">
@@ -508,8 +528,17 @@ const handleSubmit = async () => {
                   className="mt-1.5 w-full h-11 px-4 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
+            </div> */}
+            {/* stripe add card section */}
+            <div className="space-y-4 pt-2">
+            <Elements stripe={getStripe()}>
+              <AddNewCardsSection
+                handleSubmit={(id: string, nameOnCard: string) => {
+                  updateFormData({ cardholderName: nameOnCard, stripePaymentMethodId: id })
+                }}
+                />
+              </Elements>
             </div>
-
             {/* Security Badge */}
             <div className="flex items-center gap-2 pt-2">
               <Shield className="w-4 h-4 text-muted-foreground" />

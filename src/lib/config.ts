@@ -12,3 +12,8 @@ export const API_BASE_URL =
     ? "/api/backend"
     : rawApiBase;
 export const MAIN_API_URL = `${API_BASE_URL}/v2`;
+export const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_KEY || 'pk_test_wkBp1AheycW1DkLZjT3WQkNV';
+export const CUSTOM_WHITE_COLOR = "#FFFFFF";
+export const CUSTOM_LIGHT_GRAY_COLOR = "#000000";
+export const CUSTOM_LIGHT_GRAY="#000000";
+export const CARD = "card";
