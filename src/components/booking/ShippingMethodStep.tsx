@@ -16,6 +16,7 @@ import { EditAddressDialog } from "@/components/ui/dialogs/EditAddressDialog";
 import { EditTransportTypeDialog } from "@/components/booking/EditTransportTypeDialog";
 import { QuoteGetDetailsAPI, UpdateQuote } from "@/services/quote-services";
 import { toast } from "sonner";
+import { BasicAddress, formatAddressWithEllipsis, formatFullAddress } from "@/lib/address";
 
 interface ShippingMethodStepProps {
   quoteData: {
@@ -82,16 +83,7 @@ export function ShippingMethodStep({
   onNext,
   getQuoteDetails
 }: ShippingMethodStepProps) {
-  // Editable state
-  const [pickupDate, setPickupDate] = useState(() => {
-    if (quoteData.earliestPickup) {
-      const [month, day, year] = quoteData.earliestPickup.split("/").map(Number);
-      if (month && day && year) {
-        return new Date(year, month - 1, day);
-      }
-    }
-    return new Date();
-  });
+
   const [schedulingNotes, setSchedulingNotes] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([{
     id: "1",
@@ -102,35 +94,67 @@ export function ShippingMethodStep({
     operational: true,
     personalItems: "None or less than 100 lbs.",
   }]);
-  const [pickupAddress, setPickupAddress] = useState({ addLine1: quoteData.origin.addLine1, addLine2: quoteData.origin.addLine2, city: quoteData.origin.city, state: quoteData.origin.state, zip: quoteData.origin.zip });
-  const [deliveryAddress, setDeliveryAddress] = useState({ addLine1: quoteData.destination.addLine1, addLine2: quoteData.destination.addLine2, city: quoteData.destination.city, state: quoteData.destination.state, zip: quoteData.destination.zip });
+  const [pickupAddress, setPickupAddress] = useState<AddressState>({ addLine1: quoteData.origin.addLine1, addLine2: quoteData.origin.addLine2, city: quoteData.origin.city, state: quoteData.origin.state, zip: quoteData.origin.zip });
+  const [deliveryAddress, setDeliveryAddress] = useState<AddressState>({ addLine1: quoteData.destination.addLine1, addLine2: quoteData.destination.addLine2, city: quoteData.destination.city, state: quoteData.destination.state, zip: quoteData.destination.zip });
   const [transportType, setTransportType] = useState<"Open" | "Enclosed">("Open");
-  const [currentPrices, setCurrentPrices] = useState(quoteData.prices);
+  const [currentPrices, setCurrentPrices] = useState<{ saver: number; priority: number; rush: number }>(quoteData.prices);
 
+  // Initialize pickupDate with fallback to current date if earliestPickup is invalid
+const initialPickupDate = (() => {
+  if (quoteData.earliestPickup) {
+    const parts = quoteData.earliestPickup.split("/").map(Number);
+    if (parts.length === 3 && parts.every(n => !isNaN(n))) {
+      const [month, day, year] = parts;
+      return new Date(year, month - 1, day);
+    }
+  }
+  return new Date();
+})();
+const [pickupDate, setPickupDate] = useState(initialPickupDate);
   // Sync local state when quoteData updates from API
   useEffect(() => {
+    let isCancelled = false;
     if (quoteData.earliestPickup) {
-      const [month, day, year] = quoteData.earliestPickup.split("/").map(Number);
-      if (month && day && year) {
-        setPickupDate(new Date(year, month - 1, day));
+      const parts = quoteData.earliestPickup.split("/").map(Number);
+      if (parts.length === 3 && parts.every(n => !isNaN(n))) {
+        const [month, day, year] = parts;
+        if (!isCancelled) {
+          setPickupDate(new Date(year, month - 1, day));
+        }
       }
     }
 
-    setVehicles([{
-      id: "1",
-      year: quoteData.vehicle.year,
-      make: quoteData.vehicle.make,
-      model: quoteData.vehicle.model,
-      type: "SUV",
-      operational: true,
-      personalItems: "None or less than 100 lbs.",
-    }]);
+    if (!isCancelled) {
+      setVehicles([{
+        id: "1",
+        year: quoteData.vehicle.year,
+        make: quoteData.vehicle.make,
+        model: quoteData.vehicle.model,
+        type: "SUV",
+        operational: true,
+        personalItems: "None or less than 100 lbs.",
+      }]);
+      setPickupAddress(quoteData.origin);
+      setDeliveryAddress(quoteData.destination);
+      setTransportType(quoteData.transportType === "Enclosed" ? "Enclosed" : "Open");
+      setCurrentPrices(quoteData.prices);
+    }
+    return () => { isCancelled = true; };
+    // setVehicles([{
+    //   id: "1",
+    //   year: quoteData.vehicle.year,
+    //   make: quoteData.vehicle.make,
+    //   model: quoteData.vehicle.model,
+    //   type: "SUV",
+    //   operational: true,
+    //   personalItems: "None or less than 100 lbs.",
+    // }]);
 
-    setPickupAddress(quoteData.origin);
-    setDeliveryAddress(quoteData.destination);
-    setTransportType(quoteData.transportType === "Enclosed" ? "Enclosed" : "Open");
-    setCurrentPrices(quoteData.prices);
-  }, [quoteData.quoteId]);
+    // setPickupAddress(quoteData.origin);
+    // setDeliveryAddress(quoteData.destination);
+    // setTransportType(quoteData.transportType === "Enclosed" ? "Enclosed" : "Open");
+    // setCurrentPrices(quoteData.prices);
+  }, [quoteData?.quoteId]);
 
   // Dialog states
   const [dateDialogOpen, setDateDialogOpen] = useState(false);
@@ -144,13 +168,8 @@ export function ShippingMethodStep({
     ? `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`
     : `${vehicles.length} vehicles`;
 
-  const formatAddressWithEllipsis = (address: string, maxLength = 60) => {
-    if (!address) return "";
-    return address.length > maxLength ? `${address.slice(0, maxLength - 3)}...` : address;
-  };
-
-  const pickupFullAddress = `${pickupAddress.addLine1}, ${pickupAddress.addLine2 ? `${pickupAddress.addLine2}, ` : ""}${pickupAddress.city}, ${pickupAddress.state}, ${pickupAddress.zip}`;
-  const deliveryFullAddress = `${deliveryAddress.addLine1}, ${deliveryAddress.addLine2 ? `${deliveryAddress.addLine2}, ` : ""}${deliveryAddress.city}, ${deliveryAddress.state}, ${deliveryAddress.zip}`;
+  const pickupFullAddress = formatFullAddress(pickupAddress as BasicAddress);
+  const deliveryFullAddress = formatFullAddress(deliveryAddress as BasicAddress);
 
   type AddressState = { addLine1: string; addLine2: string; city: string; state: string; zip: string };
 
@@ -245,7 +264,7 @@ export function ShippingMethodStep({
     { 
       icon: ArrowLeft, 
       label: "Pickup from", 
-      value: formatAddressWithEllipsis(pickupFullAddress),
+      value: formatAddressWithEllipsis(pickupAddress as BasicAddress),
       title: pickupFullAddress,
       editable: true,
       onEdit: () => setPickupAddressDialogOpen(true),
@@ -253,7 +272,7 @@ export function ShippingMethodStep({
     { 
       icon: ArrowRightIcon, 
       label: "Deliver to", 
-      value: formatAddressWithEllipsis(deliveryFullAddress),
+      value: formatAddressWithEllipsis(deliveryAddress as BasicAddress),
       title: deliveryFullAddress,
       editable: true,
       onEdit: () => setDeliveryAddressDialogOpen(true),

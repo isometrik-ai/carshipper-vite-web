@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { OEMTransportResponse } from "@/types/OEMTransport.types";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
 /**
  * Fetches OEM Transport page data from Strapi with full population

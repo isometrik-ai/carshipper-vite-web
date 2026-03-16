@@ -89,6 +89,7 @@ export function EditVehicleDialog({
       return;
     }
 
+    if (vinLookupLoading) return; // Prevent overlapping requests
     setVinLookupLoading(true);
 
     try {

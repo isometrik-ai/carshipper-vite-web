@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, MapPin, DollarSign } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,17 @@ export function EditAddressDialog({
     });
     onOpenChange(false);
   };
+
+  // Reset state when currentAddress changes
+  useEffect(() => {
+    setAddressDisplay(`${currentAddress?.addLine1}, ${currentAddress?.addLine2 ?
+      `${currentAddress?.addLine2}, ` :"" }
+      ${currentAddress?.city}, ${currentAddress?.state}, ${currentAddress?.zip}`);
+    setAddLine2(currentAddress?.addLine2);
+    setCity(currentAddress?.city);
+    setState(currentAddress?.state);
+    setZip(currentAddress?.zip);
+  }, [currentAddress]);
 
   return (
     <>

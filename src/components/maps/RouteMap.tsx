@@ -80,12 +80,23 @@ const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
       const bounds = new google.maps.LatLngBounds();
       let placedCount = 0;
 
+      // Declare marker references at the component level
+      const originMarkerRef = useRef<any>(null);
+      const destinationMarkerRef = useRef<any>(null);
+
+      // Inside initializeMap, before placing new markers, remove existing ones
+      if (originMarkerRef.current) {
+        originMarkerRef.current.setMap(null);
+      }
+      if (destinationMarkerRef.current) {
+        destinationMarkerRef.current.setMap(null);
+      }
       const placeMarker = (address: string, label: string, color: "red" | "green") => {
         if (!address) return;
         geocoder.geocode({ address }, (results: any, status: any) => {
           if (status === "OK" && results && results[0]) {
             const location = results[0].geometry.location;
-            new google.maps.Marker({
+            const marker = new google.maps.Marker({
               map,
               position: location,
               label,
@@ -95,9 +106,15 @@ const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
                   ? "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
                   : "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
             });
+            if (label === "A") {
+              originMarkerRef.current = marker;
+            } else if (label === "B") {
+              destinationMarkerRef.current = marker;
+            }
             bounds.extend(location);
+            // fit bounds if both markers are placed
             placedCount += 1;
-            if (placedCount >= 2) {
+            if (placedCount >= 2 && originMarkerRef.current && destinationMarkerRef.current) {
               map.fitBounds(bounds);
             }
           }

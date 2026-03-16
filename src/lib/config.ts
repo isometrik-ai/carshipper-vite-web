@@ -10,9 +10,9 @@ const rawApiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://5.161.218.11:
 export const API_BASE_URL =
   typeof window !== "undefined" && window.location?.protocol === "https:"
     ? "/api/backend"
-    : rawApiBase;
+    : (process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL.trim() !== '') ? process.env.NEXT_PUBLIC_API_BASE_URL : (() => { throw new Error('Missing or invalid NEXT_PUBLIC_API_BASE_URL environment variable'); })();
 export const MAIN_API_URL = `${API_BASE_URL}/v2`;
-export const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_KEY || 'pk_test_wkBp1AheycW1DkLZjT3WQkNV';
+export const STRIPE_KEY = (process.env.NEXT_PUBLIC_STRIPE_KEY && process.env.NEXT_PUBLIC_STRIPE_KEY.trim() !== '') ? process.env.NEXT_PUBLIC_STRIPE_KEY : (() => { throw new Error('Missing or invalid NEXT_PUBLIC_STRIPE_KEY environment variable'); })();
 export const CUSTOM_WHITE_COLOR = "#FFFFFF";
 export const CUSTOM_LIGHT_GRAY_COLOR = "#000000";
 export const CUSTOM_LIGHT_GRAY="#000000";

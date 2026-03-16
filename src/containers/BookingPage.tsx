@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ReadonlyURLSearchParams, useParams, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookingHeader } from "@/components/booking/BookingHeader";
@@ -15,6 +15,8 @@ import { SuccessStep } from "@/components/booking/SuccessStep";
 import { QuoteGetDetailsAPI } from "@/services/quote-services";
 import { createNewShipmentBooking } from "@/services/booking-services";
 import { toast } from "sonner";
+import { formatFullAddress } from "@/lib/address";
+import { getClientIPAddress } from "@/lib/global";
 
 export interface BookingFormData {
   // Contact Info
@@ -92,8 +94,8 @@ type BookingQuoteData = {
   quoteId: string;
   quote_id: string;
   vehicle: { year: number; make: string; model: string };
-  origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
-  destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
+  origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string; latitude: number; longitude: number | undefined };
+  destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string; latitude: number; longitude: number | undefined };
   distance: string;
   transitTime: string;
   earliestPickup: string;
@@ -162,8 +164,8 @@ const mapQuoteDetailsToBookingQuoteData = (
     customerDetails.phone || customerDetails.phone_number || customerDetails.mobile || "";
 
   return {
-    quoteId: quote.quote_number || "",
-    quote_id: quote._id || quote.quote_number || "",
+    quoteId: quote?.quote_number || "",
+    quote_id: quote?._id || quote?.quote_number || "",
     vehicle: {
       year: vehicle.year ?? 0,
       make: vehicle.make ?? "",
@@ -175,6 +177,8 @@ const mapQuoteDetailsToBookingQuoteData = (
       city: pickup.city ?? "",
       state: pickup.state ?? "",
       zip: pickup.zip ?? "",
+      latitude: pickup.lat ?? undefined,
+      longitude: pickup.lng ?? undefined,
     },
     destination: {
       addLine1: drop.addLine1 ?? "",
@@ -182,6 +186,8 @@ const mapQuoteDetailsToBookingQuoteData = (
       city: drop.city ?? "",
       state: drop.state ?? "",
       zip: drop.zip ?? "",
+      latitude: drop.lat ?? undefined,
+      longitude: drop.lng ?? undefined,
     },
     distance,
     transitTime,
@@ -246,7 +252,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
     };
   }, [props.quoteId, quoteId]);
 
-  const refreshQuoteDetails = async () => {
+  const refreshQuoteDetails = useCallback(async () => {
     try {
       const effectiveQuoteId = props.quoteId || quoteId;
       const response = await QuoteGetDetailsAPI(effectiveQuoteId, undefined);
@@ -264,7 +270,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       console.error("Failed to refresh quote details", error);
       toast.error("Unable to refresh quote details. Please try again.");
     }
-  };
+  }, [props.quoteId, quoteId]);
 
   const price = mappedQuoteData?.prices[selectedTier] ?? 0;
 
@@ -336,6 +342,13 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         addLine2: "",
         latitude: routePickup.lat ?? routePickup.latitude ?? null,
         longitude: routePickup.lng ?? routePickup.longitude ?? null,
+        full: formatFullAddress({
+          addLine1: formData.pickupAddress || routePickup.addLine1 || "",
+          addLine2: "",
+          city: formData.pickupCity || routePickup.city || "",
+          state: formData.pickupState || routePickup.state || "",
+          zip: formData.pickupZip || routePickup.zip || "",
+        }),
       };
 
       const deliveryAddress = {
@@ -347,6 +360,13 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         addLine2: "",
         latitude: routeDrop.lat ?? routeDrop.latitude ?? null,
         longitude: routeDrop.lng ?? routeDrop.longitude ?? null,
+        full: formatFullAddress({
+          addLine1: formData.deliveryAddress || routeDrop.addLine1 || "",
+          addLine2: "",
+          city: formData.deliveryCity || routeDrop.city || "",
+          state: formData.deliveryState || routeDrop.state || "",
+          zip: formData.deliveryZip || routeDrop.zip || "",
+        }),
       };
 
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
@@ -442,7 +462,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         terms: {
           accepted: formData.agreedToTerms,
           electronic_signature: formData.cardholderName,
-          ip_address: "127.0.0.1",
+          ip_address: getClientIPAddress(),
           accepted_at: new Date().toISOString(),
         },
         customer: {
@@ -557,8 +577,14 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                         quoteId: quoteId || "",
                         quote_id: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
-                        origin: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
-                        destination: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
+                        origin: { addLine1:"", addLine2:"", city: "",
+                          state: "", zip: "",
+                        latitude: undefined,
+                        longitude: undefined },
+                        destination: { addLine1:"", addLine2:"", city: "",
+                          state: "", zip: "",
+                        latitude: undefined,
+                        longitude: undefined },
                         distance: "",
                         transitTime: "",
                         earliestPickup: "",
@@ -584,8 +610,14 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                         quoteId: quoteId || "",
                         quote_id: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
-                        origin: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
-                        destination: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
+                        origin: { addLine1:"", addLine2:"", city: "", state: "", zip: "",
+                          latitude: undefined,
+                          longitude: undefined
+                         },
+                        destination: { addLine1:"", addLine2:"", city: "",
+                          state: "", zip: "",
+                        latitude: undefined,
+                        longitude: undefined },
                         distance: "",
                         transitTime: "",
                         earliestPickup: "",
@@ -614,8 +646,14 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                         quoteId: quoteId || "",
                         quote_id: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
-                        origin: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
-                        destination: { addLine1:"", addLine2:"", city: "", state: "", zip: "" },
+                        origin: { addLine1:"", addLine2:"",
+                          city: "", state: "", zip: "",
+                          latitude: undefined,
+                          longitude: undefined },
+                        destination: { addLine1:"", addLine2:"",
+                          city: "", state: "", zip: "",
+                          latitude: undefined,
+                          longitude: undefined },
                         distance: "",
                         transitTime: "",
                         earliestPickup: "",

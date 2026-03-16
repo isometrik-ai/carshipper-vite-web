@@ -88,3 +88,7 @@ export const getFormattedAddressFromGooglePlace = (place: any) => {
       long,
     };
 }
+
+export const getClientIPAddress = () => {
+  return "127.0.0.1";
+}
