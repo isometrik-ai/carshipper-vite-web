@@ -5,8 +5,7 @@ import { ENV_CONFIG } from "@/config/env";
  * @param url - The relative URL from Strapi (e.g., "/uploads/image.jpg")
  * @returns The full URL including the Strapi base URL
  */
-export const STRAPI_API_URL = ENV_CONFIG?.STRAPI_API_URL;
-
+export const STRAPI_API_URL = ENV_CONFIG.STRAPI_API_URL;
 export const getStrapiMediaUrl = (url: string | null | undefined): string | null => {
   if (!url) return null;
   // If URL already includes http/https, return as-is
