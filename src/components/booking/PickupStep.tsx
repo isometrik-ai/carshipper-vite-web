@@ -54,8 +54,8 @@ interface PickupStepProps {
   onBack: () => void;
   quoteData: {
     vehicle: { year: number; make: string; model: string };
-    origin: { city: string; state: string; zip: string };
-    destination: { city: string; state: string; zip: string };
+    origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
+    destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
     earliestPickup: string;
     transportType: string;
   };
@@ -196,7 +196,7 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
                   address: string
                 ) => {
                   const formatted = getFormattedAddressFromGooglePlace(addressData);
-                  const line1 =  address || formatted?.addressLine1 || "";
+                  const line1 =  address || formatted?.addLine1 || "";
                   const city  = formatted?.city || "";
                   const state = formatted?.stateCode || formatted?.state || "";
                   const zip   = formatted?.zipCode || "";
@@ -364,7 +364,7 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
                 phoneNumberValue={formData.pickupContactPhone}
                 phoneNumberDefaultValue={formData.pickupContactPhone}
                 customIntlTelInputContainer="
-                  intl-tel-input separate-dial-code w-full
+                  intl-tel-input separate-dial-code w-full flex
                   border border-input rounded-md bg-background
                   text-sm shadow-sm
                   focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1
@@ -430,7 +430,7 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
                 phoneNumberValue={formData.pickupBackupPhone}
                 phoneNumberDefaultValue={formData.pickupBackupPhone}
                 customIntlTelInputContainer="
-                  intl-tel-input separate-dial-code w-full
+                  intl-tel-input separate-dial-code w-full flex
                   border border-input rounded-md bg-background
                   text-sm shadow-sm
                   focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1

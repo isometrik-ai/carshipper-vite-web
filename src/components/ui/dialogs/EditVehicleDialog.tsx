@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Car, Pencil, Trash2, Plus, Scan, CarFront, CheckCircle2, Briefcase } from "lucide-react";
+import { Car, Pencil, Trash2, Plus, Scan, CarFront, CheckCircle2, Briefcase, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { VinNumberDetails } from "@/services/quote-services";
 
 export interface Vehicle {
   id: string;
@@ -42,6 +44,7 @@ export function EditVehicleDialog({
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [vinInput, setVinInput] = useState("");
+  const [vinLookupLoading, setVinLookupLoading] = useState(false);
   const [addMethod, setAddMethod] = useState<"manual" | "vin">("manual");
 
   // Form state for new/edit vehicle
@@ -80,19 +83,48 @@ export function EditVehicleDialog({
     setAddMethod("manual");
   };
 
-  const handleVinDetect = () => {
-    // Simulate VIN detection
-    if (vinInput.length === 17) {
-      setFormData({
-        year: 2024,
-        make: "Tesla",
-        model: "Model 3",
-        type: "Sedan",
-        operational: true,
-        personalItems: "None or less than 100 lbs.",
-        vin: vinInput,
-      });
-      setAddMethod("manual");
+  const handleVinDetect = async () => {
+    if (vinInput.length !== 17) {
+      toast.error("VIN must be exactly 17 characters");
+      return;
+    }
+
+    if (vinLookupLoading) return; // Prevent overlapping requests
+    setVinLookupLoading(true);
+
+    try {
+      const response = await VinNumberDetails({ vin: vinInput });
+      const data = response?.data;
+
+      if (data && Object.keys(data).length > 0) {
+        const yearStr = data?.year || "";
+        const make = data?.make || "";
+        const model = data?.model || "";
+
+        if (make && model) {
+          const parsedYear = yearStr ? parseInt(yearStr, 10) : undefined;
+          setFormData((prev) => ({
+            ...prev,
+            year: parsedYear || prev.year || 2026,
+            make,
+            model,
+            type: prev.type || "SUV",
+            operational: prev.operational ?? true,
+            personalItems: prev.personalItems || "None or less than 100 lbs.",
+            vin: vinInput,
+          }));
+          toast.success("Vehicle details found!");
+          setAddMethod("manual");
+        } else {
+          toast.error("Could not decode VIN. Please enter details manually.");
+        }
+      } else {
+        toast.error("VIN lookup failed. Please enter details manually.");
+      }
+    } catch (error) {
+      toast.error("VIN lookup failed. Please enter details manually.");
+    } finally {
+      setVinLookupLoading(false);
     }
   };
 
@@ -161,9 +193,17 @@ export function EditVehicleDialog({
                     value={vinInput}
                     onChange={(e) => setVinInput(e.target.value.toUpperCase())}
                     maxLength={17}
+                    disabled={vinLookupLoading}
                   />
-                  <Button onClick={handleVinDetect} disabled={vinInput.length !== 17}>
-                    Detect
+                  <Button
+                    onClick={handleVinDetect}
+                    disabled={vinInput.length !== 17 || vinLookupLoading}
+                  >
+                    {vinLookupLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Detect"
+                    )}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">

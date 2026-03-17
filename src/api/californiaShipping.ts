@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { CaliforniaShippingResponse } from "@/types/CaliforniaShipping.types";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
 /**
  * Fetches California Shipping page data from Strapi with full population
