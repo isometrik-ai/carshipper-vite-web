@@ -15,30 +15,26 @@ export const dynamic = 'force-dynamic';
  * All content is managed through Strapi, including SEO metadata and page sections.
  */
 export default function HomePage() {
-  const { data, isLoading } = useLandingPage();
-  // Extract page content components
-  const pageContent = useMemo(() => {
-    return data?.data?.page_content || [];
-  }, [data]);
-
-  // Render page content components
+  const { data, isLoading, isError, error } = useLandingPage();
+  const pageContent = useMemo(() => data?.data?.page_content || [], [data]);
   const renderedContent = usePageContentRenderer(pageContent);
 
-  useEffect(()=>{
-    getAllActivePricingRulesList('');
-  })
+  useEffect(() => {
+    getAllActivePricingRulesList("");
+  }, []);
 
-  // Show loading state while fetching initial data
   if (isLoading && !data) {
-    return(
-    <>
-     <PageSkeleton />
-     </>
+    return (
+      <>
+        <PageSkeleton />
+      </>
     );
   }
 
-  return <>
-   {renderedContent}
-  </>;
+  if (isError && error) {
+    throw error;
+  }
+
+  return <>{renderedContent}</>;
 }
 
