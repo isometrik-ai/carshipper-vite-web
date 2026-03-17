@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { LandingPageResponse } from "@/types/LandingPage.types";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL ?? (() => { throw new Error('Missing environment variable: NEXT_PUBLIC_STRAPI_API_URL'); })();
 
 const fetchLandingPage = async (): Promise<LandingPageResponse> => {
     const response = await fetch(

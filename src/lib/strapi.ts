@@ -6,7 +6,7 @@
 export const getStrapiMediaUrl = (url: string | null | undefined): string | null => {
   if (!url) return null;
   
-  const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+  const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL ?? (() => { throw new Error('Missing environment variable: NEXT_PUBLIC_STRAPI_API_URL'); })();
   
   // If URL already includes http/https, return as-is
   if (url.startsWith("http://") || url.startsWith("https://")) {
