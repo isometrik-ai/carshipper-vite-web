@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { AboutPageResponse } from "@/types/AboutPage.types";
-
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL ?? (() => { throw new Error('Missing environment variable: NEXT_PUBLIC_STRAPI_API_URL'); })();
+import { STRAPI_API_URL } from "@/lib/strapi";
 
 /**
  * Fetches About page data from Strapi with full population
