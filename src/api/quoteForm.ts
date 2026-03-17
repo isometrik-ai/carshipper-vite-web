@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { QuoteFormResponse } from "@/types/QuoteForm.types";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
 const fetchQuoteForm = async (): Promise<QuoteFormResponse> => {
   const response = await fetch(

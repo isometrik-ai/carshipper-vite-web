@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { AboutPageResponse } from "@/types/AboutPage.types";
 import { apiRequest } from "@/lib/api-client";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 const ABOUT_QUERY =
   "?populate[seo_metadata]=*&populate[page_content][on][shared.hero-section][populate]=*&populate[page_content][on][shared.stats-bar][populate]=*&populate[page_content][on][shared.text-section][populate]=*&populate[page_content][on][shared.process-section][populate]=*&populate[page_content][on][shared.feature-list-section][populate]=*&populate[page_content][on][shared.call-to-action][populate]=*";
 

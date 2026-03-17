@@ -1,6 +1,6 @@
 import { apiRequest, type ApiClientOptions } from "@/lib/api-client";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL;
+export const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
 const defaultOptions: ApiClientOptions = {
   timeoutMs: 15_000,

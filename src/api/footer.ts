@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { FooterResponse } from "@/types/Footer.types";
 import { apiRequest } from "@/lib/api-client";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_API_URL;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 const FOOTER_QUERY =
   "?populate[social_links][populate]=*&populate[link_groups][populate][links][populate]=*&populate[seo_link_groups][populate][links][populate]=*&populate[bottom_links][populate]=*";
 

@@ -652,7 +652,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
               ) => {
                 const formatted = getFormattedAddressFromGooglePlace(place);
 
-                const line1 = formatted?.addressLine1 || fullAddress || "";
+                const line1 = formatted?.addLine1 || fullAddress || "";
                 const city  = formatted?.city || "";
                 const state = formatted?.stateCode || formatted?.state || "";
                 const zip   = formatted?.zipCode || "";
@@ -735,7 +735,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                           ) => {
                             const formatted = getFormattedAddressFromGooglePlace(place);
 
-                            const line1 = formatted?.addressLine1 || fullAddress || "";
+                            const line1 = formatted?.addLine1 || fullAddress || "";
                             const city  = formatted?.city || "";
                             const state = formatted?.stateCode || formatted?.state || "";
                             const zip   = formatted?.zipCode || "";
@@ -1093,7 +1093,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
             border-radius: 5px;
           }
         }
-`}</style>
+      `}</style>
     </motion.div>
   );
 }
