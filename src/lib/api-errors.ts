@@ -13,6 +13,9 @@ export class ApiError extends Error {
     this.name = "ApiError";
     Object.setPrototypeOf(this, ApiError.prototype);
   }
+  toString(): string {
+    return `ApiError: ${this.message} (URL: ${this.url}, Status: ${this.statusCode}, Status Text: ${this.statusText})`;
+  }
 }
 
 export class TimeoutError extends ApiError {
@@ -20,6 +23,9 @@ export class TimeoutError extends ApiError {
     super(message, undefined, undefined, url);
     this.name = "TimeoutError";
     Object.setPrototypeOf(this, TimeoutError.prototype);
+  }
+  toString(): string {
+    return `TimeoutError: ${this.message} (URL: ${this.url})`;
   }
 }
 
@@ -29,6 +35,9 @@ export class NetworkError extends ApiError {
     this.name = "NetworkError";
     this.cause = cause;
     Object.setPrototypeOf(this, NetworkError.prototype);
+  }
+  toString(): string {
+    return `NetworkError: ${this.message} (URL: ${this.url}, Cause: ${this.cause})`;
   }
 }
 
@@ -43,6 +52,9 @@ export class HttpError extends ApiError {
     super(message, statusCode, statusText, url);
     this.name = "HttpError";
     Object.setPrototypeOf(this, HttpError.prototype);
+  }
+  toString(): string {
+    return `HttpError: ${this.message} (URL: ${this.url}, Status: ${this.statusCode}, Body: ${JSON.stringify(this.body)})`;
   }
 }
 

@@ -32,7 +32,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render(): ReactNode {
     if (this.state.hasError && this.state.error) {
-      if (this.props.fallback) return this.props.fallback;
+      if (this.props.fallback) {
+        // Ensure fallback is a valid ReactNode, wrap if necessary
+        return typeof this.props.fallback === 'function' ? this.props.fallback : this.props.fallback;
+      }
       return (
         <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 p-6 text-center">
           <p className="text-destructive font-medium">Something went wrong.</p>

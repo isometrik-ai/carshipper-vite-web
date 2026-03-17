@@ -1,14 +1,8 @@
-import { apiRequest, type ApiClientOptions } from "@/lib/api-client";
+import { apiRequest } from "@/lib/api-client";
 
 export const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-const defaultOptions: ApiClientOptions = {
-  timeoutMs: 15_000,
-  retries: 2,
-  retryDelayMs: 1_000,
-};
+// Deprecated: prefer importing `apiRequest` directly from `@/lib/api-client` so that
+// all timeout/retry configuration lives in a single shared module.
+export { apiRequest };
 
-export async function apiGet<T = unknown>(endpoint: string, options?: ApiClientOptions): Promise<T> {
-  const url = `${API_URL}/api/${endpoint}`;
-  return apiRequest<T>(url, { method: "GET" }, { ...defaultOptions, ...options });
-}

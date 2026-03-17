@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
  * All content is managed through Strapi, including SEO metadata and page sections.
  */
 export default function HomePage() {
-  const { data, isLoading, isError, error, refetch } = useLandingPage();
+  const { data, isLoading, isError, error } = useLandingPage();
   const pageContent = useMemo(() => data?.data?.page_content || [], [data]);
   const renderedContent = usePageContentRenderer(pageContent);
 
@@ -31,20 +31,8 @@ export default function HomePage() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-4 p-6 text-center">
-        <p className="text-destructive font-medium">Unable to load the page.</p>
-        <p className="text-muted-foreground text-sm">{error?.message ?? "Please try again."}</p>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
-        >
-          Retry
-        </button>
-      </div>
-    );
+  if (isError && error) {
+    throw error;
   }
 
   return <>{renderedContent}</>;
