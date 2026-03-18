@@ -10,14 +10,16 @@ let stripePromise: Promise<Stripe | null> | null = null;
  */
 
 export const getStripe = (): Promise<Stripe | null> => {
+  console.log('STRIPE_KEY', STRIPE_KEY)
   if (!stripePromise) {
-    stripePromise = loadStripe(STRIPE_KEY).then(stripe => {
-      if (!stripe) {
-        // Retry logic or throw error to handle load failure
-        throw new Error('Stripe load failed');
-      }
-      return stripe;
-    });
+    stripePromise = loadStripe(STRIPE_KEY);
+    // .then(stripe => {
+    //   if (!stripe) {
+    //     // Retry logic or throw error to handle load failure
+    //     throw new Error('Stripe load failed');
+    //   }
+    //   return stripe;
+    // });
   }
   return stripePromise;
 };

@@ -327,6 +327,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
     try {
       const primaryDrop = dropLocations[0];
 
+      // Keep top-level distance for backward compatibility with older backend schemas.
       let distanceMiles = 0;
       if (
         pickupLat != null &&
@@ -344,10 +345,41 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         );
       }
 
-      const defaultCountryName:string = 
-      DEFAULT_COUNTRY_CODE ? 
-      DEFAULT_COUNTRY_CODE?.toLowerCase() === "us" ? 
-      "USA" : (DEFAULT_COUNTRY_CODE || "") : "";
+      const defaultCountryName: string =
+        DEFAULT_COUNTRY_CODE ?
+          DEFAULT_COUNTRY_CODE?.toLowerCase() === "us" ?
+            "USA" : (DEFAULT_COUNTRY_CODE || "")
+          : "";
+
+      const deliveries = dropLocations.map((drop) => {
+        const vehicle_indices =
+          drop.vehicleIds.length > 0
+            ? drop.vehicleIds
+                .map((vid) => vehicles.findIndex((v) => v.id === vid))
+                .filter((idx) => idx >= 0)
+            : vehicles.map((_, idx) => idx); // if no explicit assignment, assume all vehicles
+
+        const distanceForDelivery =
+          pickupLat != null &&
+          pickupLng != null &&
+          drop.lat != null &&
+          drop.lng != null
+            ? Math.round(calculateDistanceMiles(pickupLat, pickupLng, drop.lat, drop.lng))
+            : 0;
+
+        return {
+          zip: drop.zip || "",
+          city: drop.city || "",
+          state: drop.state || "",
+          addLine1: drop.location || "",
+          addLine2: "",
+          country: defaultCountryName,
+          latitude: drop.lat ?? null,
+          longitude: drop.lng ?? null,
+          distance_miles: distanceForDelivery,
+          vehicle_indices,
+        };
+      });
 
       const payload = {
         pickup_zip: pickupZip,
@@ -370,15 +402,16 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         pickup_addLine1: pickupLocation || "",
         pickup_addLine2: "",
         pickup_country: defaultCountryName,
-        delivery_city: primaryDrop?.city || "",
-        delivery_state: primaryDrop?.state || "",
-        delivery_addLine1: primaryDrop?.location || "",
-        delivery_addLine2: "",
-        delivery_country: defaultCountryName,
+        // delivery_city: primaryDrop?.city || "",
+        // delivery_state: primaryDrop?.state || "",
+        // delivery_addLine1: primaryDrop?.location || "",
+        // delivery_addLine2: "",
+        // delivery_country: defaultCountryName,
         pickup_latitude: pickupLat ?? null,
         pickup_longitude: pickupLng ?? null,
-        delivery_latitude: primaryDrop?.lat ?? null,
-        delivery_longitude: primaryDrop?.lng ?? null,
+        // delivery_latitude: primaryDrop?.lat ?? null,
+        // delivery_longitude: primaryDrop?.lng ?? null,
+        delivery: deliveries,
       };
 
       const response = await CreateNewQuotePostAPI(payload,controller.signal);
@@ -632,6 +665,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                 className="pl-10 h-14 text-lg"
               /> */}
             <AddressAutocomplete
+              restrictToCitiesOnly={true}
               key={DEFAULT_COUNTRY_CODE}
               countryCode={DEFAULT_COUNTRY_CODE}
               AddressListContainerClassName="AddressListContainer"

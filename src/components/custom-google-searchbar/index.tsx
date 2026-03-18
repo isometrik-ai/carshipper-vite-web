@@ -121,7 +121,7 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
     const normalizedCountryCode = (countryCode ?? DEFAULT_COUNTRY_CODE)?.toLowerCase();
     return {
       componentRestrictions: { country: normalizedCountryCode },
-      types: restrictToCitiesOnly ? ['(cities)'] : ['address'],
+      types: restrictToCitiesOnly ? ['(regions)'] : ['address'],
     };
   }, [countryCode, restrictToCitiesOnly]);
   
