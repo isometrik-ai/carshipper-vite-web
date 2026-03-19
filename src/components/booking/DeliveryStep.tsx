@@ -78,7 +78,7 @@ const US_STATES = [
 ];
 
 export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteData, tier, price }: DeliveryStepProps) {
-  const [locationType, setLocationType] = useState("residence");
+  const [locationType, setLocationType] = useState(formData.deliveryLocationType || "residence");
 
   const {
     register,
@@ -91,17 +91,17 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
   } = useForm<DeliveryFormData>({
     resolver: zodResolver(deliverySchema),
     defaultValues: {
-      deliveryLocationType: "residence",
+      deliveryLocationType: formData.deliveryLocationType || "residence",
       deliveryAddress: formData.deliveryAddress,
       deliveryCity: formData.deliveryCity,
       deliveryState: formData.deliveryState,
       deliveryZip: formData.deliveryZip,
-      deliveryBusinessName: "",
+      deliveryBusinessName: formData.deliveryBusinessName || "",
       deliveryContactName: `${formData.firstName} ${formData.lastName}`,
       deliveryContactPhone: formData.phone,
       deliveryBackupPhone: formData.deliveryBackupPhone,
       deliveryNotes: formData.deliveryNotes,
-      deliveryWillBePresent: true,
+      deliveryWillBePresent: formData.deliveryWillBePresent ?? true,
     },
   });
 
@@ -110,14 +110,17 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
 
   const onSubmit = (data: DeliveryFormData) => {
     updateFormData({
+      deliveryLocationType: data.deliveryLocationType,
       deliveryAddress: data.deliveryAddress,
       deliveryCity: data.deliveryCity,
       deliveryState: data.deliveryState,
       deliveryZip: data.deliveryZip,
+      deliveryBusinessName: data.deliveryBusinessName || "",
       deliveryContactName: data.deliveryContactName,
       deliveryContactPhone: data.deliveryContactPhone,
       deliveryBackupPhone: data.deliveryBackupPhone || "",
       deliveryNotes: data.deliveryNotes,
+      deliveryWillBePresent: data.deliveryWillBePresent,
     });
     onNext();
   };
