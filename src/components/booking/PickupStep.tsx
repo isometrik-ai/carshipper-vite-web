@@ -84,7 +84,7 @@ const US_STATES = [
 ];
 
 export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData, tier, price }: PickupStepProps) {
-  const [locationType, setLocationType] = useState("auction");
+  const [locationType, setLocationType] = useState(formData.pickupLocationType || "auction");
   const [phone, setPhone] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const {
@@ -98,16 +98,20 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
   } = useForm<PickupFormData>({
     resolver: zodResolver(pickupSchema),
     defaultValues: {
-      pickupLocationType: "auction",
+      pickupLocationType: formData.pickupLocationType || "auction",
       pickupAddress: formData.pickupAddress,
       pickupCity: formData.pickupCity,
       pickupState: formData.pickupState,
       pickupZip: formData.pickupZip,
-      businessName: "",
+      businessName: formData.pickupBusinessName || "",
+      buyerNumber: formData.pickupBuyerNumber || "",
+      lotNumber: formData.pickupLotNumber || "",
+      vinNumber: formData.pickupVinNumber || "",
+      vehicleColor: formData.pickupVehicleColor || "",
       pickupContactName: formData.pickupContactName,
       pickupContactPhone: formData.phone,
       pickupNotes: formData.pickupNotes,
-      willBePresent: true,
+      willBePresent: formData.pickupWillBePresent ?? true,
     },
   });
 
@@ -116,15 +120,21 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
 
   const onSubmit = (data: PickupFormData) => {
     updateFormData({
+      pickupLocationType: data.pickupLocationType,
       pickupAddress: data.pickupAddress,
       pickupCity: data.pickupCity,
       pickupState: data.pickupState,
       pickupZip: data.pickupZip,
       pickupBusinessName: data.businessName || "",
+      pickupBuyerNumber: data.buyerNumber || "",
+      pickupLotNumber: data.lotNumber || "",
+      pickupVinNumber: data.vinNumber || "",
+      pickupVehicleColor: data.vehicleColor || "",
       pickupContactName: data.pickupContactName,
       pickupContactPhone: data.pickupContactPhone,
       pickupBackupPhone: data.pickupBackupPhone || "",
       pickupNotes: data.pickupNotes,
+      pickupWillBePresent: data.willBePresent,
     });
     onNext();
   };
