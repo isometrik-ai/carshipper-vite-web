@@ -211,31 +211,27 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
   useEffect(() => {
     const enrichSuggestions = async () => {
       const sourceData = restrictToCitiesOnly ? filteredSuggestions : data;
-  
+
       if (status !== "OK" || !sourceData?.length) {
         setEnhancedSuggestions([]);
         return;
       }
-  
-      // 🔥 LIMIT TO TOP 3 (performance)
+
+      // Limit to top 20 for performance
       const limited = sourceData.slice(0, 20);
-  
+
       const enriched = await Promise.all(
         limited.map(async (item: any) => {
           const zip = await getZipFromPlaceId(item.place_id);
-  
-          return {
-            ...item,
-            zip,
-          };
+          return { ...item, zip };
         })
       );
-  
+
       setEnhancedSuggestions(enriched);
     };
-  
+
     enrichSuggestions();
-  }, [data, filteredSuggestions, status]);
+  }, [data, restrictToCitiesOnly, status]);
 
   useEffect(()=>{
     if(placeValue?.length > 0){
