@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -78,7 +78,7 @@ const US_STATES = [
 ];
 
 export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteData, tier, price }: DeliveryStepProps) {
-  const [locationType, setLocationType] = useState(formData.deliveryLocationType || "residence");
+  const [locationType, setLocationType] = useState(formData?.deliveryLocationType || "residence");
 
   const {
     register,
@@ -91,16 +91,16 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
   } = useForm<DeliveryFormData>({
     resolver: zodResolver(deliverySchema),
     defaultValues: {
-      deliveryLocationType: formData.deliveryLocationType || "residence",
-      deliveryAddress: formData.deliveryAddress,
-      deliveryCity: formData.deliveryCity,
-      deliveryState: formData.deliveryState,
-      deliveryZip: formData.deliveryZip,
-      deliveryBusinessName: formData.deliveryBusinessName || "",
-      deliveryContactName: `${formData.firstName} ${formData.lastName}`,
-      deliveryContactPhone: formData.phone,
-      deliveryBackupPhone: formData.deliveryBackupPhone,
-      deliveryNotes: formData.deliveryNotes,
+      deliveryLocationType: formData.deliveryLocationType ?? "residence",
+      deliveryAddress: formData.deliveryAddress ?? "",
+      deliveryCity: formData.deliveryCity ?? "",
+      deliveryState: formData.deliveryState ?? "",
+      deliveryZip: formData.deliveryZip ?? "",
+      deliveryBusinessName: formData.deliveryBusinessName ?? "",
+      deliveryContactName: `${formData.firstName ?? ""} ${formData.lastName ?? ""}`,
+      deliveryContactPhone: formData.phone ?? "",
+      deliveryBackupPhone: formData.deliveryBackupPhone ?? "",
+      deliveryNotes: formData.deliveryNotes ?? "",
       deliveryWillBePresent: formData.deliveryWillBePresent ?? true,
     },
   });
@@ -126,6 +126,12 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
   };
 
   const showBusinessFields = ["auction", "dealership", "commercial", "storage", "mechanic"].includes(locationType);
+  // Synchronize local state with formData if formData.deliveryLocationType changes
+  useEffect(() => {
+    if (formData.deliveryLocationType && formData.deliveryLocationType !== locationType) {
+      setLocationType(formData.deliveryLocationType);
+    }
+  }, [formData.deliveryLocationType]);
 
   return (
     <div className="grid lg:grid-cols-[380px,1fr] gap-6">
