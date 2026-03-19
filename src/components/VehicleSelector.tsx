@@ -238,7 +238,7 @@ export const VehicleSelector = ({
         </div>
 
         {/* Make & Model Combobox */}
-        <div>
+        <div className="mt-[6px]">
           <Label className="text-xs text-muted-foreground flex items-center gap-1">
             <Car className="w-3 h-3" /> {config.makeModelLabel}
           </Label>
@@ -249,13 +249,13 @@ export const VehicleSelector = ({
                   variant="outline"
                   role="combobox"
                   aria-expanded={makeModelOpen}
-                  className="w-full justify-between mt-1 font-normal"
+                  className="w-full justify-between mt-1 font-normal px-2"
                   disabled={vehicle.vinLookupLoading}
                 >
                   {selectedMakeModel
                     ? makeModelOptions.find((opt) => opt.value === selectedMakeModel)?.label
                     : config.makeModelPlaceholder}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  <ChevronsUpDown className="ml-0 h-4 w-2 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[300px] p-0" align="start">

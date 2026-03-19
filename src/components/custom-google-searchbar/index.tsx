@@ -1,6 +1,6 @@
 import { CloseNewIcon } from '@/assets/icons/close-new-icon';
 import { KeyWordSearchIcon } from '@/assets/icons/key-word-search-icon';
-import React, { useEffect, useState, useMemo, ReactNode } from 'react';
+import React, { useEffect, useState, useMemo, ReactNode, useRef } from 'react';
 import usePlacesAutocomplete, { getGeocode, getLatLng } from 'use-places-autocomplete';
 import { DEFAULT_COUNTRY_CODE } from '@/lib/config';
 
@@ -115,6 +115,8 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
   
   // Wait for Google Maps to load before using the hook
   const isGoogleMapsReady = useGoogleMapsLoader();
+  const [enhancedSuggestions, setEnhancedSuggestions] = useState<any[]>([]);
+  const zipCache = useRef<Record<string, string>>({});
   
   // Memoize the request options: country restriction + address vs cities only
   const requestOptions = useMemo(() => {
@@ -187,6 +189,54 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
     }
   };
 
+  const getZipFromPlaceId = async (placeId: string) => {
+    if (zipCache.current[placeId]) {
+      return zipCache.current[placeId];
+    }
+  
+    try {
+      const results = await getGeocode({ placeId });
+      const components = results[0]?.address_components || [];
+  
+      const zip =
+        components.find((c: any) => c.types.includes("postal_code"))
+          ?.long_name || "";
+  
+      zipCache.current[placeId] = zip;
+      return zip;
+    } catch (e) {
+      return "";
+    }
+  };
+  useEffect(() => {
+    const enrichSuggestions = async () => {
+      const sourceData = restrictToCitiesOnly ? filteredSuggestions : data;
+  
+      if (status !== "OK" || !sourceData?.length) {
+        setEnhancedSuggestions([]);
+        return;
+      }
+  
+      // 🔥 LIMIT TO TOP 3 (performance)
+      const limited = sourceData.slice(0, 20);
+  
+      const enriched = await Promise.all(
+        limited.map(async (item: any) => {
+          const zip = await getZipFromPlaceId(item.place_id);
+  
+          return {
+            ...item,
+            zip,
+          };
+        })
+      );
+  
+      setEnhancedSuggestions(enriched);
+    };
+  
+    enrichSuggestions();
+  }, [data, filteredSuggestions, status]);
+
   useEffect(()=>{
     if(placeValue?.length > 0){
       setValue(placeValue, true);
@@ -212,6 +262,10 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
   //   setDefaultAddress(false);
   //   setIsSearchAddress(false);
   // }, [countryCode]);
+
+  useEffect(()=>{
+    console.log('filteredSuggestions', filteredSuggestions);
+  },[filteredSuggestions]);
 
   return (
     <div className={googleSearchBarMainContainerClassName}>
@@ -255,7 +309,38 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
       {/* Suggestions dropdown */}
       {(status === "OK" && !defaultAddress) && (
         <ul style={{ listStyle: "none", padding: 0 }} className={AddressListContainerClassName}>
-          {(restrictToCitiesOnly ? filteredSuggestions : data).map(({ place_id, description }) => (
+          {/* {(restrictToCitiesOnly ? filteredSuggestions : data).map(({ place_id, description }) => (
+            <li
+              key={place_id}
+              onClick={() => handleSelect(description)}
+              style={{ cursor: "pointer", padding: "8px", background: "var(--white-color)", margin: "4px 0"}}
+            >
+              {description}
+            </li>
+          ))} */}
+          {restrictToCitiesOnly ? enhancedSuggestions.map((item: any) => {
+            const { place_id, description, zip, structured_formatting } = item;
+
+            const mainText = structured_formatting?.main_text;
+            const secondaryText = structured_formatting?.secondary_text;
+
+            return (
+              <li
+                key={place_id}
+                onClick={() => handleSelect(description)}
+                style={{
+                  cursor: "pointer",
+                  padding: "8px",
+                  background: "var(--white-color)",
+                  margin: "4px 0"
+                }}
+              >
+                <strong>{mainText}</strong>
+                {secondaryText && `, ${secondaryText}`}
+                {zip && ` ${zip}`}
+              </li>
+            );
+            }) : data?.map(({ place_id, description }) => (
             <li
               key={place_id}
               onClick={() => handleSelect(description)}
