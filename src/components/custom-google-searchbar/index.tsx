@@ -263,10 +263,6 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
   //   setIsSearchAddress(false);
   // }, [countryCode]);
 
-  useEffect(()=>{
-    console.log('filteredSuggestions', filteredSuggestions);
-  },[filteredSuggestions]);
-
   return (
     <div className={googleSearchBarMainContainerClassName}>
       <div className={`flex items-center border-[1px]

@@ -10,7 +10,6 @@ let stripePromise: Promise<Stripe | null> | null = null;
  */
 
 export const getStripe = (): Promise<Stripe | null> => {
-  console.log('STRIPE_KEY', STRIPE_KEY)
   if (!stripePromise) {
     stripePromise = loadStripe(STRIPE_KEY);
     // .then(stripe => {

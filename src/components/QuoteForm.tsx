@@ -383,7 +383,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
 
       const payload = {
         pickup_zip: pickupZip,
-        delivery_zip: primaryDrop?.zip || "",
+        // delivery_zip: primaryDrop?.zip || "",
         distance_miles: distanceMiles,
         transport_type: transportType === "enclosed" ? "Enclosed Transport" : "Open Transport",
         customer_email: contactInfo.email,
@@ -665,7 +665,6 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                 className="pl-10 h-14 text-lg"
               /> */}
             <AddressAutocomplete
-              restrictToCitiesOnly={true}
               key={DEFAULT_COUNTRY_CODE}
               countryCode={DEFAULT_COUNTRY_CODE}
               AddressListContainerClassName="AddressListContainer"
@@ -679,6 +678,15 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                 <MapPin className="ml-2 w-5 h-5 text-muted-foreground" />
               }
               placeholderText={getFieldValue("pickup_location", "pickup") || "e.g., Dallas, TX or 10007"}
+              clearAllValues={() => {
+                setPickupLocation("");
+                setPickupDisplayLocation("");
+                setPickupCity("");
+                setPickupState("");
+                setPickupZip("");
+                setPickupLat(null);
+                setPickupLng(null);
+              }}
               getSelectedAddressDetails={(
                 coordinates: any,
                 place: any,
@@ -762,6 +770,17 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                             <MapPin className="ml-2 w-5 h-5 text-muted-foreground" />
                           }
                           placeholderText={getFieldValue("drop_location", "drops") || "e.g., Los Angeles, CA or 90210"}
+                          clearAllValues={() => {
+                            updateDropLocation(drop.id, {
+                              displayLocation: "",
+                              location: "",
+                              city: "",
+                              state: "",
+                              zip: "",
+                              lat: null,
+                              lng: null,
+                            });
+                          }}
                           getSelectedAddressDetails={(
                             coordinates: any,
                             place: any,
