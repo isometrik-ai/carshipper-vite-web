@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import type { AboutPageResponse } from "@/types/AboutPage.types";
 import { SEO_FALLBACKS, SEO_SITE } from "@/constants/seo";
+import { fetchStrapiSeoMetadata } from "@/lib/seo/strapiSeo";
 import AboutPageClient from "./AboutPageClient";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,11 @@ const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
 const toAbsoluteUrl = (url?: string | null): string | undefined => {
   if (!url) return undefined;
-  return url.startsWith("http") ? url : `${SITE_URL}${url}`;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/") && !url.includes("//")) {
+    return `${SITE_URL}${url}`;
+  }
+  return undefined;
 };
 
 const parseRobots = (robots?: string | null): Metadata["robots"] => {
@@ -24,24 +28,8 @@ const parseRobots = (robots?: string | null): Metadata["robots"] => {
   };
 };
 
-async function fetchAboutPageSeo(): Promise<AboutPageResponse["data"]["seo_metadata"] | null> {
-  if (!STRAPI_API_URL) return null;
-  const seoQuery =
-    "?populate[seo_metadata][fields][0]=meta_title"
-  try {
-    const response = await fetch(`${STRAPI_API_URL}/api/about${seoQuery}`, {
-      next: { revalidate: 60 },
-    });
-    if (!response.ok) return null;
-    const payload = (await response.json()) as AboutPageResponse;
-    return payload?.data?.seo_metadata ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export async function generateMetadata(): Promise<Metadata> {
-  const seo = await fetchAboutPageSeo();
+  const seo = await fetchStrapiSeoMetadata(STRAPI_API_URL, "/api/about");
   const title = seo?.meta_title || DEFAULT_TITLE;
   const description = seo?.meta_description || DEFAULT_DESCRIPTION;
   const canonical = seo?.canonical_url || `${SITE_URL}/about`;

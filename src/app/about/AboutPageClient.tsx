@@ -9,22 +9,31 @@ import { useAboutPage } from "@/api/about";
 import { getIcon } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
 
+function isSafeNavigationUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 export default function AboutPageClient() {
   const { data, isLoading } = useAboutPage();
 
   const pageData = useMemo(() => {
-    if (!data?.data?.page_content) return null;
+    const content = data?.data?.page_content;
+    if (!Array.isArray(content) || content.length === 0) return null;
 
-    const content = data.data.page_content;
-    const heroSection = content.find(c => c.__component === "shared.hero-section");
-    const textSection = content.find(c => c.__component === "shared.text-section");
-    const processSection = content.find(c => c.__component === "shared.process-section");
-    const featureListSection = content.find(c => c.__component === "shared.feature-list-section");
-    const ctaSection = content.find(c => c.__component === "shared.call-to-action");
+    const heroSection = content.find(c => c.__component === "shared.hero-section") ?? null;
+    const textSection = content.find(c => c.__component === "shared.text-section") ?? null;
+    const processSection = content.find(c => c.__component === "shared.process-section") ?? null;
+    const featureListSection = content.find(c => c.__component === "shared.feature-list-section") ?? null;
+    const ctaSection = content.find(c => c.__component === "shared.call-to-action") ?? null;
 
     return {
       hero: heroSection,
-      stats: heroSection?.statistics || [],
+      stats: heroSection?.statistics ?? [],
       text: textSection,
       values: processSection,
       why30Minutes: featureListSection,
@@ -236,8 +245,9 @@ export default function AboutPageClient() {
                   size="lg"
                   className="text-lg px-8"
                   onClick={() => {
-                    if (pageData.cta.primary_button?.button_link) {
-                      window.location.href = pageData.cta.primary_button.button_link;
+                    const buttonLink = pageData.cta.primary_button?.button_link;
+                    if (buttonLink && isSafeNavigationUrl(buttonLink)) {
+                      window.location.href = buttonLink;
                     }
                   }}
                 >
