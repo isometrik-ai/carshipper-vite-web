@@ -7,6 +7,8 @@ export type {
   HeroSection,
   ProcessSection,
   TestimonialsDisplay,
+  FAQDisplay,
+  CallToAction,
 } from "./LandingPage.types";
 
 export type {
@@ -18,9 +20,13 @@ export type {
  */
 export type DealershipDeliveryContentComponent =
   | import("./LandingPage.types").HeroSection
+  | import("./AboutPage.types").TextSection
+  | import("./AutoAuctionShipping.types").ServiceCards
   | import("./AutoAuctionShipping.types").ServiceList
   | import("./LandingPage.types").ProcessSection
-  | import("./LandingPage.types").TestimonialsDisplay;
+  | import("./LandingPage.types").TestimonialsDisplay
+  | import("./LandingPage.types").FAQDisplay
+  | import("./LandingPage.types").CallToAction;
 
 /**
  * Dealership Delivery Page Data Structure
