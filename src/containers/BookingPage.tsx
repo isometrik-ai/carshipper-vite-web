@@ -691,7 +691,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     price={price}
                   />
                 )}
-                {currentStep === 1 && (
+                {currentStep === 4 && (
                   <BookShipmentStep
                     formData={formData}
                     updateFormData={updateFormData}
