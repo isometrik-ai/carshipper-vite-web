@@ -37,9 +37,14 @@ export interface BookingFormData {
   pickupNotes: string;
   pickupLocationType: string;
   pickupBusinessName: string;
+  pickupBuyerNumber: string;
+  pickupLotNumber: string;
+  pickupVinNumber: string;
+  pickupVehicleColor: string;
   pickupContactName: string;
   pickupContactPhone: string;
   pickupBackupPhone: string;
+  pickupWillBePresent: boolean;
   // Delivery Details
   deliveryAddress: string;
   deliveryCity: string;
@@ -51,6 +56,7 @@ export interface BookingFormData {
   deliveryContactName: string;
   deliveryContactPhone: string;
   deliveryBackupPhone: string;
+  deliveryWillBePresent: boolean;
   // Confirmation
   agreedToTerms: boolean;
   smsUpdates: boolean;
@@ -72,9 +78,14 @@ const initialFormData: BookingFormData = {
   pickupNotes: "",
   pickupLocationType: "residence",
   pickupBusinessName: "",
+  pickupBuyerNumber: "",
+  pickupLotNumber: "",
+  pickupVinNumber: "",
+  pickupVehicleColor: "",
   pickupContactName: "",
   pickupContactPhone: "",
   pickupBackupPhone: "",
+  pickupWillBePresent: true,
   deliveryAddress: "",
   deliveryCity: "Duluth",
   deliveryState: "GA",
@@ -85,6 +96,7 @@ const initialFormData: BookingFormData = {
   deliveryContactName: "",
   deliveryContactPhone: "",
   deliveryBackupPhone: "",
+  deliveryWillBePresent: true,
   agreedToTerms: false,
   smsUpdates: true,
 };
@@ -219,6 +231,26 @@ const steps = [
   { id: 5, name: "Thank You", shortName: "Done" },
 ];
 
+const normalizeLocationType = (locationType?: string): string => {
+  const type = (locationType || "").toLowerCase().trim();
+  const locationTypeMap: Record<string, string> = {
+    residence: "private_residence",
+    private_residence: "private_residence",
+    auction: "auction",
+    dealership: "dealership",
+    commercial: "commercial_or_industrial",
+    commercial_or_industrial: "commercial_or_industrial",
+    seaport: "seaport",
+    storage: "tow_yard_or_storage",
+    tow_yard_or_storage: "tow_yard_or_storage",
+    mechanic: "mechanic_or_body_shop",
+    mechanic_or_body_shop: "mechanic_or_body_shop",
+    other: "other",
+  };
+
+  return locationTypeMap[type] || "private_residence";
+};
+
 export default function BookingPage(props: { quoteId: string; initialTier?: "saver" | "priority" | "rush" }) {
   const quoteId: string | undefined = useParams().quoteId as string;
   const searchParams: ReadonlyURLSearchParams = useSearchParams();
@@ -342,13 +374,13 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         addLine2: "",
         latitude: routePickup.lat ?? routePickup.latitude ?? null,
         longitude: routePickup.lng ?? routePickup.longitude ?? null,
-        full: formatFullAddress({
-          addLine1: formData.pickupAddress || routePickup.addLine1 || "",
-          addLine2: "",
-          city: formData.pickupCity || routePickup.city || "",
-          state: formData.pickupState || routePickup.state || "",
-          zip: formData.pickupZip || routePickup.zip || "",
-        }),
+        // full: formatFullAddress({
+        //   addLine1: formData.pickupAddress || routePickup.addLine1 || "",
+        //   addLine2: "",
+        //   city: formData.pickupCity || routePickup.city || "",
+        //   state: formData.pickupState || routePickup.state || "",
+        //   zip: formData.pickupZip || routePickup.zip || "",
+        // }),
       };
 
       const deliveryAddress = {
@@ -360,13 +392,13 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         addLine2: "",
         latitude: routeDrop.lat ?? routeDrop.latitude ?? null,
         longitude: routeDrop.lng ?? routeDrop.longitude ?? null,
-        full: formatFullAddress({
-          addLine1: formData.deliveryAddress || routeDrop.addLine1 || "",
-          addLine2: "",
-          city: formData.deliveryCity || routeDrop.city || "",
-          state: formData.deliveryState || routeDrop.state || "",
-          zip: formData.deliveryZip || routeDrop.zip || "",
-        }),
+        // full: formatFullAddress({
+        //   addLine1: formData.deliveryAddress || routeDrop.addLine1 || "",
+        //   addLine2: "",
+        //   city: formData.deliveryCity || routeDrop.city || "",
+        //   state: formData.deliveryState || routeDrop.state || "",
+        //   zip: formData.deliveryZip || routeDrop.zip || "",
+        // }),
       };
 
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
@@ -428,24 +460,51 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
           insurance_included: true,
         },
         pickup: {
-          location_type: formData.pickupLocationType || "private_residence",
+          location_type: normalizeLocationType(formData.pickupLocationType),
           address: pickupAddress,
-          business_info: { name: formData.pickupBusinessName || fullName || "N/A" },
+          business_info: {
+            name: formData.pickupBusinessName || fullName || "N/A",
+            ...(formData.pickupBuyerNumber?.trim()
+              ? { buyer_number: formData.pickupBuyerNumber.trim() }
+              : {}),
+            ...(formData.pickupLotNumber?.trim()
+              ? { lot_number: formData.pickupLotNumber.trim() }
+              : {}),
+            ...(formData.pickupVinNumber?.trim()
+              ? { vin_number: formData.pickupVinNumber.trim() }
+              : {}),
+            ...(formData.pickupVehicleColor?.trim()
+              ? { color: formData.pickupVehicleColor.trim() }
+              : {}),
+          },
           contact: {
             name: formData.pickupContactName || fullName,
             phone: formData.pickupContactPhone || formData.phone,
-            email: formData.email,
-            present_at_pickup: true,
+            ...(formData.pickupBackupPhone?.trim()
+              ? { backup_phone: formData.pickupBackupPhone.trim() }
+              : {}),
+            ...(formData.email?.trim() ? { email: formData.email.trim() } : {}),
+            ...(formData.pickupNotes?.trim()
+              ? { special_notes: formData.pickupNotes.trim() }
+              : {}),
+            present_at_pickup: formData.pickupWillBePresent,
           },
         },
         delivery: {
-          location_type: formData.deliveryLocationType || "private_residence",
+          location_type: normalizeLocationType(formData.deliveryLocationType),
           address: deliveryAddress,
+          // business_info: "3embed", //|| formData.deliveryBusinessName || "",
           contact: {
             name: formData.deliveryContactName || fullName,
             phone: formData.deliveryContactPhone || formData.phone,
-            email: formData.email,
-            present_at_delivery: true,
+            ...(formData.deliveryBackupPhone?.trim()
+              ? { backup_phone: formData.deliveryBackupPhone.trim() }
+              : {}),
+            ...(formData.email?.trim() ? { email: formData.email.trim() } : {}),
+            ...(formData.deliveryNotes?.trim()
+              ? { special_notes: formData.deliveryNotes.trim() }
+              : {}),
+            present_at_delivery: formData.deliveryWillBePresent,
           },
         },
         payment: {
@@ -472,7 +531,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
           phone: customerPhone,
           company_name:
             formData.pickupBusinessName || formData.deliveryBusinessName || "",
-          account_type: hasCompany ? "business" : "personal",
+          account_type: "business"//hasCompany ? "business" : "personal",
         },
       };
 
@@ -632,7 +691,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     price={price}
                   />
                 )}
-                {currentStep === 1 && (
+                {currentStep === 4 && (
                   <BookShipmentStep
                     formData={formData}
                     updateFormData={updateFormData}

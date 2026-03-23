@@ -1,23 +1,39 @@
-import { useQuery } from "@tanstack/react-query";
+import { Query, useQuery } from "@tanstack/react-query";
 import type { LandingPageResponse } from "@/types/LandingPage.types";
+import { apiRequest } from "@/lib/api-client";
+import { LANDING_QUERY } from "./query.constants";
 
 const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL ?? (() => { throw new Error('Missing environment variable: NEXT_PUBLIC_STRAPI_API_URL'); })();
 
-const fetchLandingPage = async (): Promise<LandingPageResponse> => {
-    const response = await fetch(
-        `${STRAPI_API_URL}/api/landing-page?populate[seo_metadata]=*&populate[seo_metadata][populate][og_image][fields][0]=url&populate[seo_metadata][populate][og_image][fields][1]=alternativeText&populate[seo_metadata][populate][og_image][fields][2]=width&populate[seo_metadata][populate][og_image][fields][3]=height&populate[seo_metadata][populate][twitter_image][fields][0]=url&populate[seo_metadata][populate][twitter_image][fields][1]=alternativeText&populate[seo_metadata][populate][twitter_image][fields][2]=width&populate[seo_metadata][populate][twitter_image][fields][3]=height&populate[page_content][on][shared.hero-section][populate][trust_indicators][populate]=*&populate[page_content][on][shared.hero-section][populate][statistics][populate]=*&populate[page_content][on][shared.hero-section][populate][background_image][fields][0]=url&populate[page_content][on][shared.hero-section][populate][background_image][fields][1]=alternativeText&populate[page_content][on][shared.hero-section][populate][background_image][fields][2]=width&populate[page_content][on][shared.hero-section][populate][background_image][fields][3]=height&populate[page_content][on][shared.stats-bar][populate][statistics][populate]=*&populate[page_content][on][shared.process-section][populate][steps][populate]=*&populate[page_content][on][shared.process-section][populate][cta_button][populate]=*&populate[page_content][on][shared.comparison-section][populate][columns][populate][features][populate]=*&populate[page_content][on][shared.comparison-section][populate][columns][populate][bullet_points][populate]=*&populate[page_content][on][shared.pricing-display][populate][routes][populate]=*&populate[page_content][on][shared.pricing-display][populate][cta_button][populate]=*&populate[page_content][on][shared.testimonials-display][populate][testimonials][populate]=*&populate[page_content][on][shared.testimonials-display][populate][ratings][populate]=*&populate[page_content][on][shared.faq-display][populate][faq_items][populate]=*&populate[page_content][on][shared.faq-display][populate][contact_cta][populate]=*&populate[page_content][on][shared.call-to-action][populate][primary_button][populate]=*&populate[page_content][on][shared.call-to-action][populate][secondary_button][populate]=*`
-    );
-
-    if (!response.ok) {
-        throw new Error(`Failed to fetch landing page: ${response.statusText}`);
+  const fetchLandingPage = async (): Promise<LandingPageResponse> => {
+    try {
+      const response = await apiRequest<LandingPageResponse>(`${STRAPI_API_URL}/api/landing-page${LANDING_QUERY}`, {
+        method: "GET"
+      });
+      if (!response) {
+        throw new Error('Landing page response is undefined or null');
+      }
+      return response;
+    } catch (error) {
+      // Handle or propagate error appropriately
+      throw new Error(`Failed to fetch landing page: ${error.message}`);
     }
+  };
 
-    return response.json();
-};
-
-export const useLandingPage = () =>
-    useQuery({
-        queryKey: ["landing-page"],
-        queryFn: fetchLandingPage,
-        refetchOnWindowFocus: false,
+  export const useLandingPage = () => {
+    const queryResult = useQuery({
+      queryKey: ["landing-page"],
+      queryFn: () => fetchLandingPage().catch((error) => {
+        console.error('Failed to fetch landing page:', error);
+        throw error;
+      }),
+      refetchOnWindowFocus: false,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+      throwOnError: (error: Error, query: Query<LandingPageResponse, Error, LandingPageResponse, string[]>) => {
+        console.error('Landing page fetch error:', error);
+        return true;
+      }
     });
+    return queryResult;
+  };

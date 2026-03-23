@@ -11,12 +11,9 @@ let stripePromise: Promise<Stripe | null> | null = null;
 
 export const getStripe = (): Promise<Stripe | null> => {
   if (!stripePromise) {
-    stripePromise = loadStripe(STRIPE_KEY).then(stripe => {
-      if (!stripe) {
-        // Retry logic or throw error to handle load failure
-        throw new Error('Stripe load failed');
-      }
-      return stripe;
+    stripePromise = loadStripe(STRIPE_KEY).catch(error => {
+      stripePromise = null; // Reset promise on failure to allow retries
+      throw error;
     });
   }
   return stripePromise;
