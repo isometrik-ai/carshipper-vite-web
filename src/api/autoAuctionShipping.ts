@@ -7,8 +7,22 @@ const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
  * Fetches Auto Auction Shipping page data from Strapi with full population
  */
 const fetchAutoAuctionShipping = async (): Promise<AutoAuctionShippingResponse> => {
+  const seoFieldsQuery =
+    "populate[seo_metadata][fields][0]=meta_title" +
+    "&populate[seo_metadata][fields][1]=meta_description" +
+    "&populate[seo_metadata][fields][2]=meta_keywords" +
+    "&populate[seo_metadata][fields][3]=canonical_url" +
+    "&populate[seo_metadata][fields][4]=og_title" +
+    "&populate[seo_metadata][fields][5]=og_description" +
+    "&populate[seo_metadata][fields][6]=og_type" +
+    "&populate[seo_metadata][fields][7]=og_url" +
+    "&populate[seo_metadata][fields][8]=twitter_card" +
+    "&populate[seo_metadata][fields][9]=twitter_title" +
+    "&populate[seo_metadata][fields][10]=twitter_description" +
+    "&populate[seo_metadata][fields][11]=robots";
+
   const response = await fetch(
-    `${STRAPI_API_URL}/api/auto-auction-shipping?populate[seo_metadata]=*&populate[seo_metadata][populate][og_image][fields][0]=url&populate[seo_metadata][populate][og_image][fields][1]=alternativeText&populate[seo_metadata][populate][og_image][fields][2]=width&populate[seo_metadata][populate][og_image][fields][3]=height&populate[seo_metadata][populate][twitter_image][fields][0]=url&populate[seo_metadata][populate][twitter_image][fields][1]=alternativeText&populate[seo_metadata][populate][twitter_image][fields][2]=width&populate[seo_metadata][populate][twitter_image][fields][3]=height&populate[page_content][on][shared.hero-section][populate][trust_indicators][populate]=*&populate[page_content][on][shared.hero-section][populate][statistics][populate]=*&populate[page_content][on][shared.hero-section][populate][background_image][fields][0]=url&populate[page_content][on][shared.hero-section][populate][background_image][fields][1]=alternativeText&populate[page_content][on][shared.hero-section][populate][background_image][fields][2]=width&populate[page_content][on][shared.hero-section][populate][background_image][fields][3]=height&populate[page_content][on][shared.service-list][populate][services][populate]=*&populate[page_content][on][shared.service-cards][populate][service_cards][populate]=*&populate[page_content][on][shared.process-section][populate][steps][populate]=*&populate[page_content][on][shared.process-section][populate][cta_button][populate]=*&populate[page_content][on][shared.testimonials-display][populate][testimonials][populate]=*&populate[page_content][on][shared.testimonials-display][populate][ratings][populate]=*&populate[page_content][on][shared.alert-warning][populate]=*`
+    `${STRAPI_API_URL}/api/auto-auction-shipping?${seoFieldsQuery}&populate[page_content]=*`
   );
   
   if (!response.ok) {
