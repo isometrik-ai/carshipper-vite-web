@@ -148,7 +148,7 @@ const handleSubmit = async () => {
           </div>
 
           {/* Route Map (non-interactive Google Map via JS API) */}
-          {/* <RouteMap origin={originAddress} destination={destinationAddress} /> */}
+          <RouteMap origin={originAddress} destination={destinationAddress} />
         </div>
 
         {/* Dedicated Agent */}

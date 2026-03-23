@@ -17,3 +17,10 @@ export const CUSTOM_WHITE_COLOR = "#FFFFFF";
 export const CUSTOM_LIGHT_GRAY_COLOR = "#000000";
 export const CUSTOM_LIGHT_GRAY="#000000";
 export const CARD = "card";
+export const MAP_BOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ||'';
+
+// Validate Mapbox token (browser-only)
+if (typeof window !== 'undefined' && !MAP_BOX_ACCESS_TOKEN) {
+  console.warn('Mapbox access token is not configured. Please check .env file.');
+}
+export const MAP_BOX_STYLE_LINK = "mapbox://styles/mapbox/dark-v11";
