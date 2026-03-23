@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { RentalCarLogisticsResponse } from "@/types/RentalCarLogistics.types";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL ?? (() => { throw new Error('Missing environment variable: NEXT_PUBLIC_STRAPI_API_URL'); })();
 
 /**
  * Fetches Rental Car Logistics page data from Strapi with full population

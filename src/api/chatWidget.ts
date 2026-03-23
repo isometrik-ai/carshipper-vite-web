@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ChatWidgetResponse } from "@/types/ChatWidget.types";
-
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+import { STRAPI_API_URL } from "@/lib/strapi";
 
 /**
  * Fetches Chat Widget data from Strapi with full population
