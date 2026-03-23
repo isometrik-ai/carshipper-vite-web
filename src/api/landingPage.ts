@@ -3,7 +3,7 @@ import type { LandingPageResponse } from "@/types/LandingPage.types";
 import { apiRequest } from "@/lib/api-client";
 import { LANDING_QUERY } from "./query.constants";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL ?? (() => { throw new Error('Missing environment variable: NEXT_PUBLIC_STRAPI_API_URL'); })();
 
   const fetchLandingPage = async (): Promise<LandingPageResponse> => {
     try {

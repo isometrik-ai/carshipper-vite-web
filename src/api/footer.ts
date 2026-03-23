@@ -3,7 +3,7 @@ import type { FooterResponse } from "@/types/Footer.types";
 import { apiRequest } from "@/lib/api-client";
 import { FOOTER_QUERY } from "./query.constants";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL ?? (() => { throw new Error('Missing environment variable: NEXT_PUBLIC_STRAPI_API_URL'); })();
 
 const fetchFooter = (): Promise<FooterResponse> =>
   apiRequest<FooterResponse>(`${STRAPI_API_URL}/api/footer${FOOTER_QUERY}`, { method: "GET" });

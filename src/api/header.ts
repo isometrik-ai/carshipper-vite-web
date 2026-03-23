@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { HeaderResponse } from "@/types/Header.types";
 
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL ?? (() => { throw new Error('Missing environment variable: NEXT_PUBLIC_STRAPI_API_URL'); })();
 
 const fetchHeader = async (): Promise<HeaderResponse> => {
   const response = await fetch(`${STRAPI_API_URL}/api/header?populate=*`);
