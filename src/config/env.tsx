@@ -22,4 +22,5 @@ function getEnvConfig(value: string | undefined, name: string, required = true):
 export const ENV_CONFIG = {
   // IMPORTANT: must reference env vars directly so Next.js can inline them at build time
   STRAPI_API_URL: getEnvConfig(process.env.NEXT_PUBLIC_STRAPI_API_URL, "NEXT_PUBLIC_STRAPI_API_URL", false),
+  MAP_BOX_ACCESS_TOKEN: getEnvConfig(process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN, "NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN", false),
 };
