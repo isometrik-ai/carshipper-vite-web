@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import mapboxgl, { Map as MapboxMap, Marker, Popup } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MAP_BOX_ACCESS_TOKEN } from "@/lib/config";
+import { createMarkerElement } from "@/components/maps/mapMarkerUtils";
 
 interface RouteMapProps {
   origin: string;
@@ -15,12 +16,17 @@ const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
   const mapInstanceRef = useRef<MapboxMap | null>(null);
   const pickupMarkerRef = useRef<Marker | null>(null);
   const dropMarkerRef = useRef<Marker | null>(null);
+  const activePopupsRef = useRef<Popup[]>([]);
+  const latestUpdateRequestIdRef = useRef(0);
   const navControlAddedRef = useRef(false);
 
   useEffect(() => {
     if (!origin || !destination || !mapContainerRef.current || !MAP_BOX_ACCESS_TOKEN) return;
 
     mapboxgl.accessToken = MAP_BOX_ACCESS_TOKEN;
+    const normalizedOrigin = origin.trim().toLowerCase();
+    const normalizedDestination = destination.trim().toLowerCase();
+    if (!normalizedOrigin || !normalizedDestination) return;
 
     const map =
       mapInstanceRef.current ??
@@ -37,6 +43,11 @@ const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
       navControlAddedRef.current = true;
     }
 
+    const removeAllActivePopups = () => {
+      activePopupsRef.current.forEach((popup) => popup.remove());
+      activePopupsRef.current = [];
+    };
+
     const geocodeAddress = async (address: string): Promise<[number, number] | null> => {
       const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
         address
@@ -49,49 +60,12 @@ const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
       return [coordinates[0], coordinates[1]];
     };
 
-    const buildPinMarkerElement = (color: string, label: string) => {
-      const markerEl = document.createElement("div");
-      markerEl.style.position = "relative";
-      markerEl.style.display = "flex";
-      markerEl.style.alignItems = "center";
-      markerEl.style.justifyContent = "center";
-      markerEl.style.cursor = "pointer";
-
-      const pin = document.createElement("div");
-      pin.innerHTML = `
-        <svg width="28" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M12 22C12 22 20 14.8 20 9.5C20 5.36 16.42 2 12 2C7.58 2 4 5.36 4 9.5C4 14.8 12 22 12 22Z" fill="${color}" />
-          <circle cx="12" cy="9.5" r="3.1" fill="white" />
-        </svg>
-      `;
-
-      const badge = document.createElement("span");
-      badge.textContent = label;
-      badge.style.position = "absolute";
-      badge.style.left = "28px";
-      badge.style.top = "2px";
-      badge.style.padding = "2px 6px";
-      badge.style.borderRadius = "9999px";
-      badge.style.background = "rgba(255,255,255,0.96)";
-      badge.style.border = "1px solid rgba(15, 23, 42, 0.2)";
-      badge.style.boxShadow = "0 1px 2px rgba(15, 23, 42, 0.15)";
-      badge.style.color = "#0f172a";
-      badge.style.fontSize = "10px";
-      badge.style.fontWeight = "600";
-      badge.style.lineHeight = "1.2";
-      badge.style.whiteSpace = "nowrap";
-      badge.style.pointerEvents = "none";
-
-      markerEl.appendChild(pin);
-      markerEl.appendChild(badge);
-      return markerEl;
-    };
-
     const attachHoverPopup = (marker: Marker, address: string) => {
       let popup: Popup | null = null;
       const markerEl = marker.getElement() as HTMLElement;
 
       markerEl.addEventListener("mouseenter", () => {
+        removeAllActivePopups();
         popup = new mapboxgl.Popup({
           closeButton: false,
           closeOnClick: false,
@@ -100,34 +74,43 @@ const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
           .setLngLat(marker.getLngLat())
           .setHTML(`<div style="font-size:12px;line-height:1.2;">${address}</div>`)
           .addTo(map);
+        activePopupsRef.current.push(popup);
       });
       markerEl.addEventListener("mouseleave", () => {
         if (popup) {
           popup.remove();
+          activePopupsRef.current = activePopupsRef.current.filter(
+            (activePopup) => activePopup !== popup
+          );
           popup = null;
         }
       });
     };
 
     const updateMap = async () => {
+      const requestId = ++latestUpdateRequestIdRef.current;
+      const isCurrentRequest = () => requestId === latestUpdateRequestIdRef.current;
+
       const [pickupCoords, dropCoords] = await Promise.all([
-        geocodeAddress(origin),
-        geocodeAddress(destination),
+        geocodeAddress(normalizedOrigin),
+        geocodeAddress(normalizedDestination),
       ]);
 
+      if (!isCurrentRequest()) return;
       if (!pickupCoords || !dropCoords) return;
 
+      removeAllActivePopups();
       if (pickupMarkerRef.current) pickupMarkerRef.current.remove();
       if (dropMarkerRef.current) dropMarkerRef.current.remove();
 
       const pickupMarker = new mapboxgl.Marker({
-        element: buildPinMarkerElement("#22c55e", "Pickup"),
+        element: createMarkerElement("#22c55e", "Pickup"),
         anchor: "bottom",
       })
         .setLngLat(pickupCoords)
         .addTo(map);
       const dropMarker = new mapboxgl.Marker({
-        element: buildPinMarkerElement("#ef4444", "Drop"),
+        element: createMarkerElement("#ef4444", "Drop"),
         anchor: "bottom",
       })
         .setLngLat(dropCoords)
@@ -135,38 +118,59 @@ const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
 
       pickupMarkerRef.current = pickupMarker;
       dropMarkerRef.current = dropMarker;
-      attachHoverPopup(pickupMarker, origin);
-      attachHoverPopup(dropMarker, destination);
+      attachHoverPopup(pickupMarker, normalizedOrigin);
+      attachHoverPopup(dropMarker, normalizedDestination);
 
       const routeUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${pickupCoords[0]},${pickupCoords[1]};${dropCoords[0]},${dropCoords[1]}?geometries=geojson&overview=full&access_token=${MAP_BOX_ACCESS_TOKEN}`;
       const routeResponse = await fetch(routeUrl);
+      if (!isCurrentRequest()) return;
       if (!routeResponse.ok) return;
       const routeData = await routeResponse.json();
+      if (!isCurrentRequest()) return;
       const geometry = routeData?.routes?.[0]?.geometry;
       if (!geometry) return;
 
-      if (map.getLayer("route-line")) map.removeLayer("route-line");
-      if (map.getSource("route-line")) map.removeSource("route-line");
+      const existingRouteLayer = map.getLayer("route-line");
+      const existingRouteSource = map.getSource("route-line");
 
-      map.addSource("route-line", {
-        type: "geojson",
-        data: {
-          type: "Feature",
-          properties: {},
-          geometry,
-        },
-      });
+      if (existingRouteLayer) {
+        map.removeLayer("route-line");
+      }
+      if (existingRouteSource) {
+        map.removeSource("route-line");
+      }
 
-      map.addLayer({
-        id: "route-line",
-        type: "line",
-        source: "route-line",
-        paint: {
-          "line-color": "#2563eb",
-          "line-width": 4,
-          "line-opacity": 0.9,
-        },
-      });
+      try {
+        if (!map.getSource("route-line")) {
+          map.addSource("route-line", {
+            type: "geojson",
+            data: {
+              type: "Feature",
+              properties: {},
+              geometry,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Unable to add route source:", error);
+      }
+
+      try {
+        if (!map.getLayer("route-line") && map.getSource("route-line")) {
+          map.addLayer({
+            id: "route-line",
+            type: "line",
+            source: "route-line",
+            paint: {
+              "line-color": "#2563eb",
+              "line-width": 4,
+              "line-opacity": 0.9,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Unable to add route layer:", error);
+      }
 
       const bounds = new mapboxgl.LngLatBounds();
       bounds.extend(pickupCoords);
@@ -185,6 +189,9 @@ const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
 
   useEffect(() => {
     return () => {
+      latestUpdateRequestIdRef.current += 1;
+      activePopupsRef.current.forEach((popup) => popup.remove());
+      activePopupsRef.current = [];
       if (pickupMarkerRef.current) pickupMarkerRef.current.remove();
       if (dropMarkerRef.current) dropMarkerRef.current.remove();
       if (mapInstanceRef.current) {
