@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BookingHeader } from "@/components/booking/BookingHeader";
 import { BookingProgress } from "@/components/booking/BookingProgress";
 import { ShippingMethodStep } from "@/components/booking/ShippingMethodStep";
+import type { Vehicle as ShippingVehicle } from "@/components/ui/dialogs/EditVehicleDialog";
 // import { ContactStep } from "@/components/booking/ContactStep";
 import { PickupStep } from "@/components/booking/PickupStep";
 import { DeliveryStep } from "@/components/booking/DeliveryStep";
@@ -106,7 +107,15 @@ type BookingQuoteData = {
   quoteId: string;
   quote_id: string;
   vehicle: { year: number; make: string; model: string };
-  vehicles: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
+  vehicles: Array<{
+    year: number;
+    make: string;
+    model: string;
+    is_running?: boolean;
+    type?: string;
+    personal_items_weight?: string;
+    condition?: string;
+  }>;
   origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string; latitude: number; longitude: number | undefined };
   destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string; latitude: number; longitude: number | undefined };
   distance: string;
@@ -203,6 +212,9 @@ const mapQuoteDetailsToBookingQuoteData = (
       make: v?.make ?? "",
       model: v?.model ?? "",
       is_running: v?.is_running,
+      type: v?.type,
+      personal_items_weight: v?.personal_items_weight,
+      condition: v?.condition,
     })),
     origin: {
       addLine1: pickup.addLine1 ?? "",
@@ -272,6 +284,35 @@ const normalizeLocationType = (locationType?: string): string => {
   return locationTypeMap[type] || "private_residence";
 };
 
+const mapPersonalItemsForBooking = (personalItems: string): string => {
+  const normalized = (personalItems || "").toLowerCase().trim();
+  if (normalized.includes("none") || normalized.includes("less than 100")) return "0-100";
+  if (normalized.includes("100-150")) return "100-150";
+  if (normalized.includes("150-200")) return "150-200";
+  if (normalized.includes("more than 200")) return "200+";
+  return "0-100";
+};
+
+const mapQuoteVehiclesToShippingVehicles = (
+  vehicles: BookingQuoteData["vehicles"]
+): ShippingVehicle[] => {
+  return (vehicles || []).map((v, index) => ({
+    id: String(index + 1),
+    year: Number(v?.year) || 0,
+    make: v?.make || "",
+    model: v?.model || "",
+    type: v?.type || "SUV",
+    operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
+    personalItems: (() => {
+      const weight = (v?.personal_items_weight || "").toLowerCase().trim();
+      if (weight === "100-150") return "100-150 lbs";
+      if (weight === "150-200") return "150-200 lbs";
+      if (weight === "200+" || weight.includes("more")) return "More than 200 lbs";
+      return "None or less than 100 lbs.";
+    })(),
+  }));
+};
+
 export default function BookingPage(props: { quoteId: string; initialTier?: "saver" | "priority" | "rush" }) {
   const quoteId: string | undefined = useParams().quoteId as string;
   const searchParams: ReadonlyURLSearchParams = useSearchParams();
@@ -283,7 +324,16 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
   const [formData, setFormData] = useState<BookingFormData>(initialFormData);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [quoteDetails, setQuoteDetails] = useState<any | null>(null);
+  const [selectedVehicles, setSelectedVehicles] = useState<ShippingVehicle[]>([]);
   const mappedQuoteData = mapQuoteDetailsToBookingQuoteData(quoteDetails);
+
+  useEffect(() => {
+    if (!mappedQuoteData?.vehicles?.length) return;
+    setSelectedVehicles((prev) => {
+      if (prev.length > 0) return prev;
+      return mapQuoteVehiclesToShippingVehicles(mappedQuoteData.vehicles);
+    });
+  }, [mappedQuoteData?.quoteId, JSON.stringify(mappedQuoteData?.vehicles || [])]);
 
   useEffect(() => {
     const effectiveQuoteId = props.quoteId || quoteId;
@@ -366,7 +416,16 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         : [];
 
       const vehiclePayload =
-        vehicleFromQuote.length > 0
+        selectedVehicles.length > 0
+          ? selectedVehicles.map((v) => ({
+              year: Number(v.year),
+              make: v.make,
+              model: v.model,
+              type: v.type || "SUV",
+              condition: v.operational === false ? "inoperable" : "runs_and_drives",
+              personal_items_weight: mapPersonalItemsForBooking(v.personalItems || ""),
+            }))
+          : vehicleFromQuote.length > 0
           ? vehicleFromQuote.map((v: any) => ({
               year: v.year,
               make: v.make,
@@ -383,7 +442,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                 type: "SUV",
                 condition: "runs_and_drives",
                 personal_items_weight: "0-100",
-              },
+              }
             ];
 
       const pickupAddress = {
@@ -648,6 +707,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     onTierChange={setSelectedTier}
                     onNext={nextStep}
                     getQuoteDetails={refreshQuoteDetails}
+                    onVehiclesChange={setSelectedVehicles}
                   />
                 )}
                 {currentStep === 2 && (
@@ -727,6 +787,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     tier={selectedTier}
                     price={price}
                     onTierChange={(newTier, newPrice) => setSelectedTier(newTier)}
+                    selectedVehicles={selectedVehicles}
                     quoteData={
                       mappedQuoteData ?? {
                         quoteId: quoteId || "",

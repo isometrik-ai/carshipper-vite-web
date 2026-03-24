@@ -22,7 +22,15 @@ interface ShippingMethodStepProps {
   quoteData: {
     quoteId: string;
     vehicle: { year: number; make: string; model: string };
-    vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
+    vehicles?: Array<{
+      year: number;
+      make: string;
+      model: string;
+      is_running?: boolean;
+      type?: string;
+      personal_items_weight?: string;
+      condition?: string;
+    }>;
     origin: {
       addLine1: string;
       addLine2: string;
@@ -54,6 +62,7 @@ interface ShippingMethodStepProps {
   onTierChange: (tier: "saver" | "priority" | "rush") => void;
   onNext: () => void;
   getQuoteDetails: () => void;
+  onVehiclesChange?: (vehicles: Vehicle[]) => void;
 }
 
 const tiers = [
@@ -98,10 +107,19 @@ export function ShippingMethodStep({
   selectedTier, 
   onTierChange, 
   onNext,
-  getQuoteDetails
+  getQuoteDetails,
+  onVehiclesChange
 }: ShippingMethodStepProps) {
   const mapQuoteVehiclesToLocal = () => {
-    const sourceVehicles: Array<{ year: number; make: string; model: string; is_running?: boolean }> =
+    const sourceVehicles: Array<{
+      year: number;
+      make: string;
+      model: string;
+      is_running?: boolean;
+      type?: string;
+      personal_items_weight?: string;
+      condition?: string;
+    }> =
       Array.isArray(quoteData.vehicles) && quoteData.vehicles.length > 0
         ? quoteData.vehicles
         : [{ ...quoteData.vehicle, is_running: undefined }];
@@ -111,9 +129,15 @@ export function ShippingMethodStep({
       year: Number(v?.year) || 0,
       make: v?.make || "",
       model: v?.model || "",
-      type: "SUV",
-      operational: v?.is_running ?? true,
-      personalItems: "None or less than 100 lbs.",
+      type: v?.type || "SUV",
+      operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
+      personalItems: (() => {
+        const weight = (v?.personal_items_weight || "").toLowerCase().trim();
+        if (weight === "100-150") return "100-150 lbs";
+        if (weight === "150-200") return "150-200 lbs";
+        if (weight === "200+" || weight.includes("more")) return "More than 200 lbs";
+        return "None or less than 100 lbs.";
+      })(),
     }));
   };
 
@@ -168,7 +192,8 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
     }
 
     if (!isCancelled) {
-      setVehicles(mapQuoteVehiclesToLocal());
+      const mappedVehicles = mapQuoteVehiclesToLocal();
+      setVehicles(mappedVehicles);
       setPickupAddress(quoteData.origin);
       setDeliveryAddress(quoteData.destination);
       setTransportType(quoteData.transportType === "Enclosed" ? "Enclosed" : "Open");
@@ -629,6 +654,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
         vehicles={vehicles}
         onSave={async (updatedVehicles) => {
           setVehicles(updatedVehicles);
+          onVehiclesChange?.(updatedVehicles);
           await syncQuoteWithServer({ vehicles: updatedVehicles });
         }}
       />
