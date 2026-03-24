@@ -10,6 +10,15 @@ import { Button } from "@/components/ui/button";
 import type { HeroSection, StatsBar, ProcessSection, FAQDisplay, CallToAction } from "@/types/LandingPage.types";
 import type { RouteTable, CityLinks } from "@/types/CaliforniaShipping.types";
 
+function isSafeNavigationUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 export default function CaliforniaShippingPageClient() {
   const { data, isLoading } = useCaliforniaShipping();
 
@@ -49,7 +58,7 @@ export default function CaliforniaShippingPageClient() {
       whyChooseUs,
       cta,
     };
-  }, [data]);
+  }, [data?.data?.page_content]);
 
   if (isLoading && !data) {
     return <PageSkeleton />;
@@ -199,8 +208,9 @@ export default function CaliforniaShippingPageClient() {
                   variant="secondary"
                   size="xl"
                   onClick={() => {
-                    if (pageData.cta.primary_button?.button_link) {
-                      window.location.href = pageData.cta.primary_button.button_link;
+                    const buttonLink = pageData.cta.primary_button?.button_link;
+                    if (buttonLink && isSafeNavigationUrl(buttonLink)) {
+                      window.location.href = buttonLink;
                     } else {
                       window.location.href = "/#quote-form";
                     }

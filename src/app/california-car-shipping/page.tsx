@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import type { CaliforniaShippingResponse } from "@/types/CaliforniaShipping.types";
 import CaliforniaShippingPageClient from "./CaliforniaShippingPageClient";
 
@@ -6,6 +7,9 @@ export const dynamic = "force-dynamic";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://carshippers.ai";
 const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const HAS_VALID_STRAPI_API_URL =
+  typeof STRAPI_API_URL === "string" &&
+  (STRAPI_API_URL.startsWith("http://") || STRAPI_API_URL.startsWith("https://"));
 
 const toAbsoluteUrl = (url?: string | null): string | undefined => {
   if (!url) return undefined;
@@ -26,7 +30,9 @@ const parseRobots = (robots?: string | null): Metadata["robots"] => {
 };
 
 async function fetchCaliforniaSeo(): Promise<CaliforniaShippingResponse["data"]["seo_metadata"] | null> {
-  if (!STRAPI_API_URL) return null;
+  if (!HAS_VALID_STRAPI_API_URL) return null;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
   const seoQuery =
     "?populate[seo_metadata][fields][0]=meta_title" +
     "&populate[seo_metadata][fields][1]=meta_description" +
@@ -44,17 +50,22 @@ async function fetchCaliforniaSeo(): Promise<CaliforniaShippingResponse["data"][
   try {
     const response = await fetch(`${STRAPI_API_URL}/api/california-car-shipping${seoQuery}`, {
       next: { revalidate: 60 },
+      signal: controller.signal,
     });
     if (!response.ok) return null;
     const payload = (await response.json()) as CaliforniaShippingResponse;
     return payload?.data?.seo_metadata ?? null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
+const getCaliforniaSeo = cache(fetchCaliforniaSeo);
+
 export async function generateMetadata(): Promise<Metadata> {
-  const seo = await fetchCaliforniaSeo();
+  const seo = await getCaliforniaSeo();
   const title = seo?.meta_title || "California Car Shipping | CarShippers AI";
   const description =
     seo?.meta_description ||
