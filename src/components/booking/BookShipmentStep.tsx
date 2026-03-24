@@ -22,6 +22,14 @@ interface BookShipmentStepProps {
   tier: "saver" | "priority" | "rush";
   price: number;
   onTierChange?: (tier: "saver" | "priority" | "rush", price: number) => void;
+  selectedVehicles?: Array<{
+    year: number;
+    make: string;
+    model: string;
+    type?: string;
+    operational?: boolean;
+    personalItems?: string;
+  }>;
   quoteData: {
     vehicle: { year: number; make: string; model: string };
     vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
@@ -57,6 +65,7 @@ export function BookShipmentStep({
   tier,
   price,
   onTierChange,
+  selectedVehicles,
   quoteData,
 }: BookShipmentStepProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,14 +102,16 @@ const handleSubmit = async () => {
   const shipperEmail = quoteData.customer?.email || formData.email;
   const shipperPhone = quoteData.customer?.phone || formData.phone;
   const effectiveVehicles =
-    Array.isArray(quoteData.vehicles) && quoteData.vehicles.length > 0
+    Array.isArray(selectedVehicles) && selectedVehicles.length > 0
+      ? selectedVehicles
+      : Array.isArray(quoteData.vehicles) && quoteData.vehicles.length > 0
       ? quoteData.vehicles
       : [quoteData.vehicle];
   const primaryVehicle = effectiveVehicles[0];
   const vehicleSummary =
     effectiveVehicles.length > 1
       ? `${effectiveVehicles.length} vehicles`
-      : `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model} (SUV)`;
+      : `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}${(primaryVehicle as any)?.type ? ` (${(primaryVehicle as any).type})` : ""}`;
 
   const originAddress = [
     quoteData?.origin?.addLine1,
@@ -270,18 +281,18 @@ const handleSubmit = async () => {
                     {effectiveVehicles.map((vehicle, index) => (
                       <div key={`${vehicle.year}-${vehicle.make}-${vehicle.model}-${index}`} className="pb-3 border-b border-border/50 last:pb-0 last:border-0">
                         <p className="font-medium text-foreground">
-                          {vehicle.year} {vehicle.make} {vehicle.model} (SUV)
+                          {vehicle.year} {vehicle.make} {vehicle.model} {(vehicle as any)?.type ? `(${(vehicle as any).type})` : ""}
                         </p>
                         <div className="mt-2 space-y-1">
                           <p className={cn(
                             "text-sm flex items-center gap-2",
-                            (vehicle as any)?.is_running === false ? "text-amber-600" : "text-emerald-600"
+                            (vehicle as any)?.operational === false || (vehicle as any)?.is_running === false ? "text-amber-600" : "text-emerald-600"
                           )}>
                             <CheckCircle className="w-4 h-4" />
-                            {(vehicle as any)?.is_running === false ? "Inoperable" : "Operational"}
+                            {(vehicle as any)?.operational === false || (vehicle as any)?.is_running === false ? "Inoperable" : "Operational"}
                           </p>
                           <p className="text-sm text-muted-foreground flex items-center gap-2">
-                            <Package className="w-4 h-4" /> None or less than 100lbs of personal items
+                            <Package className="w-4 h-4" /> {(vehicle as any)?.personalItems || "None or less than 100 lbs."}
                           </p>
                         </div>
                       </div>
