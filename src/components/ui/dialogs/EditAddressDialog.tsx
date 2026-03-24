@@ -83,7 +83,7 @@ export function EditAddressDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader className="text-center pb-4">
           <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
             <ArrowLeft className="w-6 h-6 text-muted-foreground" />
@@ -97,7 +97,7 @@ export function EditAddressDialog({
           </p>
         </DialogHeader>
 
-        <div className="bg-muted/50 rounded-xl p-4">
+        <div className="bg-muted/50 rounded-xl p-4 overflow-y-auto pr-1">
           <div className="flex items-center gap-2 mb-3">
             <Label className="font-medium text-foreground">
               {type === "pickup" ? "Pickup from" : "Deliver to"} (addLine1, addLine2, city, state, zip)

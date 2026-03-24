@@ -22,6 +22,7 @@ interface ShippingMethodStepProps {
   quoteData: {
     quoteId: string;
     vehicle: { year: number; make: string; model: string };
+    vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
     origin: {
       addLine1: string;
       addLine2: string;
@@ -99,17 +100,25 @@ export function ShippingMethodStep({
   onNext,
   getQuoteDetails
 }: ShippingMethodStepProps) {
+  const mapQuoteVehiclesToLocal = () => {
+    const sourceVehicles: Array<{ year: number; make: string; model: string; is_running?: boolean }> =
+      Array.isArray(quoteData.vehicles) && quoteData.vehicles.length > 0
+        ? quoteData.vehicles
+        : [{ ...quoteData.vehicle, is_running: undefined }];
+
+    return sourceVehicles.map((v, index) => ({
+      id: String(index + 1),
+      year: Number(v?.year) || 0,
+      make: v?.make || "",
+      model: v?.model || "",
+      type: "SUV",
+      operational: v?.is_running ?? true,
+      personalItems: "None or less than 100 lbs.",
+    }));
+  };
 
   const [schedulingNotes, setSchedulingNotes] = useState("");
-  const [vehicles, setVehicles] = useState<Vehicle[]>([{
-    id: "1",
-    year: quoteData.vehicle.year,
-    make: quoteData.vehicle.make,
-    model: quoteData.vehicle.model,
-    type: "SUV",
-    operational: true,
-    personalItems: "None or less than 100 lbs.",
-  }]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(mapQuoteVehiclesToLocal);
   const [pickupAddress, setPickupAddress] = useState<AddressState>({
     addLine1: quoteData.origin.addLine1,
     addLine2: quoteData.origin.addLine2,
@@ -148,7 +157,6 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
   // Sync local state when quoteData updates from API
   useEffect(() => {
     let isCancelled = false;
-    console.log('quoteData', quoteData)
     if (quoteData.earliestPickup) {
       const parts = quoteData.earliestPickup.split("/").map(Number);
       if (parts.length === 3 && parts.every(n => !isNaN(n))) {
@@ -160,15 +168,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
     }
 
     if (!isCancelled) {
-      setVehicles([{
-        id: "1",
-        year: quoteData.vehicle.year,
-        make: quoteData.vehicle.make,
-        model: quoteData.vehicle.model,
-        type: "SUV",
-        operational: true,
-        personalItems: "None or less than 100 lbs.",
-      }]);
+      setVehicles(mapQuoteVehiclesToLocal());
       setPickupAddress(quoteData.origin);
       setDeliveryAddress(quoteData.destination);
       setTransportType(quoteData.transportType === "Enclosed" ? "Enclosed" : "Open");
@@ -181,6 +181,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
     JSON.stringify(quoteData.origin),
     JSON.stringify(quoteData.destination),
     JSON.stringify(quoteData.vehicle),
+    JSON.stringify(quoteData.vehicles),
     quoteData.earliestPickup,
     quoteData.transportType,
     JSON.stringify(quoteData.prices),

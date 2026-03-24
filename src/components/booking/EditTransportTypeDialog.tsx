@@ -40,7 +40,7 @@ export function EditTransportTypeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader className="text-center pb-4">
           <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
             <Truck className="w-6 h-6 text-muted-foreground" />
@@ -51,7 +51,7 @@ export function EditTransportTypeDialog({
           </p>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto pr-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="font-medium text-foreground">Choose Your Carrier Type</span>
