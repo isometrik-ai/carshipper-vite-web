@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Car, Pencil, Trash2, Plus, Scan, CarFront, CheckCircle2, Briefcase, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,15 @@ export function EditVehicleDialog({
   const [vinInput, setVinInput] = useState("");
   const [vinLookupLoading, setVinLookupLoading] = useState(false);
   const [addMethod, setAddMethod] = useState<"manual" | "vin">("manual");
+
+  useEffect(() => {
+    if (!open) return;
+    setLocalVehicles(vehicles);
+    setEditingVehicle(null);
+    setIsAddingNew(false);
+    setVinInput("");
+    setAddMethod("manual");
+  }, [open, vehicles]);
 
   // Form state for new/edit vehicle
   const [formData, setFormData] = useState<Partial<Vehicle>>({
@@ -160,7 +169,7 @@ export function EditVehicleDialog({
   if (isAddingNew) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="text-center gap-4 pb-4">
             <div className="flex items-center gap-4">
               <DialogTitle className="text-xl font-bold">
@@ -172,7 +181,7 @@ export function EditVehicleDialog({
             </div>
           </DialogHeader>
 
-          <Tabs value={addMethod} onValueChange={(v) => setAddMethod(v as "manual" | "vin")}>
+          <Tabs value={addMethod} onValueChange={(v) => setAddMethod(v as "manual" | "vin")} className="overflow-y-auto pr-1">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="manual" className="gap-2">
                 <CarFront className="w-4 h-4" />
@@ -331,7 +340,7 @@ export function EditVehicleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader className="text-center pb-4">
           <div className="flex items-center gap-4 pb-4">
             <DialogTitle className="text-xl font-bold">Vehicle(s)</DialogTitle>
@@ -344,7 +353,7 @@ export function EditVehicleDialog({
           </p>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto pr-1">
           {localVehicles.map((vehicle) => (
             <div key={vehicle.id} className="border rounded-xl p-4">
               <div className="flex items-start justify-between mb-3">

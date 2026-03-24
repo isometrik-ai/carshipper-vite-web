@@ -108,7 +108,7 @@ export function HeroSection({
                     <div className="text-center">
                       <span className="text-2xl">→</span>
                       <p className="text-xs text-primary-foreground/70">{formattedDistance}</p>
-                      <p className="text-xs text-primary-foreground/70">{formattedTransitTime}</p>
+                      {/* <p className="text-xs text-primary-foreground/70">{formattedTransitTime}</p> */}
                     </div>
                     <div className="hidden md:block h-px flex-1 bg-primary-foreground/30" />
                   </div>

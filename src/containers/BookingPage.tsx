@@ -106,6 +106,7 @@ type BookingQuoteData = {
   quoteId: string;
   quote_id: string;
   vehicle: { year: number; make: string; model: string };
+  vehicles: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
   origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string; latitude: number; longitude: number | undefined };
   destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string; latitude: number; longitude: number | undefined };
   distance: string;
@@ -174,7 +175,8 @@ const mapQuoteDetailsToBookingQuoteData = (
       .padStart(2, "0")}/${pickupDate.getFullYear()}`;
   }
 
-  const vehicle = Array.isArray(quote.vehicle) ? quote.vehicle[0] ?? {} : {};
+  const vehiclesFromQuote = Array.isArray(quote.vehicle) ? quote.vehicle : [];
+  const vehicle = vehiclesFromQuote[0] ?? {};
 
   const customerName =
     customerDetails.full_name ||
@@ -196,6 +198,12 @@ const mapQuoteDetailsToBookingQuoteData = (
       make: vehicle.make ?? "",
       model: vehicle.model ?? "",
     },
+    vehicles: vehiclesFromQuote.map((v: any) => ({
+      year: v?.year ?? 0,
+      make: v?.make ?? "",
+      model: v?.model ?? "",
+      is_running: v?.is_running,
+    })),
     origin: {
       addLine1: pickup.addLine1 ?? "",
       addLine2: pickup.addLine2 ?? "",
@@ -622,6 +630,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                       mappedQuoteData ?? {
                         quoteId: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
+                        vehicles: [],
                         origin: { addLine1: "", addLine2: "", city: "", state: "", zip: "" },
                         destination: { addLine1: "", addLine2: "", city: "", state: "", zip: "" },
                         distance: "",
@@ -651,6 +660,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                         quoteId: quoteId || "",
                         quote_id: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
+                        vehicles: [],
                         origin: { addLine1:"", addLine2:"", city: "",
                           state: "", zip: "",
                         latitude: undefined,
@@ -684,6 +694,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                         quoteId: quoteId || "",
                         quote_id: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
+                        vehicles: [],
                         origin: { addLine1:"", addLine2:"", city: "", state: "", zip: "",
                           latitude: undefined,
                           longitude: undefined
@@ -720,6 +731,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                         quoteId: quoteId || "",
                         quote_id: quoteId || "",
                         vehicle: { year: 0, make: "", model: "" },
+                        vehicles: [],
                         origin: { addLine1:"", addLine2:"",
                           city: "", state: "", zip: "",
                           latitude: undefined,

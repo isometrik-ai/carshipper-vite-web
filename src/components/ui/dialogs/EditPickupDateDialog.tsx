@@ -33,7 +33,7 @@ export function EditPickupDateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] h-[600px] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader className="text-center pb-4">
           <div className="flex items-center gap-4">
              <DialogTitle className="text-xl font-bold">Earliest Pickup Date</DialogTitle>
@@ -44,7 +44,7 @@ export function EditPickupDateDialog({
           <p className="text-sm text-muted-foreground">Edit your earliest pickup date</p>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-y-auto pr-1">
           <div className="bg-muted/50 rounded-xl p-4 flex flex-col items-start justify-start">
             <h4 className="font-medium text-foreground mb-2">When would you like your vehicle picked up?</h4>
             <a href="#" className="text-sm text-primary underline">Weather & Holiday Disclaimer</a>
