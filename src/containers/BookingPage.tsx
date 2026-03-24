@@ -422,7 +422,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               make: v.make,
               model: v.model,
               type: v.type || "SUV",
-              condition: v.operational === false ? "inoperable" : "runs_and_drives",
+              condition: "runs_and_drives", //v.operational === false ? "inoperable" : "runs_and_drives",
               personal_items_weight: mapPersonalItemsForBooking(v.personalItems || ""),
             }))
           : vehicleFromQuote.length > 0
@@ -431,7 +431,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               make: v.make,
               model: v.model,
               type: v.type || "SUV",
-              condition: v.condition || "runs_and_drives",
+              condition: "runs_and_drives", //|| v.condition || "runs_and_drives",
               personal_items_weight: v.personal_items_weight || "0-100",
             }))
           : [
