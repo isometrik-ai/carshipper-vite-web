@@ -18,6 +18,8 @@ export const useBlogPage = () =>
     queryKey: ["blog-page"],
     queryFn: fetchBlogPage,
     refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes fresh
+    gcTime: 1000 * 60 * 60, 
     retry: 2,
     retryDelay: (i) => Math.min(1000 * 2 ** i, 5000),
     throwOnError: (error: Error, _query: Query<BlogPageResponse, Error, BlogPageResponse, string[]>) => {

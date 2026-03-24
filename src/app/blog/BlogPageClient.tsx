@@ -25,6 +25,12 @@ const formatDate = (dateString: string | null | undefined): string => {
   }
 };
 
+const getSafePostPath = (slug: unknown, id: unknown): string => {
+  const raw = slug != null && String(slug).trim().length > 0 ? String(slug) : String(id ?? "");
+  const safeSegment = encodeURIComponent(raw);
+  return `/blog/${safeSegment}`;
+};
+
 export default function BlogPageClient() {
   const { data, isLoading } = useBlogPage();
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,17 +63,18 @@ export default function BlogPageClient() {
     return defaultCat?.name || categories[0]?.name || "All Posts";
   }, [categories]);
 
-  const [activeCategory, setActiveCategory] = useState(defaultCategory);
+  const [activeCategory, setActiveCategory] = useState(() => defaultCategory);
 
   useEffect(() => {
-    if (defaultCategory) {
-      setActiveCategory(defaultCategory);
-    }
-  }, [defaultCategory]);
+    setActiveCategory((current) => {
+      const hasCurrent = categories.some((category: any) => category.name === current);
+      return hasCurrent ? current : defaultCategory;
+    });
+  }, [categories, defaultCategory]);
 
   const blogPosts = useMemo(() => {
     return data?.data?.blog_posts || [];
-  }, [data]);
+  }, [data?.data?.blog_posts]);
 
   const filteredPosts = useMemo(() => {
     return blogPosts.filter((post: any) => {
@@ -81,7 +88,7 @@ export default function BlogPageClient() {
 
   const pageContent = useMemo(() => {
     return data?.data?.page_content || [];
-  }, [data]);
+  }, [data?.data?.page_content]);
 
   if (isLoading && !data) {
     return (
@@ -197,7 +204,7 @@ export default function BlogPageClient() {
                             <span>{formatDate(post.published_at)}</span>
                           </div>
                         ) : null}
-                        <Link href={`/blog/${post.slug || post.id}`}>
+                        <Link href={getSafePostPath(post.slug, post.id)}>
                           <Button variant="ghost" size="sm">
                             Read More
                             <ArrowRight className="w-4 h-4 ml-2" />
