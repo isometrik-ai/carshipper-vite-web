@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 interface OrderSummaryPanelProps {
   quoteData: {
     vehicle: { year: number; make: string; model: string };
+    vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
     origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
     destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
     earliestPickup: string;
@@ -27,6 +28,22 @@ const tierColors = {
 };
 
 export function OrderSummaryPanel({ quoteData, tier, price }: OrderSummaryPanelProps) {
+  const effectiveVehicles =
+    Array.isArray(quoteData.vehicles) && quoteData.vehicles.length > 0
+      ? quoteData.vehicles
+      : [quoteData.vehicle];
+  const primaryVehicle = effectiveVehicles[0];
+  const vehicleLabel =
+    effectiveVehicles.length > 1
+      ? `${effectiveVehicles.length} vehicles`
+      : `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`;
+  const vehicleCondition =
+    effectiveVehicles.length > 1
+      ? "Mixed"
+      : (primaryVehicle as { is_running?: boolean }).is_running === false
+        ? "Inoperable"
+        : "Runs and Drives";
+
   const summaryRows = [
     {
       icon: Calendar,
@@ -36,11 +53,11 @@ export function OrderSummaryPanel({ quoteData, tier, price }: OrderSummaryPanelP
     {
       icon: Car,
       label: "Vehicle",
-      value: `${quoteData.vehicle.year} ${quoteData.vehicle.make} ${quoteData.vehicle.model}`,
+      value: vehicleLabel,
     },
     {
       label: "Condition",
-      value: "Runs and Drives",
+      value: vehicleCondition,
       indent: true,
     },
     {

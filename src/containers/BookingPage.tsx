@@ -602,6 +602,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               model: "",
             }
           }
+          vehicles={mappedQuoteData?.vehicles ?? []}
         />
       </div>
     );

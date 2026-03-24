@@ -49,6 +49,7 @@ interface DeliveryStepProps {
   onBack: () => void;
   quoteData: {
     vehicle: { year: number; make: string; model: string };
+    vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
     origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
     destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
     earliestPickup: string;

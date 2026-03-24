@@ -24,6 +24,7 @@ interface BookShipmentStepProps {
   onTierChange?: (tier: "saver" | "priority" | "rush", price: number) => void;
   quoteData: {
     vehicle: { year: number; make: string; model: string };
+    vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
     origin: { addLine1:string, addLine2:string, city: string; state: string; zip: string };
     destination: { addLine1:string, addLine2:string, city: string; state: string; zip: string };
     earliestPickup: string;
@@ -91,6 +92,15 @@ const handleSubmit = async () => {
     `${formData.firstName} ${formData.lastName}`.trim();
   const shipperEmail = quoteData.customer?.email || formData.email;
   const shipperPhone = quoteData.customer?.phone || formData.phone;
+  const effectiveVehicles =
+    Array.isArray(quoteData.vehicles) && quoteData.vehicles.length > 0
+      ? quoteData.vehicles
+      : [quoteData.vehicle];
+  const primaryVehicle = effectiveVehicles[0];
+  const vehicleSummary =
+    effectiveVehicles.length > 1
+      ? `${effectiveVehicles.length} vehicles`
+      : `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model} (SUV)`;
 
   const originAddress = [
     quoteData?.origin?.addLine1,
@@ -242,7 +252,7 @@ const handleSubmit = async () => {
                   <div>
                     <p className="font-medium text-foreground">Vehicle(s)</p>
                     <p className="text-sm text-muted-foreground">
-                      {quoteData.vehicle.year} {quoteData.vehicle.make} {quoteData.vehicle.model} (Suv)
+                      {vehicleSummary}
                     </p>
                   </div>
                 </div>
@@ -256,16 +266,26 @@ const handleSubmit = async () => {
               </div>
               {expandedSections.vehicles && (
                 <div className="mt-4 ml-8 p-4 bg-muted/30 rounded-xl border-l-4 border-primary/30">
-                  <p className="font-medium text-foreground">
-                    {quoteData.vehicle.year} {quoteData.vehicle.make} {quoteData.vehicle.model} (Suv)
-                  </p>
-                  <div className="mt-2 space-y-1">
-                    <p className="text-sm text-emerald-600 flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" /> Operational
-                    </p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Package className="w-4 h-4" /> None or less than 100lbs of personal items
-                    </p>
+                  <div className="space-y-3">
+                    {effectiveVehicles.map((vehicle, index) => (
+                      <div key={`${vehicle.year}-${vehicle.make}-${vehicle.model}-${index}`} className="pb-3 border-b border-border/50 last:pb-0 last:border-0">
+                        <p className="font-medium text-foreground">
+                          {vehicle.year} {vehicle.make} {vehicle.model} (SUV)
+                        </p>
+                        <div className="mt-2 space-y-1">
+                          <p className={cn(
+                            "text-sm flex items-center gap-2",
+                            (vehicle as any)?.is_running === false ? "text-amber-600" : "text-emerald-600"
+                          )}>
+                            <CheckCircle className="w-4 h-4" />
+                            {(vehicle as any)?.is_running === false ? "Inoperable" : "Operational"}
+                          </p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            <Package className="w-4 h-4" /> None or less than 100lbs of personal items
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
