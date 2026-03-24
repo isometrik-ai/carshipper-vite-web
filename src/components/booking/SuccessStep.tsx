@@ -12,6 +12,7 @@ interface SuccessStepProps {
   tier: "saver" | "priority" | "rush";
   price: number;
   vehicle: { year: number; make: string; model: string };
+  vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
 }
 
 const tierNames = {
@@ -20,7 +21,15 @@ const tierNames = {
   rush: "Rush Service",
 };
 
-export function SuccessStep({ formData, quoteId, tier, price, vehicle }: SuccessStepProps) {
+export function SuccessStep({ formData, quoteId, tier, price, vehicle, vehicles }: SuccessStepProps) {
+  const effectiveVehicles =
+    Array.isArray(vehicles) && vehicles.length > 0 ? vehicles : [vehicle];
+  const primaryVehicle = effectiveVehicles[0];
+  const vehicleSummary =
+    effectiveVehicles.length > 1
+      ? `${effectiveVehicles.length} vehicles`
+      : `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`;
+
   useEffect(() => {
     // Trigger confetti on mount
     const duration = 2 * 1000;
@@ -106,7 +115,7 @@ export function SuccessStep({ formData, quoteId, tier, price, vehicle }: Success
               </div>
               <div>
                 <span className="text-muted-foreground">Vehicle</span>
-                <p className="font-semibold">{vehicle.year} {vehicle.make} {vehicle.model}</p>
+                <p className="font-semibold">{vehicleSummary}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">Total Price</span>
@@ -114,6 +123,24 @@ export function SuccessStep({ formData, quoteId, tier, price, vehicle }: Success
               </div>
             </div>
           </motion.div>
+
+          {effectiveVehicles.length > 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55 }}
+              className="bg-muted rounded-xl p-6 mb-8 text-left"
+            >
+              <h3 className="font-semibold text-foreground mb-3">Vehicles</h3>
+              <div className="space-y-2">
+                {effectiveVehicles.map((v, index) => (
+                  <p key={`${v.year}-${v.make}-${v.model}-${index}`} className="text-sm text-foreground">
+                    {index + 1}. {v.year} {v.make} {v.model}
+                  </p>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* Next Steps */}
           <motion.div
