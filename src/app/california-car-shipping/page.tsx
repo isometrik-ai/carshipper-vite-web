@@ -1,240 +1,111 @@
-'use client';
+import type { Metadata } from "next";
+import { cache } from "react";
+import type { CaliforniaShippingResponse } from "@/types/CaliforniaShipping.types";
+import CaliforniaShippingPageClient from "./CaliforniaShippingPageClient";
 
-import { useMemo } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
-import QuoteForm from "@/components/QuoteForm";
-import { PageSEO } from "@/components/seo/PageSEO";
-import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { useCaliforniaShipping } from "@/api/californiaShipping";
-import { getIcon } from "@/lib/icons";
-import { MapPin, Phone } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import type { LucideIcon } from "lucide-react";
-import type { HeroSection, StatsBar, ProcessSection, FAQDisplay, CallToAction } from "@/types/LandingPage.types";
-import type { RouteTable, CityLinks } from "@/types/CaliforniaShipping.types";
+export const dynamic = "force-dynamic";
 
-export const dynamic = 'force-dynamic';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://carshippers.ai";
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const HAS_VALID_STRAPI_API_URL =
+  typeof STRAPI_API_URL === "string" &&
+  (STRAPI_API_URL.startsWith("http://") || STRAPI_API_URL.startsWith("https://"));
 
-export default function CaliforniaShipping() {
-  const { data, isLoading } = useCaliforniaShipping();
-
-  const pageData = useMemo(() => {
-    if (!data?.data?.page_content) return null;
-    const content = data.data.page_content;
-    const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
-    const statsBar = content.find(c => c.__component === "shared.stats-bar") as StatsBar | undefined;
-    const howItWorks = content.find(c =>
-      c.__component === "shared.process-section" &&
-      (c as ProcessSection).section_title === "How California Auto Transport Works"
-    ) as ProcessSection | undefined;
-    const routeTableFrom = content.find(c =>
-      c.__component === "shared.route-table" &&
-      (c as RouteTable).section_title?.includes("FROM California")
-    ) as RouteTable | undefined;
-    const routeTableTo = content.find(c =>
-      c.__component === "shared.route-table" &&
-      (c as RouteTable).section_title?.includes("TO California")
-    ) as RouteTable | undefined;
-    const cityLinks = content.find(c => c.__component === "shared.city-links") as CityLinks | undefined;
-    const faqDisplay = content.find(c => c.__component === "shared.faq-display") as FAQDisplay | undefined;
-    const whyChooseUs = content.find(c =>
-      c.__component === "shared.process-section" &&
-      (c as ProcessSection).section_title === "Why Choose Us for California Car Shipping?"
-    ) as ProcessSection | undefined;
-    const cta = content.find(c => c.__component === "shared.call-to-action") as CallToAction | undefined;
-
-    return {
-      hero: heroSection,
-      stats: statsBar,
-      howItWorks,
-      routeTableFrom,
-      routeTableTo,
-      cityLinks,
-      faq: faqDisplay,
-      whyChooseUs,
-      cta,
-    };
-  }, [data]);
-
-  const pageContent = useMemo(() => {
-    return data?.data?.page_content || [];
-  }, [data]);
-
-  if (isLoading && !data) {
-    return (
-      <>
-        <PageSEO seoMetadata={null} pageContent={null} />
-        <PageSkeleton />
-      </>
-    );
+const toAbsoluteUrl = (url?: string | null): string | undefined => {
+  if (!url) return undefined;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/") && !url.includes("//")) {
+    return `${SITE_URL}${url}`;
   }
+  return undefined;
+};
 
-  if (!pageData) {
-    return (
-      <>
-        <PageSEO seoMetadata={data?.data?.seo_metadata} pageContent={pageContent} />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <p className="text-muted-foreground">No content available.</p>
-        </div>
-      </>
-    );
+const parseRobots = (robots?: string | null): Metadata["robots"] => {
+  if (!robots) return undefined;
+  const value = robots.toLowerCase();
+  return {
+    index: !value.includes("noindex"),
+    follow: !value.includes("nofollow"),
+  };
+};
+
+async function fetchCaliforniaSeo(): Promise<CaliforniaShippingResponse["data"]["seo_metadata"] | null> {
+  if (!HAS_VALID_STRAPI_API_URL) return null;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const seoQuery =
+    "?populate[seo_metadata][fields][0]=meta_title" +
+    "&populate[seo_metadata][fields][1]=meta_description" +
+    "&populate[seo_metadata][fields][2]=meta_keywords" +
+    "&populate[seo_metadata][fields][3]=canonical_url" +
+    "&populate[seo_metadata][fields][4]=og_title" +
+    "&populate[seo_metadata][fields][5]=og_description" +
+    "&populate[seo_metadata][fields][6]=og_type" +
+    "&populate[seo_metadata][fields][7]=og_url" +
+    "&populate[seo_metadata][fields][8]=twitter_card" +
+    "&populate[seo_metadata][fields][9]=twitter_title" +
+    "&populate[seo_metadata][fields][10]=twitter_description" +
+    "&populate[seo_metadata][fields][11]=robots";
+
+  try {
+    const response = await fetch(`${STRAPI_API_URL}/api/california-car-shipping${seoQuery}`, {
+      next: { revalidate: 60 },
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as CaliforniaShippingResponse;
+    return payload?.data?.seo_metadata ?? null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
+}
 
-  return (
-    <>
-      <PageSEO seoMetadata={data?.data?.seo_metadata} pageContent={pageContent} />
-      <main className="flex-1 pt-20">
-        <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background">
-          <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-2 gap-12 items-start">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                  {pageData.hero?.main_headline || "California Car Shipping"}{" "}
-                  {pageData.hero?.highlighted_text ? (
-                    <span className="text-primary">{pageData.hero.highlighted_text}</span>
-                  ) : null}
-                </h1>
-                {pageData.hero?.description ? (
-                  <p className="text-lg md:text-xl text-muted-foreground mb-6">
-                    {pageData.hero.description}
-                  </p>
-                ) : null}
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <QuoteForm />
-              </motion.div>
-            </div>
-          </div>
-        </section>
+const getCaliforniaSeo = cache(fetchCaliforniaSeo);
 
-        {pageData.stats ? (
-          <section className="py-8 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {pageData.stats.statistics && pageData.stats.statistics.map((stat: any) => (
-                  <div key={stat.id} className="text-center">
-                    <div className="text-2xl font-bold text-primary">{stat.value}</div>
-                    <div className="text-sm text-muted-foreground">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : null}
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getCaliforniaSeo();
+  const title = seo?.meta_title || "California Car Shipping | CarShippers AI";
+  const description =
+    seo?.meta_description ||
+    "Ship cars to or from California with trusted carriers and transparent pricing.";
+  const canonical = seo?.canonical_url || `${SITE_URL}/california-car-shipping`;
+  const ogImageUrl = toAbsoluteUrl(seo?.og_image?.url);
+  const twitterImageUrl = toAbsoluteUrl(seo?.twitter_image?.url) || ogImageUrl;
 
-        {pageData.howItWorks ? (
-          <section className="py-16 md:py-24">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-center mb-12"
-              >
-                {pageData.howItWorks.section_title ? (
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">{pageData.howItWorks.section_title}</h2>
-                ) : null}
-              </motion.div>
-              {pageData.howItWorks.steps && pageData.howItWorks.steps.length > 0 ? (
-                <div className="grid md:grid-cols-3 gap-8">
-                  {pageData.howItWorks.steps.map((step: any, index: number) => (
-                    <motion.div
-                      key={step.id || index}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="text-center"
-                    >
-                      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <span className="text-2xl font-bold text-primary">{index + 1}</span>
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">{step.step_title}</h3>
-                      {step.step_description ? (
-                        <p className="text-muted-foreground">{step.step_description}</p>
-                      ) : null}
-                    </motion.div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
+  return {
+    title,
+    description,
+    keywords: seo?.meta_keywords || undefined,
+    alternates: { canonical },
+    robots: parseRobots(seo?.robots),
+    openGraph: {
+      title: seo?.og_title || title,
+      description: seo?.og_description || description,
+      type: (seo?.og_type as "website" | "article") || "website",
+      url: seo?.og_url || canonical,
+      images: ogImageUrl
+        ? [
+            {
+              url: ogImageUrl,
+              width: seo?.og_image?.width || undefined,
+              height: seo?.og_image?.height || undefined,
+              alt: seo?.og_image?.alternativeText || undefined,
+            },
+          ]
+        : undefined,
+    },
+    twitter: {
+      card: (seo?.twitter_card as "summary" | "summary_large_image") || "summary_large_image",
+      title: seo?.twitter_title || seo?.og_title || title,
+      description: seo?.twitter_description || seo?.og_description || description,
+      images: twitterImageUrl ? [twitterImageUrl] : undefined,
+    },
+  };
+}
 
-        {pageData.cityLinks ? (
-          <section className="py-16 md:py-24 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-center mb-12"
-              >
-                {pageData.cityLinks.section_title ? (
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">{pageData.cityLinks.section_title}</h2>
-                ) : null}
-              </motion.div>
-              {pageData.cityLinks.cities && pageData.cityLinks.cities.length > 0 ? (
-                <div className="grid md:grid-cols-3 gap-4">
-                  {pageData.cityLinks.cities.map((city: any) => (
-                    <Link
-                      key={city.id}
-                      href={city.link || "#"}
-                      className="bg-card p-4 rounded-xl border border-border hover:border-primary transition-colors"
-                    >
-                      {city.city_name}
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
-
-        {pageData.cta ? (
-          <section className="py-16 md:py-24 bg-primary">
-            <div className="container mx-auto px-4 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-              >
-                <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-                  {pageData.cta.headline || "Get Your California Car Shipping Quote"}
-                </h2>
-                {pageData.cta.primary_button ? (
-                  <Button
-                    variant="secondary"
-                    size="xl"
-                    onClick={() => {
-                      if (pageData.cta.primary_button?.button_link) {
-                        window.location.href = pageData.cta.primary_button.button_link;
-                      } else {
-                        window.location.href = "/#quote-form";
-                      }
-                    }}
-                  >
-                    {pageData.cta.primary_button.button_text || "Get Your Free Quote"}
-                  </Button>
-                ) : null}
-              </motion.div>
-            </div>
-          </section>
-        ) : null}
-      </main>
-    </>
-  );
+export default function CaliforniaShippingPage() {
+  return <CaliforniaShippingPageClient />;
 }
 

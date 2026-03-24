@@ -56,6 +56,8 @@ export type {
   HeroSection,
   ProcessSection,
   TestimonialsDisplay,
+  FAQDisplay,
+  CallToAction,
 } from "./LandingPage.types";
 
 /**
@@ -63,10 +65,13 @@ export type {
  */
 export type AutoAuctionShippingContentComponent =
   | import("./LandingPage.types").HeroSection
+  | import("./AboutPage.types").TextSection
   | ServiceList
   | ServiceCards
   | import("./LandingPage.types").ProcessSection
   | import("./LandingPage.types").TestimonialsDisplay
+  | import("./LandingPage.types").FAQDisplay
+  | import("./LandingPage.types").CallToAction
   | AlertWarning;
 
 /**
