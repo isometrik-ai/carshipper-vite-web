@@ -1,28 +1,29 @@
-import { useQuery } from "@tanstack/react-query";
+import { Query, useQuery } from "@tanstack/react-query";
 import type { BlogPageResponse } from "@/types/BlogPage.types";
-import { STRAPI_API_URL } from "@/lib/strapi";
+import { apiRequest } from "@/lib/api-client";
+import { BLOG_QUERY } from "./blog.query.constants";
 
-/**
- * Fetches Blog page data from Strapi with full population
- */
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
 const fetchBlogPage = async (): Promise<BlogPageResponse> => {
-  const response = await fetch(
-    `${STRAPI_API_URL}/api/blog?populate[seo_metadata]=*&populate[seo_metadata][populate][og_image][fields][0]=url&populate[seo_metadata][populate][og_image][fields][1]=alternativeText&populate[seo_metadata][populate][og_image][fields][2]=width&populate[seo_metadata][populate][og_image][fields][3]=height&populate[seo_metadata][populate][twitter_image][fields][0]=url&populate[seo_metadata][populate][twitter_image][fields][1]=alternativeText&populate[seo_metadata][populate][twitter_image][fields][2]=width&populate[seo_metadata][populate][twitter_image][fields][3]=height&populate[page_content][on][shared.blog-hero][populate]=*&populate[page_content][on][shared.blog-categories][populate][categories][populate]=*&populate[page_content][on][shared.newsletter-cta][populate]=*&populate[page_content][on][shared.blog-posts-display][populate]=*&populate[blog_posts][populate][cover][fields][0]=url&populate[blog_posts][populate][cover][fields][1]=alternativeText&populate[blog_posts][populate][cover][fields][2]=width&populate[blog_posts][populate][cover][fields][3]=height`
-  );
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch blog page: ${response.statusText}`);
+  if (!STRAPI_API_URL || !STRAPI_API_URL.startsWith("http")) {
+    throw new Error("Invalid STRAPI_API_URL");
   }
-  
-  return response.json();
+
+  return apiRequest<BlogPageResponse>(`${STRAPI_API_URL}/api/blog${BLOG_QUERY}`, { method: "GET" });
 };
 
-/**
- * React Query hook for fetching Blog page data
- */
 export const useBlogPage = () =>
   useQuery({
     queryKey: ["blog-page"],
     queryFn: fetchBlogPage,
     refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes fresh
+    gcTime: 1000 * 60 * 60, 
+    retry: 2,
+    retryDelay: (i) => Math.min(1000 * 2 ** i, 5000),
+    throwOnError: (error: Error, _query: Query<BlogPageResponse, Error, BlogPageResponse, string[]>) => {
+      console.error("Blog page fetch error:", error);
+      return true;
+    },
   });
