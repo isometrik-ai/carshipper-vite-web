@@ -11,8 +11,24 @@ interface EditAddressDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: "pickup" | "delivery";
-  currentAddress: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
-  onSave: (address: { addLine1: string; addLine2: string; city: string; state: string; zip: string }) => void;
+  currentAddress: {
+    addLine1: string;
+    addLine2: string;
+    city: string;
+    state: string;
+    zip: string;
+    latitude?: number;
+    longitude?: number;
+  };
+  onSave: (address: {
+    addLine1: string;
+    addLine2: string;
+    city: string;
+    state: string;
+    zip: string;
+    latitude?: number;
+    longitude?: number;
+  }) => void;
 }
 
 export function EditAddressDialog({
@@ -25,10 +41,14 @@ export function EditAddressDialog({
   const [addressDisplay, setAddressDisplay] = useState(
     `${currentAddress.addLine1}, ${currentAddress.addLine2 ? `${currentAddress.addLine2}, ` :"" } ${currentAddress.city}, ${currentAddress.state}, ${currentAddress.zip}`
   );
+  /** Parsed from Google Places (or initial quote); must be used on Save — not `currentAddress` props */
+  const [addLine1, setAddLine1] = useState(currentAddress.addLine1);
   const [addLine2, setAddLine2] = useState(currentAddress.addLine2);
   const [city, setCity] = useState(currentAddress.city);
   const [state, setState] = useState(currentAddress.state);
   const [zip, setZip] = useState(currentAddress.zip);
+  const [latitude, setLatitude] = useState<number | undefined>(currentAddress.latitude);
+  const [longitude, setLongitude] = useState<number | undefined>(currentAddress.longitude);
 
   const isAddressComplete = city.trim() !== "" && state.trim() !== "" && zip.trim() !== "";
 
@@ -36,11 +56,13 @@ export function EditAddressDialog({
     if (!isAddressComplete) return;
 
     onSave({
-      addLine1: currentAddress.addLine1,
-      addLine2: currentAddress.addLine2,
-      city: currentAddress.city,
-      state: currentAddress.state,
-      zip,
+      addLine1: addLine1.trim(),
+      addLine2: addLine2.trim(),
+      city: city.trim(),
+      state: state.trim(),
+      zip: zip.trim(),
+      latitude,
+      longitude,
     });
     onOpenChange(false);
   };
@@ -48,12 +70,14 @@ export function EditAddressDialog({
   // Reset state when currentAddress changes
   useEffect(() => {
     setAddressDisplay(`${currentAddress?.addLine1}, ${currentAddress?.addLine2 ?
-      `${currentAddress?.addLine2}, ` :"" }
-      ${currentAddress?.city}, ${currentAddress?.state}, ${currentAddress?.zip}`);
-    setAddLine2(currentAddress?.addLine2);
-    setCity(currentAddress?.city);
-    setState(currentAddress?.state);
-    setZip(currentAddress?.zip);
+      `${currentAddress?.addLine2}, ` :"" }${currentAddress?.city ? `${currentAddress?.city}, ` :"" }${currentAddress?.state ? `${currentAddress?.state}, ` :"" }${currentAddress?.zip ? `${currentAddress?.zip}` :"" }`);
+    setAddLine1(currentAddress?.addLine1 ?? "");
+    setAddLine2(currentAddress?.addLine2 ?? "");
+    setCity(currentAddress?.city ?? "");
+    setState(currentAddress?.state ?? "");
+    setZip(currentAddress?.zip ?? "");
+    setLatitude(currentAddress?.latitude);
+    setLongitude(currentAddress?.longitude);
   }, [currentAddress]);
 
   return (
@@ -105,10 +129,13 @@ export function EditAddressDialog({
                 const display = fullAddress || line1;
 
                 setAddressDisplay(display || line1);
+                setAddLine1(line1);
                 setAddLine2(line2);
                 setCity(nextCity);
                 setState(nextState);
                 setZip(nextZip);
+                setLatitude(formatted?.lat ?? coordinates?.lat);
+                setLongitude(formatted?.long ?? coordinates?.lng);
               }}
             />
             {!isAddressComplete && addressDisplay ? (
