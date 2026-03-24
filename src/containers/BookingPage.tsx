@@ -133,6 +133,19 @@ const mapQuoteDetailsToBookingQuoteData = (
   const pickup = route.pickup ?? {};
   const drop = route.drop ?? {};
   const customerDetails = (quote as any)?.customerDetails ?? {};
+  const toCoordinate = (value: unknown): number | undefined => {
+    if (value === null || value === undefined || value === "") return undefined;
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+  const pickupLatitude =
+    toCoordinate(pickup.lat) ?? toCoordinate(pickup.latitude);
+  const pickupLongitude =
+    toCoordinate(pickup.lng) ?? toCoordinate(pickup.longitude);
+  const dropLatitude =
+    toCoordinate(drop.lat) ?? toCoordinate(drop.latitude);
+  const dropLongitude =
+    toCoordinate(drop.lng) ?? toCoordinate(drop.longitude);
 
   const distanceMiles = route.distance_miles;
   const distance =
@@ -189,8 +202,8 @@ const mapQuoteDetailsToBookingQuoteData = (
       city: pickup.city ?? "",
       state: pickup.state ?? "",
       zip: pickup.zip ?? "",
-      latitude: pickup.lat ?? undefined,
-      longitude: pickup.lng ?? undefined,
+      latitude: pickupLatitude,
+      longitude: pickupLongitude,
     },
     destination: {
       addLine1: drop.addLine1 ?? "",
@@ -198,8 +211,8 @@ const mapQuoteDetailsToBookingQuoteData = (
       city: drop.city ?? "",
       state: drop.state ?? "",
       zip: drop.zip ?? "",
-      latitude: drop.lat ?? undefined,
-      longitude: drop.lng ?? undefined,
+      latitude: dropLatitude,
+      longitude: dropLongitude,
     },
     distance,
     transitTime,
@@ -493,7 +506,9 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         delivery: {
           location_type: normalizeLocationType(formData.deliveryLocationType),
           address: deliveryAddress,
-          // business_info: "3embed", //|| formData.deliveryBusinessName || "",
+          business_info: {
+            name: formData.deliveryBusinessName || fullName || "N/A",
+          },
           contact: {
             name: formData.deliveryContactName || fullName,
             phone: formData.deliveryContactPhone || formData.phone,
@@ -691,7 +706,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     price={price}
                   />
                 )}
-                {currentStep === 1 && (
+                {currentStep === 4 && (
                   <BookShipmentStep
                     formData={formData}
                     updateFormData={updateFormData}

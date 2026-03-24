@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { 
   Calendar, Car, MapPin, Truck, Shield, Package, CheckCircle2, ArrowRight, 
   Phone, User, Pencil, ArrowLeft, ArrowRightIcon, DollarSign, Lock, Clock, Star, Zap,
-  CreditCard
+  CreditCard, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -22,8 +22,24 @@ interface ShippingMethodStepProps {
   quoteData: {
     quoteId: string;
     vehicle: { year: number; make: string; model: string };
-    origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
-    destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
+    origin: {
+      addLine1: string;
+      addLine2: string;
+      city: string;
+      state: string;
+      zip: string;
+      latitude?: number;
+      longitude?: number;
+    };
+    destination: {
+      addLine1: string;
+      addLine2: string;
+      city: string;
+      state: string;
+      zip: string;
+      latitude?: number;
+      longitude?: number;
+    };
     distance: string;
     transitTime: string;
     earliestPickup: string;
@@ -94,10 +110,28 @@ export function ShippingMethodStep({
     operational: true,
     personalItems: "None or less than 100 lbs.",
   }]);
-  const [pickupAddress, setPickupAddress] = useState<AddressState>({ addLine1: quoteData.origin.addLine1, addLine2: quoteData.origin.addLine2, city: quoteData.origin.city, state: quoteData.origin.state, zip: quoteData.origin.zip });
-  const [deliveryAddress, setDeliveryAddress] = useState<AddressState>({ addLine1: quoteData.destination.addLine1, addLine2: quoteData.destination.addLine2, city: quoteData.destination.city, state: quoteData.destination.state, zip: quoteData.destination.zip });
+  const [pickupAddress, setPickupAddress] = useState<AddressState>({
+    addLine1: quoteData.origin.addLine1,
+    addLine2: quoteData.origin.addLine2,
+    city: quoteData.origin.city,
+    state: quoteData.origin.state,
+    zip: quoteData.origin.zip,
+    latitude: quoteData.origin.latitude,
+    longitude: quoteData.origin.longitude,
+  });
+  const [deliveryAddress, setDeliveryAddress] = useState<AddressState>({
+    addLine1: quoteData.destination.addLine1,
+    addLine2: quoteData.destination.addLine2,
+    city: quoteData.destination.city,
+    state: quoteData.destination.state,
+    zip: quoteData.destination.zip,
+    latitude: quoteData.destination.latitude,
+    longitude: quoteData.destination.longitude,
+  });
   const [transportType, setTransportType] = useState<"Open" | "Enclosed">("Open");
   const [currentPrices, setCurrentPrices] = useState<{ saver: number; priority: number; rush: number }>(quoteData.prices);
+  /** Shown over the pricing cards while UpdateQuote (and optional refetch) runs */
+  const [isPricingUpdating, setIsPricingUpdating] = useState(false);
 
   // Initialize pickupDate with fallback to current date if earliestPickup is invalid
 const initialPickupDate = (() => {
@@ -114,6 +148,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
   // Sync local state when quoteData updates from API
   useEffect(() => {
     let isCancelled = false;
+    console.log('quoteData', quoteData)
     if (quoteData.earliestPickup) {
       const parts = quoteData.earliestPickup.split("/").map(Number);
       if (parts.length === 3 && parts.every(n => !isNaN(n))) {
@@ -140,21 +175,16 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
       setCurrentPrices(quoteData.prices);
     }
     return () => { isCancelled = true; };
-    // setVehicles([{
-    //   id: "1",
-    //   year: quoteData.vehicle.year,
-    //   make: quoteData.vehicle.make,
-    //   model: quoteData.vehicle.model,
-    //   type: "SUV",
-    //   operational: true,
-    //   personalItems: "None or less than 100 lbs.",
-    // }]);
-
-    // setPickupAddress(quoteData.origin);
-    // setDeliveryAddress(quoteData.destination);
-    // setTransportType(quoteData.transportType === "Enclosed" ? "Enclosed" : "Open");
-    // setCurrentPrices(quoteData.prices);
-  }, [quoteData?.quoteId]);
+    // Re-sync when the same quote is refetched (e.g. after UpdateQuote) — not only when quoteId changes
+  }, [
+    quoteData?.quoteId,
+    JSON.stringify(quoteData.origin),
+    JSON.stringify(quoteData.destination),
+    JSON.stringify(quoteData.vehicle),
+    quoteData.earliestPickup,
+    quoteData.transportType,
+    JSON.stringify(quoteData.prices),
+  ]);
 
   // Dialog states
   const [dateDialogOpen, setDateDialogOpen] = useState(false);
@@ -171,7 +201,15 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
   const pickupFullAddress = formatFullAddress(pickupAddress as BasicAddress);
   const deliveryFullAddress = formatFullAddress(deliveryAddress as BasicAddress);
 
-  type AddressState = { addLine1: string; addLine2: string; city: string; state: string; zip: string };
+  type AddressState = {
+    addLine1: string;
+    addLine2: string;
+    city: string;
+    state: string;
+    zip: string;
+    latitude?: number;
+    longitude?: number;
+  };
 
   const buildUpdatePayload = (overrides?: {
     pickupAddress?: AddressState;
@@ -183,27 +221,48 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
     const effectiveDelivery = overrides?.deliveryAddress ?? deliveryAddress;
     const effectiveVehicles = overrides?.vehicles ?? vehicles;
     const effectiveTransportType = overrides?.transportType ?? transportType;
+    const parsedDistanceMiles = Number(
+      String(quoteData.distance || "")
+        .replace(/,/g, "")
+        .replace(/[^\d.]/g, "")
+    );
+    const distanceMiles = Number.isFinite(parsedDistanceMiles) ? parsedDistanceMiles : 0;
+    const vehicleIndices = effectiveVehicles.map((_, idx) => idx);
+    const deliveries = [
+      {
+        zip: effectiveDelivery.zip || "",
+        city: effectiveDelivery.city || "",
+        state: effectiveDelivery.state || "",
+        addLine1: effectiveDelivery.addLine1 || "",
+        addLine2: effectiveDelivery.addLine2 || "",
+        country: "USA",
+        latitude: effectiveDelivery.latitude ?? deliveryAddress?.latitude ?? null,
+        longitude: effectiveDelivery.longitude ?? deliveryAddress?.longitude ?? null,
+        distance_miles: distanceMiles,
+        vehicle_indices: vehicleIndices,
+      },
+    ];
 
     return {
     quote_number: quoteData.quoteId,
     pickup_zip: effectivePickup.zip,
     delivery_zip: effectiveDelivery.zip,
-    distance_miles: undefined,
-    transport_type: effectiveTransportType === "Open" ? "Open Transport" : "Enclosed Transport",
+    distance_miles: distanceMiles,
+    transport_type: effectiveTransportType?.includes("Open") ? "Open Transport" : "Enclosed Transport",
     pickup_city: effectivePickup.city,
     pickup_state: effectivePickup.state,
     pickup_addLine1: effectivePickup.addLine1,
     pickup_addLine2: effectivePickup.addLine2,
     pickup_country: "USA",
-    pickup_latitude: undefined,
-    pickup_longitude: undefined,
+    pickup_latitude: effectivePickup.latitude ?? pickupAddress?.latitude ?? null,
+    pickup_longitude: effectivePickup.longitude ?? pickupAddress?.longitude ?? null,
     delivery_city: effectiveDelivery.city,
     delivery_state: effectiveDelivery.state,
     delivery_addLine1: effectiveDelivery.addLine1,
     delivery_addLine2: effectiveDelivery.addLine2,
     delivery_country: "USA",
-    delivery_latitude: undefined,
-    delivery_longitude: undefined,
+    delivery_latitude: effectiveDelivery.latitude ?? deliveryAddress?.latitude ?? null,
+    delivery_longitude: effectiveDelivery.longitude ?? deliveryAddress?.longitude ?? null,
     customer_email: undefined,
     customer_name: undefined,
     customer_first_name: undefined,
@@ -217,6 +276,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
       model: v.model,
       is_running: v.operational,
     })),
+    delivery: deliveries,
     };
   };
 
@@ -226,6 +286,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
     vehicles?: Vehicle[];
     transportType?: "Open" | "Enclosed";
   }) => {
+    setIsPricingUpdating(true);
     try {
       const payload = buildUpdatePayload(overrides);
       await UpdateQuote(payload);
@@ -233,6 +294,8 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
     } catch (error) {
       console.error("Failed to update quote", error);
       toast.error("Unable to update quote. Please try again.");
+    } finally {
+      setIsPricingUpdating(false);
     }
   };
 
@@ -297,14 +360,18 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
   ];
 
   const handleContinue = async () => {
+    setIsPricingUpdating(true);
     try {
       const payload = buildUpdatePayload();
       await UpdateQuote(payload);
+      await getQuoteDetails();
+      setTimeout
     } catch (error) {
       console.error("Failed to update quote", error);
+      toast.error("Unable to update quote. Please try again.");
+    } finally {
+      setIsPricingUpdating(false);
     }
-
-    onNext();
   };
 
   return (
@@ -446,20 +513,32 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
             </div>
           </div>
 
-          {/* Price Options */}
-          <div>
+          {/* Price Options — loader overlays this block while UpdateQuote runs */}
+          <div className="relative min-h-[120px]">
+            {isPricingUpdating && (
+              <div
+                className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl bg-background/70 backdrop-blur-[2px]"
+                aria-busy="true"
+                aria-live="polite"
+              >
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <span className="text-sm font-medium text-muted-foreground">Updating prices…</span>
+              </div>
+            )}
+
             <h3 className="text-xl font-bold text-foreground mb-4">Choose Price Option</h3>
 
             <RadioGroup 
               value={selectedTier} 
               onValueChange={(value) => onTierChange(value as "saver" | "priority" | "rush")}
-              className="space-y-4"
+              className={cn("space-y-4", isPricingUpdating && "pointer-events-none opacity-60")}
+              disabled={isPricingUpdating}
             >
               {tiers.map((tier) => (
                 <motion.div
                   key={tier.id}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
+                  whileHover={{ scale: isPricingUpdating ? 1 : 1.01 }}
+                  whileTap={{ scale: isPricingUpdating ? 1 : 0.99 }}
                 >
                   <Label
                     htmlFor={tier.id}
@@ -482,7 +561,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="text-xl font-bold text-foreground">
-                            ${quoteData.prices[tier.id].toLocaleString()}
+                            ${currentPrices[tier.id].toLocaleString()}
                           </span>
                           <RadioGroupItem value={tier.id} id={tier.id} />
                         </div>
@@ -507,7 +586,12 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
 
           {/* Continue Button */}
           <div className="pt-4">
-            <Button onClick={handleContinue} size="lg" className="w-full gap-2">
+            <Button
+              onClick={onNext}
+              size="lg"
+              className="w-full gap-2"
+              disabled={isPricingUpdating}
+            >
               Continue to Booking Details
               <ArrowRight className="w-4 h-4" />
             </Button>
