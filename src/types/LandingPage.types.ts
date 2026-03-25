@@ -124,6 +124,8 @@ export interface ComparisonSection {
   id: number;
   section_title: string;
   section_subtitle: string | null;
+  // Some Strapi entries expose this field name instead of section_subtitle.
+  section_description?: string | null;
   columns: ComparisonColumn[];
 }
 
