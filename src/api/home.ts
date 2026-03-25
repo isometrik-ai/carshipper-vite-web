@@ -1,3 +1,3 @@
-import { apiGet } from "./client";
+import { apiRequest } from "./client";
 
-export const getHomePageData = () => apiGet("home?populate=*");
+export const getHomePageData = () => apiRequest("home?populate=*");

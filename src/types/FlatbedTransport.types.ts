@@ -79,7 +79,10 @@ export type FlatbedTransportContentComponent =
   | import("./AutoAuctionShipping.types").ServiceCards
   | ComparisonTable
   | PricingInfo
-  | import("./LandingPage.types").FAQDisplay;
+  | import("./LandingPage.types").FAQDisplay
+  | import("./AboutPage.types").TextSection
+  | import("./LandingPage.types").TestimonialsDisplay
+  | import("./LandingPage.types").CallToAction;
 
 /**
  * Flatbed Transport Page Data Structure

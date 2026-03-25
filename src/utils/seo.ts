@@ -1,4 +1,5 @@
 import type { SeoMetadata, PageContentComponent, FAQDisplay, FAQItem } from "@/types/LandingPage.types";
+import type { FAQCategories } from "@/types/FAQ.types";
 
 /** Schema.org context URL - use without trailing slash per spec */
 const SCHEMA_CONTEXT = "https://schema.org";
@@ -151,8 +152,8 @@ export const extractFAQItems = (pageContent: PageContentComponent[] | null | und
     }
 
     const faqCategories = pageContent.find(
-        (c) => c.__component === "shared.faq-categories"
-    ) as { categories?: Array<{ faqs?: FAQItem[] }> } | undefined;
+        (c): c is FAQCategories => c.__component === "shared.faq-categories"
+    );
     if (faqCategories?.categories) {
         faqCategories.categories.forEach((cat) => {
             cat.faqs?.forEach(addIfValid);
@@ -170,9 +171,9 @@ export const generateCorporationSchema = () => {
         "@context": SCHEMA_CONTEXT,
         "@type": "Corporation",
         name: COMPANY_INFO.name,
-        ...(COMPANY_INFO.alternateName && { alternateName: COMPANY_INFO.alternateName }),
+        ...(COMPANY_INFO.alternateName ? { alternateName: COMPANY_INFO.alternateName } : {}),
         url: COMPANY_INFO.url,
-        ...(COMPANY_INFO.logo && { logo: COMPANY_INFO.logo }),
+        ...(COMPANY_INFO.logo ? { logo: COMPANY_INFO.logo } : {}),
         contactPoint: {
             "@type": "ContactPoint",
             telephone: COMPANY_INFO.telephone,

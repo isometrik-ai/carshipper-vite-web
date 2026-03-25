@@ -17,7 +17,9 @@ export type RentalCarLogisticsContentComponent =
   | import("./LandingPage.types").HeroSection
   | import("./LandingPage.types").ProcessSection
   | import("./LandingPage.types").FAQDisplay
-  | import("./LandingPage.types").CallToAction;
+  | import("./LandingPage.types").CallToAction
+  | import("./AboutPage.types").TextSection
+  | import("./AutoAuctionShipping.types").ServiceCards;
 
 /**
  * Rental Car Logistics Page Data Structure

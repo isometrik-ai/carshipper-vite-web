@@ -15,7 +15,10 @@ export type {
 export type FleetTransportContentComponent =
   | import("./LandingPage.types").HeroSection
   | import("./LandingPage.types").ProcessSection
-  | import("./LandingPage.types").CallToAction;
+  | import("./LandingPage.types").CallToAction
+  | import("./AboutPage.types").TextSection
+  | import("./AutoAuctionShipping.types").ServiceCards
+  | import("./LandingPage.types").FAQDisplay;
 
 /**
  * Fleet Transport Page Data Structure
