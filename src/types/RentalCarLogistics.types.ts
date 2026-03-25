@@ -10,11 +10,21 @@ export type {
   CallToAction,
 } from "./LandingPage.types";
 
+export type {
+  TextSection,
+} from "./AboutPage.types";
+
+export type {
+  ServiceCards,
+} from "./AutoAuctionShipping.types";
+
 /**
  * Rental Car Logistics Page Content Component Types
  */
 export type RentalCarLogisticsContentComponent =
   | import("./LandingPage.types").HeroSection
+  | import("./AboutPage.types").TextSection
+  | import("./AutoAuctionShipping.types").ServiceCards
   | import("./LandingPage.types").ProcessSection
   | import("./LandingPage.types").FAQDisplay
   | import("./LandingPage.types").CallToAction;
