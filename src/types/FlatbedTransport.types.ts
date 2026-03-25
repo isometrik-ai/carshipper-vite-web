@@ -65,21 +65,30 @@ export interface PricingInfo {
 export type {
   HeroSection,
   FAQDisplay,
+  CallToAction,
+  TestimonialsDisplay,
 } from "./LandingPage.types";
 
 export type {
   ServiceCards,
 } from "./AutoAuctionShipping.types";
 
+export type {
+  TextSection,
+} from "./AboutPage.types";
+
 /**
  * Flatbed Transport Page Content Component Types
  */
 export type FlatbedTransportContentComponent =
   | import("./LandingPage.types").HeroSection
+  | import("./AboutPage.types").TextSection
   | import("./AutoAuctionShipping.types").ServiceCards
+  | import("./LandingPage.types").TestimonialsDisplay
   | ComparisonTable
   | PricingInfo
-  | import("./LandingPage.types").FAQDisplay;
+  | import("./LandingPage.types").FAQDisplay
+  | import("./LandingPage.types").CallToAction;
 
 /**
  * Flatbed Transport Page Data Structure
