@@ -1,5 +1,71 @@
 /** @type {import('next').NextConfig} */
 const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://5.161.218.11:7008';
+/** Strapi API base (dev/staging/prod) — used for app + image remotePatterns */
+const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+/** Optional: production Strapi origin if it differs from NEXT_PUBLIC_STRAPI_API_URL in some builds */
+const strapiProductionUrl = process.env.NEXT_PUBLIC_STRAPI_PRODUCTION_URL;
+const gumletHost = process.env.NEXT_PUBLIC_GUMLET_HOST || process.env.NEXT_PUBLIC_GUMLET_CDN_HOST;
+
+function toRemotePattern(urlString) {
+  if (!urlString) return null;
+  try {
+    const u = new URL(urlString);
+    return {
+      protocol: u.protocol.replace(":", ""),
+      hostname: u.hostname,
+      port: u.port || "",
+      pathname: "/**",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function toRemotePatternFromHost(hostString) {
+  if (!hostString) return null;
+  try {
+    const u = new URL(hostString.startsWith("http") ? hostString : `https://${hostString}`);
+    return {
+      protocol: u.protocol.replace(":", ""),
+      hostname: u.hostname,
+      port: u.port || "",
+      pathname: "/**",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function dedupeRemotePatterns(patterns) {
+  const seen = new Set();
+  return patterns.filter((p) => {
+    if (!p) return false;
+    const key = `${p.protocol}://${p.hostname}:${p.port || ""}${p.pathname}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/** Allow Next/Image for Strapi (env + optional prod), Gumlet, and local Strapi dev */
+const remotePatterns = dedupeRemotePatterns([
+  toRemotePattern(strapiUrl),
+  toRemotePattern(strapiProductionUrl),
+  toRemotePatternFromHost(gumletHost),
+  // Local Strapi (no env required for dev)
+  {
+    protocol: "http",
+    hostname: "localhost",
+    port: "1337",
+    pathname: "/uploads/**",
+  },
+  {
+    protocol: "https",
+    hostname: "localhost",
+    port: "1337",
+    pathname: "/uploads/**",
+  },
+]);
 const securityHeaders = [
   {
     key: 'X-Content-Type-Options',
@@ -70,17 +136,14 @@ const nextConfig = {
     // Temporarily ignore ESLint errors during build
     ignoreDuringBuilds: true,
   },
-  // images: {
-  //   domains: ['localhost'],
-  //   remotePatterns: [
-  //     {
-  //       protocol: 'http',
-  //       hostname: 'localhost',
-  //       port: '1337',
-  //       pathname: '/uploads/**',
-  //     },
-  //   ],
-  // },
+  images: {
+    formats: ["image/avif", "image/webp"],
+    /** Viewport widths for `sizes` / `fill` srcset (mobile → desktop) */
+    deviceSizes: [640, 750, 828, 1080, 1200, 1280, 1920, 2048, 3840],
+    /** Fixed layout / icon breakpoints */
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    remotePatterns,
+  },
   // Keep existing path alias support
   webpack: (config) => {
     config.resolve.alias = {

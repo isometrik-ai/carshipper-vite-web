@@ -8,7 +8,8 @@ import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useBlogPage } from "@/api/blog";
 import { getStrapiMediaUrl } from "@/lib/strapi";
-import { Search, Calendar, Clock, ArrowRight, Tag } from "lucide-react";
+import GumletImage from "@/components/media/GumletImage";
+import { Search, Calendar, ArrowRight, Tag } from "lucide-react";
 import Link from "next/link";
 
 const formatDate = (dateString: string | null | undefined): string => {
@@ -163,52 +164,65 @@ export default function Blog() {
           <div className="container mx-auto px-4">
             {filteredPosts.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredPosts.map((post: any, index: number) => (
-                  <motion.article
-                    key={post.id || index}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg transition-shadow"
-                  >
-                    {post.featured_image ? (
+                {filteredPosts.map((post: any, index: number) => {
+                  const featuredSrc = post.featured_image
+                    ? getStrapiMediaUrl(
+                        typeof post.featured_image === "string"
+                          ? post.featured_image
+                          : post.featured_image?.url
+                      )
+                    : null;
+
+                  return (
+                    <motion.article
+                      key={post.id || index}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg transition-shadow"
+                    >
+                    {featuredSrc ? (
                       <div className="aspect-video bg-muted relative">
-                        <img
-                          src={getStrapiMediaUrl(post.featured_image)}
+                        <GumletImage
+                          src={featuredSrc}
                           alt={post.title || "Blog post"}
-                          className="w-full h-full object-cover"
+                          fill
+                          priority={index < 3}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover"
                         />
                       </div>
                     ) : null}
-                    <div className="p-6">
-                      {post.category ? (
-                        <div className="flex items-center gap-2 mb-3">
-                          <Tag className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">{post.category}</span>
-                        </div>
-                      ) : null}
-                      <h2 className="text-xl font-bold mb-2">{post.title}</h2>
-                      {post.excerpt ? (
-                        <p className="text-muted-foreground mb-4 line-clamp-3">{post.excerpt}</p>
-                      ) : null}
-                      <div className="flex items-center justify-between">
-                        {post.published_at ? (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="w-4 h-4" />
-                            <span>{formatDate(post.published_at)}</span>
+                      <div className="p-6">
+                        {post.category ? (
+                          <div className="flex items-center gap-2 mb-3">
+                            <Tag className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{post.category}</span>
                           </div>
                         ) : null}
-                        <Link href={`/blog/${post.slug || post.id}`}>
-                          <Button variant="ghost" size="sm">
-                            Read More
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                          </Button>
-                        </Link>
+                        <h2 className="text-xl font-bold mb-2">{post.title}</h2>
+                        {post.excerpt ? (
+                          <p className="text-muted-foreground mb-4 line-clamp-3">{post.excerpt}</p>
+                        ) : null}
+                        <div className="flex items-center justify-between">
+                          {post.published_at ? (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Calendar className="w-4 h-4" />
+                              <span>{formatDate(post.published_at)}</span>
+                            </div>
+                          ) : null}
+                          <Link href={`/blog/${post.slug || post.id}`}>
+                            <Button variant="ghost" size="sm">
+                              Read More
+                              <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-                  </motion.article>
-                ))}
+                    </motion.article>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-12">
