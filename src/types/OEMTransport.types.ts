@@ -12,6 +12,7 @@ export type {
 
 export type {
   FeatureListSection,
+  TextSection,
 } from "./AboutPage.types";
 
 export type {
@@ -24,6 +25,7 @@ export type {
 export type OEMTransportContentComponent =
   | import("./LandingPage.types").HeroSection
   | import("./AboutPage.types").FeatureListSection
+  | import("./AboutPage.types").TextSection
   | import("./LandingPage.types").StatsBar
   | import("./AutoAuctionShipping.types").ServiceCards
   | import("./LandingPage.types").FAQDisplay
