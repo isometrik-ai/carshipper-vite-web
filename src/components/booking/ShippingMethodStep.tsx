@@ -196,7 +196,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
       setVehicles(mappedVehicles);
       setPickupAddress(quoteData.origin);
       setDeliveryAddress(quoteData.destination);
-      setTransportType(quoteData.transportType === "Enclosed" ? "Enclosed" : "Open");
+      setTransportType(quoteData.transportType?.includes("Enclosed") ? "Enclosed" : "Open");
       setCurrentPrices(quoteData.prices);
     }
     return () => { isCancelled = true; };
