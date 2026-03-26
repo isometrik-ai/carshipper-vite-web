@@ -5,6 +5,7 @@ import { getIcon, DEFAULT_ICON } from "@/lib/icons";
 import { getStrapiMediaUrl } from "@/lib/strapi";
 import type { HeroSection as HeroSectionType } from "@/types/LandingPage.types";
 import type { LucideIcon } from "lucide-react";
+import GumletImage from "@/components/media/GumletImage";
 
 interface HeroSectionProps {
   data?: HeroSectionType;
@@ -44,7 +45,9 @@ const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
   // Get background image URL
   const backgroundImageUrl = useMemo(() => {
     if (heroData.backgroundImage?.url) {
-      return getStrapiMediaUrl(heroData.backgroundImage.url);
+      const url = getStrapiMediaUrl(heroData.backgroundImage.url);
+      // Optional: add validation or allowlist check here
+      return url;
     }
     return null;
   }, [heroData.backgroundImage]);
@@ -57,21 +60,18 @@ const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
       {/* Background Image - Only show for quote form variant */}
       {showQuoteForm ? (
         <>
-          {backgroundImageUrl ? (
-            <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${backgroundImageUrl})` }}
-              role="img"
-              aria-label={heroData.backgroundImage?.alternativeText || "Car shipping background"}
-            />
-          ) : (
-            <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(/hero-bg.jpg)` }}
-              role="img"
-              aria-label="Car shipping background"
-            />
-          )}
+          <div className="absolute inset-0">
+            <div className="relative h-full w-full">
+              <GumletImage
+                src={backgroundImageUrl || "/hero-bg.jpg"}
+                alt={heroData.backgroundImage?.alternativeText || "Car shipping background"}
+                fill
+                priority
+                sizes="100vw"
+                style={{ objectFit: "cover", objectPosition: "center" }}
+              />
+            </div>
+          </div>
           
           {/* Overlay Gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/85 to-primary/70" aria-hidden="true" />
