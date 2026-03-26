@@ -45,7 +45,9 @@ const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
   // Get background image URL
   const backgroundImageUrl = useMemo(() => {
     if (heroData.backgroundImage?.url) {
-      return getStrapiMediaUrl(heroData.backgroundImage.url);
+      const url = getStrapiMediaUrl(heroData.backgroundImage.url);
+      // Optional: add validation or allowlist check here
+      return url;
     }
     return null;
   }, [heroData.backgroundImage]);

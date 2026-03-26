@@ -165,13 +165,12 @@ export default function Blog() {
             {filteredPosts.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredPosts.map((post: any, index: number) => {
-                  const featuredSrc = post.featured_image
-                    ? getStrapiMediaUrl(
-                        typeof post.featured_image === "string"
-                          ? post.featured_image
-                          : post.featured_image?.url
-                      )
-                    : null;
+                const featuredSrc = post.featured_image
+                ? typeof post.featured_image === "string" ?
+                getStrapiMediaUrl(post.featured_image) : 
+                (post.featured_image?.url ? 
+                getStrapiMediaUrl(post.featured_image.url) : null)
+                : null;
 
                   return (
                     <motion.article
