@@ -1,4 +1,5 @@
 import type { SeoMetadata } from "./LandingPage.types";
+import type { SharedTransportContentComponent } from "./SharedTransport.types";
 
 /**
  * Re-export types from LandingPage for reuse
@@ -14,12 +15,8 @@ export type {
  * Rental Car Logistics Page Content Component Types
  */
 export type RentalCarLogisticsContentComponent =
-  | import("./LandingPage.types").HeroSection
-  | import("./LandingPage.types").ProcessSection
-  | import("./LandingPage.types").FAQDisplay
-  | import("./LandingPage.types").CallToAction
-  | import("./AboutPage.types").TextSection
-  | import("./AutoAuctionShipping.types").ServiceCards;
+  | SharedTransportContentComponent
+  | import("./LandingPage.types").ProcessSection;
 
 /**
  * Rental Car Logistics Page Data Structure

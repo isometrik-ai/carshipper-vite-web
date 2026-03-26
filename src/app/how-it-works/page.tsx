@@ -134,7 +134,7 @@ export default function HowItWorksPage() {
                   className="text-center mb-12"
                 >
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    {comparisonSection.section_title}
+                    {comparisonSection?.section_title}
                   </h2>
                   {comparisonSection?.section_description ? (
                     <p className="text-muted-foreground">

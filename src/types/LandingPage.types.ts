@@ -121,8 +121,10 @@ export interface ComparisonColumn {
   features: ComparisonFeature[];
 }
 
+export type SectionDescription = string | null;
+
 export interface ComparisonSection {
-  section_description: any;
+  section_description: SectionDescription;
   __component: "shared.comparison-section";
   id: number;
   section_title: string;

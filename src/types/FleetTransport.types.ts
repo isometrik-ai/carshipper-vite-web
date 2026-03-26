@@ -1,4 +1,5 @@
 import type { SeoMetadata } from "./LandingPage.types";
+import type { SharedTransportContentComponent } from "./SharedTransport.types";
 
 /**
  * Re-export types from LandingPage for reuse
@@ -13,12 +14,8 @@ export type {
  * Fleet Transport Page Content Component Types
  */
 export type FleetTransportContentComponent =
-  | import("./LandingPage.types").HeroSection
-  | import("./LandingPage.types").ProcessSection
-  | import("./LandingPage.types").CallToAction
-  | import("./AboutPage.types").TextSection
-  | import("./AutoAuctionShipping.types").ServiceCards
-  | import("./LandingPage.types").FAQDisplay;
+  | SharedTransportContentComponent
+  | import("./LandingPage.types").ProcessSection;
 
 /**
  * Fleet Transport Page Data Structure
