@@ -7,9 +7,9 @@ const strapiProductionUrl = process.env.NEXT_PUBLIC_STRAPI_PRODUCTION_URL;
 const gumletHost = process.env.NEXT_PUBLIC_GUMLET_HOST || process.env.NEXT_PUBLIC_GUMLET_CDN_HOST;
 
 const remotePatterns = dedupeRemotePatterns([
-  toRemotePattern(strapiUrl),
-  toRemotePattern(strapiProductionUrl),
-  toRemotePatternFromHost(gumletHost),
+  ...(strapiUrl ? [toRemotePattern(strapiUrl)] : []),
+  ...(strapiProductionUrl ? [toRemotePattern(strapiProductionUrl)] : []),
+  ...(gumletHost ? [toRemotePatternFromHost(gumletHost)] : []),
   { protocol: "http", hostname: "localhost", port: "1337", pathname: "/uploads/**" },
   { protocol: "https", hostname: "localhost", port: "1337", pathname: "/uploads/**" },
 ]);

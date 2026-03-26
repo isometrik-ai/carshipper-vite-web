@@ -64,9 +64,13 @@ export function buildGumletUrl(params) {
     if (!src.startsWith(origin)) return src;
   }
 
+  // Validate width and quality to be positive integers
+  const validatedWidth = Number.isInteger(width) && width > 0 ? width : 75;
+  const validatedQuality = Number.isInteger(quality) && quality > 0 ? quality : 75;
+
   const out = new URL(`${gumletBase}${srcUrl.pathname}`);
-  out.searchParams.set("w", String(width));
-  out.searchParams.set("q", String(quality ?? 75));
+  out.searchParams.set("w", String(validatedWidth));
+  out.searchParams.set("q", String(validatedQuality));
   out.searchParams.set("auto", "format");
   return out.toString();
 }
