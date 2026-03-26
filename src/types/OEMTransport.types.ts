@@ -1,4 +1,5 @@
 import type { SeoMetadata } from "./LandingPage.types";
+import type { TransportWithStatsContentComponent } from "./SharedTransport.types";
 
 /**
  * Re-export types from LandingPage and other pages for reuse
@@ -23,13 +24,8 @@ export type {
  * OEM Transport Page Content Component Types
  */
 export type OEMTransportContentComponent =
-  | import("./LandingPage.types").HeroSection
-  | import("./AboutPage.types").FeatureListSection
-  | import("./AboutPage.types").TextSection
-  | import("./LandingPage.types").StatsBar
-  | import("./AutoAuctionShipping.types").ServiceCards
-  | import("./LandingPage.types").FAQDisplay
-  | import("./LandingPage.types").CallToAction;
+  | TransportWithStatsContentComponent
+  | import("./AboutPage.types").FeatureListSection;
 
 /**
  * OEM Transport Page Data Structure

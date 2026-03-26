@@ -1,4 +1,5 @@
 import type { SeoMetadata } from "./LandingPage.types";
+import type { TransportWithComparisonContentComponent } from "./SharedTransport.types";
 
 /**
  * Vehicle Type Item Component
@@ -68,15 +69,9 @@ export type {
  * Enclosed Transport Page Content Component Types
  */
 export type EnclosedTransportContentComponent =
-  | import("./LandingPage.types").HeroSection
-  | import("./AboutPage.types").TextSection
+  | TransportWithComparisonContentComponent
   | VehicleTypesGrid
-  | import("./AutoAuctionShipping.types").ServiceCards
-  | import("./LandingPage.types").ComparisonSection
-  | TrailerTypes
-  | import("./LandingPage.types").TestimonialsDisplay
-  | import("./LandingPage.types").FAQDisplay
-  | import("./LandingPage.types").CallToAction;
+  | TrailerTypes;
 
 /**
  * Enclosed Transport Page Data Structure

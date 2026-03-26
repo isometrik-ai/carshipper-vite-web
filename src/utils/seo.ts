@@ -1,4 +1,11 @@
-import type { SeoMetadata, PageContentComponent, FAQDisplay, FAQItem } from "@/types/LandingPage.types";
+import type {
+    SeoMetadata,
+    PageContentComponent,
+    FAQDisplay,
+    FAQItem,
+    SectionDescription,
+} from "@/types/LandingPage.types";
+import type { FAQCategories } from "@/types/FAQ.types";
 
 /** Schema.org context URL - use without trailing slash per spec */
 const SCHEMA_CONTEXT = "https://schema.org";
@@ -6,7 +13,7 @@ const SCHEMA_CONTEXT = "https://schema.org";
 /**
  * Strips HTML tags and normalizes whitespace for schema.org plain-text fields
  */
-const stripHtml = (text: string): string => {
+const stripHtml = (text: SectionDescription): string => {
     if (!text || typeof text !== "string") return "";
     return text
         .replace(/<[^>]*>/g, " ")
@@ -151,8 +158,8 @@ export const extractFAQItems = (pageContent: PageContentComponent[] | null | und
     }
 
     const faqCategories = pageContent.find(
-        (c) => c.__component === "shared.faq-categories"
-    ) as { categories?: Array<{ faqs?: FAQItem[] }> } | undefined;
+        (c): c is FAQCategories => c.__component === "shared.faq-categories"
+    );
     if (faqCategories?.categories) {
         faqCategories.categories.forEach((cat) => {
             cat.faqs?.forEach(addIfValid);
@@ -170,9 +177,9 @@ export const generateCorporationSchema = () => {
         "@context": SCHEMA_CONTEXT,
         "@type": "Corporation",
         name: COMPANY_INFO.name,
-        ...(COMPANY_INFO.alternateName && { alternateName: COMPANY_INFO.alternateName }),
+        ...(COMPANY_INFO.alternateName ? { alternateName: COMPANY_INFO.alternateName } : {}),
+        ...(COMPANY_INFO.logo ? { logo: COMPANY_INFO.logo } : {}), // Explicit truthiness check
         url: COMPANY_INFO.url,
-        ...(COMPANY_INFO.logo && { logo: COMPANY_INFO.logo }),
         contactPoint: {
             "@type": "ContactPoint",
             telephone: COMPANY_INFO.telephone,
@@ -264,9 +271,10 @@ export const generateStructuredDataSchemas = (
     if (!isMainPage && seoMetadata) {
         const pageTitle = seoMetadata.meta_title || DEFAULT_SEO.title;
         const pageDescription = seoMetadata.meta_description || DEFAULT_SEO.description;
-        const pageUrl =
-            seoMetadata.canonical_url ??
-            (typeof window !== "undefined" ? `${baseUrl}${window.location.pathname}` : DEFAULT_SEO.canonical);
+        const pageUrl = seoMetadata.canonical_url || 
+        (typeof window !== "undefined" ? 
+            `${baseUrl}${window.location.pathname}` : DEFAULT_SEO.canonical); // Use logical OR to fallback on empty string
+
         const rawImage = seoMetadata.og_image?.url;
         const imageUrl = rawImage
             ? rawImage.startsWith("http")

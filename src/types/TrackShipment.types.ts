@@ -52,10 +52,12 @@ export interface TrackingStepsSection {
  */
 export type {
   HeroSection,
-  ServiceCards,
   CallToAction,
 } from "./LandingPage.types";
 
+export type {
+  ServiceCards,
+} from "./AutoAuctionShipping.types";
 /**
  * Track Shipment Page Content Component Types
  */
@@ -63,7 +65,7 @@ export type TrackShipmentContentComponent =
   | import("./LandingPage.types").HeroSection
   | TrackingForm
   | TrackingStepsSection
-  | import("./LandingPage.types").ServiceCards
+  | import("./AutoAuctionShipping.types").ServiceCards
   | import("./LandingPage.types").CallToAction;
 
 /**

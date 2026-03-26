@@ -1,4 +1,6 @@
 import type { SeoMetadata } from "./LandingPage.types";
+import type { SharedTransportContentComponent } from "./SharedTransport.types";
+import type { TestimonialsDisplay } from "./LandingPage.types";
 
 /**
  * Safety Info Section Statistics Item
@@ -44,13 +46,9 @@ export type {
  * Open Transport Page Content Component Types
  */
 export type OpenTransportContentComponent =
-  | import("./LandingPage.types").HeroSection
-  | import("./AboutPage.types").TextSection
-  | import("./AutoAuctionShipping.types").ServiceCards
+  | SharedTransportContentComponent
   | SafetyInfoSection
-  | import("./LandingPage.types").TestimonialsDisplay
-  | import("./LandingPage.types").FAQDisplay
-  | import("./LandingPage.types").CallToAction;
+  | TestimonialsDisplay;
 
 /**
  * Open Transport Page Data Structure

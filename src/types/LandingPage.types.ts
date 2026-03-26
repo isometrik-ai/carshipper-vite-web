@@ -1,3 +1,5 @@
+import type { FAQCategories } from "./FAQ.types";
+
 export interface SeoMetadata {
   id: number;
   meta_title: string | null;
@@ -119,7 +121,10 @@ export interface ComparisonColumn {
   features: ComparisonFeature[];
 }
 
+export type SectionDescription = string | null;
+
 export interface ComparisonSection {
+  section_description: SectionDescription;
   __component: "shared.comparison-section";
   id: number;
   section_title: string;
@@ -233,6 +238,7 @@ export type PageContentComponent =
   | PricingDisplay
   | TestimonialsDisplay
   | FAQDisplay
+  | FAQCategories
   | CallToAction;
 
 export interface LandingPageData {

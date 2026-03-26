@@ -1,4 +1,6 @@
 import type { SeoMetadata } from "./LandingPage.types";
+import type { SharedTransportContentComponent } from "./SharedTransport.types";
+import type { TestimonialsDisplay } from "./LandingPage.types";
 
 /**
  * Comparison Table Header Component
@@ -75,11 +77,10 @@ export type {
  * Flatbed Transport Page Content Component Types
  */
 export type FlatbedTransportContentComponent =
-  | import("./LandingPage.types").HeroSection
-  | import("./AutoAuctionShipping.types").ServiceCards
+  | SharedTransportContentComponent
   | ComparisonTable
   | PricingInfo
-  | import("./LandingPage.types").FAQDisplay;
+  | TestimonialsDisplay;
 
 /**
  * Flatbed Transport Page Data Structure
