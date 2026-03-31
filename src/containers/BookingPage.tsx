@@ -409,7 +409,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       }
 
       const routePickup: any = quote.route?.pickup ?? {};
-      const routeDrop: any = quote.route?.drop ?? {};
+      const routeDrop: any = quote.route?.deliveries?.[0] ?? {};
 
       const vehicleFromQuote: any[] = Array.isArray(quote.vehicle)
         ? quote.vehicle
@@ -470,8 +470,8 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         zip: formData.deliveryZip || routeDrop.zip || "",
         addLine1: formData.deliveryAddress || routeDrop.addLine1 || "",
         addLine2: "",
-        latitude: routeDrop.lat ?? routeDrop.latitude ?? null,
-        longitude: routeDrop.lng ?? routeDrop.longitude ?? null,
+        latitude: routeDrop.lat || routeDrop.latitude || null,
+        longitude: routeDrop.lng || routeDrop.longitude || null,
         // full: formatFullAddress({
         //   addLine1: formData.deliveryAddress || routeDrop.addLine1 || "",
         //   addLine2: "",
@@ -516,6 +516,9 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       const resolvedEarliestPickupDate =
         earliestPickupDateFromForm || earliestPickupDateFromQuote || null;
 
+      const stripPhoneHyphens = (value?: string) =>
+        (value || "").replace(/-/g, "").trim();
+
       // Normalize transport type to simple backend-friendly values: "open" or "enclosed"
       const rawTransportType =
         quote.transport_type ||
@@ -559,9 +562,11 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
           },
           contact: {
             name: formData.pickupContactName || fullName,
-            phone: formData.pickupContactPhone || formData.phone,
+            phone: stripPhoneHyphens(
+              formData.pickupContactPhone || formData.phone
+            ),
             ...(formData.pickupBackupPhone?.trim()
-              ? { backup_phone: formData.pickupBackupPhone.trim() }
+              ? { backup_phone: stripPhoneHyphens(formData.pickupBackupPhone) }
               : {}),
             ...(formData.email?.trim() ? { email: formData.email.trim() } : {}),
             ...(formData.pickupNotes?.trim()
@@ -578,9 +583,13 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
           },
           contact: {
             name: formData.deliveryContactName || fullName,
-            phone: formData.deliveryContactPhone || formData.phone,
+            phone: stripPhoneHyphens(
+              formData.deliveryContactPhone || formData.phone
+            ),
             ...(formData.deliveryBackupPhone?.trim()
-              ? { backup_phone: formData.deliveryBackupPhone.trim() }
+              ? {
+                  backup_phone: stripPhoneHyphens(formData.deliveryBackupPhone),
+                }
               : {}),
             ...(formData.email?.trim() ? { email: formData.email.trim() } : {}),
             ...(formData.deliveryNotes?.trim()
@@ -610,7 +619,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
           first_name: customerFirstName,
           last_name: customerLastName,
           email: customerEmail,
-          phone: customerPhone,
+          phone: stripPhoneHyphens(customerPhone),
           company_name:
             formData.pickupBusinessName || formData.deliveryBusinessName || "",
           account_type: "business"//hasCompany ? "business" : "personal",
