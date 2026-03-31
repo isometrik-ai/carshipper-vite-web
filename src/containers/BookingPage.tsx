@@ -141,7 +141,7 @@ const mapQuoteDetailsToBookingQuoteData = (
 
   const route = quote.route ?? {};
   const pickup = route.pickup ?? {};
-  const drop = route.drop ?? {};
+  const drop = route.deliveries?.[0] ?? {};
   const customerDetails = (quote as any)?.customerDetails ?? {};
   const toCoordinate = (value: unknown): number | undefined => {
     if (value === null || value === undefined || value === "") return undefined;
