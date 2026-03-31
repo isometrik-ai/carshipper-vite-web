@@ -28,9 +28,9 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   compress: true,
-  async rewrites() {
-    return [{ source: "/api/backend/:path*", destination: `${backendUrl}/:path*` }];
-  },
+  // async rewrites() {
+  //   return [{ source: "/api/backend/:path*", destination: `${backendUrl}/:path*` }];
+  // },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
