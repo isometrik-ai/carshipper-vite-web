@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import QuoteForm from "@/components/QuoteForm";
+import dynamicImport from "next/dynamic";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useHeavyHauling } from "@/api/heavyHauling";
@@ -14,6 +14,11 @@ import type { ServiceList, ServiceCards, AlertWarning } from "@/types/AutoAuctio
 import type { TrailerTypes } from "@/types/EnclosedTransport.types";
 
 export const dynamic = 'force-dynamic';
+
+const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
+  ssr: false,
+  loading: () => <PageSkeleton />,
+});
 
 export default function HeavyHauling() {
   const { data, isLoading } = useHeavyHauling();

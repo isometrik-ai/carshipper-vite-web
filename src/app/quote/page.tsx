@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import QuoteForm from "@/components/QuoteForm";
+import dynamicImport from "next/dynamic";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useQuote } from "@/api/quote";
@@ -15,6 +15,11 @@ import type { SectionIntro, ComparisonTable, SimpleStepsSection } from "@/types/
 import type { PricingFactorsSection } from "@/types/Pricing.types";
 
 export const dynamic = 'force-dynamic';
+
+const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
+  ssr: false,
+  loading: () => <PageSkeleton />,
+});
 
 export default function Quote() {
   const { data, isLoading } = useQuote();

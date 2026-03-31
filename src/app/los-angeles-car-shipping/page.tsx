@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import QuoteForm from "@/components/QuoteForm";
+import dynamicImport from "next/dynamic";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useLosAngelesShipping } from "@/api/losAngelesShipping";
@@ -17,6 +17,11 @@ import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
 import type { NeighborhoodsSection, RelatedPagesSection } from "@/types/LosAngelesShipping.types";
 
 export const dynamic = 'force-dynamic';
+
+const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
+  ssr: false,
+  loading: () => <PageSkeleton />,
+});
 
 export default function LosAngelesShipping() {
   const { data, isLoading } = useLosAngelesShipping();

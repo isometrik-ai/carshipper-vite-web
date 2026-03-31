@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import QuoteForm from "@/components/QuoteForm";
+import dynamicImport from "next/dynamic";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useDealershipDelivery } from "@/api/dealershipDelivery";
 import { getIcon } from "@/lib/icons";
@@ -12,6 +12,11 @@ import { ArrowRight } from "lucide-react";
 import type { HeroSection, FAQDisplay, CallToAction } from "@/types/LandingPage.types";
 import type { TextSection } from "@/types/AboutPage.types";
 import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
+
+const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
+  ssr: false,
+  loading: () => <PageSkeleton />,
+});
 
 export default function DealershipDeliveryPageClient() {
   const { data, isLoading } = useDealershipDelivery();

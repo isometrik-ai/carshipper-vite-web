@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import QuoteForm from "@/components/QuoteForm";
+import dynamicImport from "next/dynamic";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useOpenTransport } from "@/api/openTransport";
 import { getIcon } from "@/lib/icons";
@@ -13,6 +13,11 @@ import type { HeroSection, FAQDisplay, CallToAction, TestimonialsDisplay } from 
 import type { TextSection } from "@/types/AboutPage.types";
 import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
 import type { SafetyInfoSection } from "@/types/OpenTransport.types";
+
+const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
+  ssr: false,
+  loading: () => <PageSkeleton />,
+});
 
 export default function OpenTransportPageClient() {
   const { data, isLoading } = useOpenTransport();

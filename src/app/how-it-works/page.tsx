@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
+import dynamicImport from "next/dynamic";
 import { Phone } from "lucide-react";
 import Link from "next/link";
 import ProcessStepsSection from "@/components/sections/ProcessStepsSection";
@@ -10,11 +11,15 @@ import type { LucideIcon } from "lucide-react";
 import { useHowItWorks } from "@/api/howItWorks";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import QuoteForm from "@/components/QuoteForm";
 import { Button } from "@/components/ui/button";
 
 // Force dynamic rendering (no static generation)
 export const dynamic = 'force-dynamic';
+
+const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
+  ssr: false,
+  loading: () => <PageSkeleton />,
+});
 
 /**
  * How It Works page component
