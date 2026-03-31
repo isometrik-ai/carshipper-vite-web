@@ -30,6 +30,8 @@ export interface BookingFormData {
   cardholderName: string;
   // Pickup Details
   pickupAddress: string;
+  pickupLatitude?: number;
+  pickupLongitude?: number;
   pickupCity: string;
   pickupState: string;
   pickupZip: string;
@@ -48,6 +50,8 @@ export interface BookingFormData {
   pickupWillBePresent: boolean;
   // Delivery Details
   deliveryAddress: string;
+  deliveryLatitude?: number;
+  deliveryLongitude?: number;
   deliveryCity: string;
   deliveryState: string;
   deliveryZip: string;
@@ -71,6 +75,8 @@ const initialFormData: BookingFormData = {
   stripePaymentMethodId: "",
   cardholderName: "",
   pickupAddress: "",
+  pickupLatitude: undefined,
+  pickupLongitude: undefined,
   pickupCity: "Beverly Hills",
   pickupState: "CA",
   pickupZip: "90210",
@@ -88,6 +94,8 @@ const initialFormData: BookingFormData = {
   pickupBackupPhone: "",
   pickupWillBePresent: true,
   deliveryAddress: "",
+  deliveryLatitude: undefined,
+  deliveryLongitude: undefined,
   deliveryCity: "Duluth",
   deliveryState: "GA",
   deliveryZip: "30097",
@@ -293,6 +301,12 @@ const mapPersonalItemsForBooking = (personalItems: string): string => {
   return "0-100";
 };
 
+const toCoordinate = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 const mapQuoteVehiclesToShippingVehicles = (
   vehicles: BookingQuoteData["vehicles"]
 ): ShippingVehicle[] => {
@@ -452,8 +466,14 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         zip: formData.pickupZip || routePickup.zip || "",
         addLine1: formData.pickupAddress || routePickup.addLine1 || "",
         addLine2: "",
-        latitude: routePickup.lat ?? routePickup.latitude ?? null,
-        longitude: routePickup.lng ?? routePickup.longitude ?? null,
+        latitude:
+          toCoordinate(formData.pickupLatitude) ??
+          toCoordinate(routePickup.lat) ??
+          toCoordinate(routePickup.latitude),
+        longitude:
+          toCoordinate(formData.pickupLongitude) ??
+          toCoordinate(routePickup.lng) ??
+          toCoordinate(routePickup.longitude),
         // full: formatFullAddress({
         //   addLine1: formData.pickupAddress || routePickup.addLine1 || "",
         //   addLine2: "",
@@ -470,8 +490,14 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
         zip: formData.deliveryZip || routeDrop.zip || "",
         addLine1: formData.deliveryAddress || routeDrop.addLine1 || "",
         addLine2: "",
-        latitude: routeDrop.lat || routeDrop.latitude || null,
-        longitude: routeDrop.lng || routeDrop.longitude || null,
+        latitude:
+          toCoordinate(formData.deliveryLatitude) ??
+          toCoordinate(routeDrop.lat) ??
+          toCoordinate(routeDrop.latitude),
+        longitude:
+          toCoordinate(formData.deliveryLongitude) ??
+          toCoordinate(routeDrop.lng) ??
+          toCoordinate(routeDrop.longitude),
         // full: formatFullAddress({
         //   addLine1: formData.deliveryAddress || routeDrop.addLine1 || "",
         //   addLine2: "",

@@ -207,12 +207,39 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
                 const city  = formatted?.city || "";
                 const state = formatted?.stateCode || formatted?.state || "";
                 const zip   = formatted?.zipCode || "";
+                const latitude =
+                  coordinates?.lat ??
+                  formatted?.lat ??
+                  null;
+                const longitude =
+                  coordinates?.lng ??
+                  coordinates?.long ??
+                  formatted?.long ??
+                  null;
+                const deliveryLatNumber =
+                  latitude === null || latitude === undefined || latitude === ""
+                    ? undefined
+                    : Number(latitude);
+                const deliveryLngNumber =
+                  longitude === null || longitude === undefined || longitude === ""
+                    ? undefined
+                    : Number(longitude);
 
                 // Auto-fill RHF fields so Zod can validate them
                 setValue("deliveryAddress", line1, { shouldDirty: true, shouldValidate: true });
                 setValue("deliveryCity",    city,  { shouldDirty: true, shouldValidate: true });
                 setValue("deliveryState",   state, { shouldDirty: true, shouldValidate: true });
                 setValue("deliveryZip",     zip,   { shouldDirty: true, shouldValidate: true });
+                updateFormData({
+                  deliveryAddress: line1,
+                  deliveryCity: city,
+                  deliveryState: state,
+                  deliveryZip: zip,
+                  deliveryLatitude:
+                    Number.isFinite(deliveryLatNumber) ? deliveryLatNumber : undefined,
+                  deliveryLongitude:
+                    Number.isFinite(deliveryLngNumber) ? deliveryLngNumber : undefined,
+                });
               }}
             />
             {errors.deliveryAddress && (
