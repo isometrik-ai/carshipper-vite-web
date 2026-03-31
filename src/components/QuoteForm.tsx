@@ -476,7 +476,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
             {
               field_id: "f6f9a199-db6d-4251-8745-9709eb9c063a",
               value: {
-                line_1: drop.location || "",
+                address_line1: drop.location || "",
                 city: drop.city || "",
                 state: drop.state || "",
                 country: countryCode,
@@ -529,7 +529,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           {
             field_id: "743c6d5e-a995-4b1b-92e5-f290fcc11172",
             value: {
-              line_1: pickupLocation || "",
+              address_line1: pickupLocation || "",
               city: pickupCity || "",
               state: pickupState || "",
               country: countryCode,
@@ -560,19 +560,19 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       if (!leadId) {
         throw new Error("Lead ID not returned from lead API");
       }
-      // const leadId = "e58ca908-9f79-43e9-b90e-496bdfc2f838";
-      const leadDetails = await LeadsGetDetailsAPI(String(leadId), controller.signal);
-      const verifiedLeadId =
-        leadDetails?.lead_id ||
-        leadDetails?.leadId ||
-        leadDetails?.id ||
-        leadDetails?.data?.data?.lead_id ||
-        leadDetails?.data?.data?.leadId ||
-        leadDetails?.data?.data?.id;
+      // // const leadId = "e58ca908-9f79-43e9-b90e-496bdfc2f838";
+      // const leadDetails = await LeadsGetDetailsAPI(String(leadId), controller.signal);
+      // const verifiedLeadId =
+      //   leadDetails?.lead_id ||
+      //   leadDetails?.leadId ||
+      //   leadDetails?.id ||
+      //   leadDetails?.data?.data?.lead_id ||
+      //   leadDetails?.data?.data?.leadId ||
+      //   leadDetails?.data?.data?.id;
 
-      if (!verifiedLeadId || String(verifiedLeadId) !== String(leadId)) {
-        throw new Error("Lead details API failed or lead ID mismatch");
-      }
+      // if (!verifiedLeadId || String(verifiedLeadId) !== String(leadId)) {
+      //   throw new Error("Lead details API failed or lead ID mismatch");
+      // }
 
       const response = await CreateNewQuotePostAPI(
         {

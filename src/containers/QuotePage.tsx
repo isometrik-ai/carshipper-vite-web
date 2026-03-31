@@ -109,11 +109,11 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
       }
     : { city: "", state: "", zip: "" };
 
-  const destination = quoteDetails?.data?.quote?.route
+  const destination = quoteDetails?.data?.quote?.route?.deliveries?.length > 0 && quoteDetails?.data?.quote?.route?.deliveries[0]
     ? {
-        city: quoteDetails?.data?.quote?.route?.drop?.city || "",
-        state: quoteDetails?.data?.quote?.route?.drop?.state || "",
-        zip: quoteDetails?.data?.quote?.route?.drop?.zip || "",
+        city: quoteDetails?.data?.quote?.route?.deliveries[0]?.city || "",
+        state: quoteDetails?.data?.quote?.route?.deliveries[0]?.state || "",
+        zip: quoteDetails?.data?.quote?.route?.deliveries[0]?.zip || "",
       }
     : { city: "", state: "", zip: "" };
 
