@@ -580,7 +580,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               ? { lot_number: formData.pickupLotNumber.trim() }
               : {}),
             ...(formData.pickupVinNumber?.trim()
-              ? { vin_number: formData.pickupVinNumber.trim() }
+              ? { vn_number: formData.pickupVinNumber.trim() }
               : {}),
             ...(formData.pickupVehicleColor?.trim()
               ? { color: formData.pickupVehicleColor.trim() }

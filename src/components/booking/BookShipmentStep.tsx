@@ -33,8 +33,8 @@ interface BookShipmentStepProps {
   quoteData: {
     vehicle: { year: number; make: string; model: string };
     vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
-    origin: { addLine1:string, addLine2:string, city: string; state: string; zip: string };
-    destination: { addLine1:string, addLine2:string, city: string; state: string; zip: string };
+    origin: { addLine1:string, addLine2:string, city: string; state: string; zip: string; latitude?: number; longitude?: number };
+    destination: { addLine1:string, addLine2:string, city: string; state: string; zip: string; latitude?: number; longitude?: number };
     earliestPickup: string;
     transportType: string;
     customer?: {
@@ -113,22 +113,80 @@ const handleSubmit = async () => {
       ? `${effectiveVehicles.length} vehicles`
       : `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}${(primaryVehicle as any)?.type ? ` (${(primaryVehicle as any).type})` : ""}`;
 
+  const pickupAddressLine1 = formData.pickupAddress || quoteData?.origin?.addLine1 || "";
+  const pickupAddressLine2 = quoteData?.origin?.addLine2 || "";
+  const pickupCity = formData.pickupCity || quoteData?.origin?.city || "";
+  const pickupState = formData.pickupState || quoteData?.origin?.state || "";
+  const pickupZip = formData.pickupZip || quoteData?.origin?.zip || "";
+
+  const deliveryAddressLine1 = formData.deliveryAddress || quoteData?.destination?.addLine1 || "";
+  const deliveryAddressLine2 = quoteData?.destination?.addLine2 || "";
+  const deliveryCity = formData.deliveryCity || quoteData?.destination?.city || "";
+  const deliveryState = formData.deliveryState || quoteData?.destination?.state || "";
+  const deliveryZip = formData.deliveryZip || quoteData?.destination?.zip || "";
+
+  const pickupFullAddress = [
+    pickupAddressLine1,
+    pickupAddressLine2,
+    pickupCity,
+    pickupState,
+    pickupZip,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const deliveryFullAddress = [
+    deliveryAddressLine1,
+    deliveryAddressLine2,
+    deliveryCity,
+    deliveryState,
+    deliveryZip,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const pickupLatitude =
+    typeof formData.pickupLatitude === "number"
+      ? formData.pickupLatitude
+      : quoteData?.origin?.latitude;
+  const pickupLongitude =
+    typeof formData.pickupLongitude === "number"
+      ? formData.pickupLongitude
+      : quoteData?.origin?.longitude;
+  const deliveryLatitude =
+    typeof formData.deliveryLatitude === "number"
+      ? formData.deliveryLatitude
+      : quoteData?.destination?.latitude;
+  const deliveryLongitude =
+    typeof formData.deliveryLongitude === "number"
+      ? formData.deliveryLongitude
+      : quoteData?.destination?.longitude;
+
+  const pickupCoordinates =
+    typeof pickupLongitude === "number" && typeof pickupLatitude === "number"
+      ? ([pickupLongitude, pickupLatitude] as [number, number])
+      : null;
+  const deliveryCoordinates =
+    typeof deliveryLongitude === "number" && typeof deliveryLatitude === "number"
+      ? ([deliveryLongitude, deliveryLatitude] as [number, number])
+      : null;
+
   const originAddress = [
-    quoteData?.origin?.addLine1,
-    quoteData?.origin?.addLine2,
-    quoteData?.origin?.city,
-    quoteData?.origin?.state,
-    quoteData?.origin?.zip,
+    pickupAddressLine1,
+    pickupAddressLine2,
+    pickupCity,
+    pickupState,
+    pickupZip,
   ]
     .filter(Boolean)
     .join(", ");
 
   const destinationAddress = [
-    quoteData?.destination?.addLine1,
-    quoteData?.destination?.addLine2,
-    quoteData?.destination?.city,
-    quoteData?.destination?.state,
-    quoteData?.destination?.zip,
+    deliveryAddressLine1,
+    deliveryAddressLine2,
+    deliveryCity,
+    deliveryState,
+    deliveryZip,
   ]
     .filter(Boolean)
     .join(", ");
@@ -144,11 +202,7 @@ const handleSubmit = async () => {
               <div>
                 <p className="text-sm text-muted-foreground">Pickup</p>
                 <p className="font-semibold">
-                  {quoteData?.origin?.addLine1}, 
-                  {quoteData?.origin?.addLine2 ? `${quoteData?.origin?.addLine2}, ` :"" } 
-                  {quoteData?.origin?.city}, 
-                  {quoteData?.origin?.state}, 
-                  {quoteData?.origin?.zip}
+                  {pickupFullAddress}
                   </p>
               </div>
             </div>
@@ -158,18 +212,19 @@ const handleSubmit = async () => {
               <div>
                 <p className="text-sm text-muted-foreground">Delivery</p>
                 <p className="font-semibold">
-                  {quoteData?.destination?.addLine1}, 
-                  {quoteData?.destination?.addLine2 ? `${quoteData?.destination?.addLine2}, ` :"" } 
-                  {quoteData?.destination?.city}, 
-                  {quoteData?.destination?.state}, 
-                  {quoteData?.destination?.zip}
+                  {deliveryFullAddress}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Route Map: all geocoding and route rendering lives in RouteMap */}
-          <RouteMap origin={originAddress} destination={destinationAddress} />
+          <RouteMap
+            origin={originAddress}
+            destination={destinationAddress}
+            originCoordinates={pickupCoordinates}
+            destinationCoordinates={deliveryCoordinates}
+          />
         </div>
 
         {/* Dedicated Agent */}
@@ -310,7 +365,7 @@ const handleSubmit = async () => {
                   <div>
                     <p className="font-medium text-foreground">Pickup From</p>
                     <p className="text-sm text-muted-foreground">
-                      {quoteData?.origin?.addLine1}, {quoteData?.origin?.addLine2 ? `${quoteData?.origin?.addLine2}, ` :"" } {quoteData?.origin?.city}, {quoteData?.origin?.state} {quoteData?.origin?.zip}
+                      {pickupFullAddress}
                     </p>
                   </div>
                 </div>
@@ -327,7 +382,7 @@ const handleSubmit = async () => {
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
                     <span className="text-sm text-foreground">
-                      {quoteData?.origin?.addLine1}, {quoteData?.origin?.addLine2 ? `${quoteData?.origin?.addLine2}, ` :"" } {quoteData?.origin?.city}, {quoteData?.origin?.state} {quoteData?.origin?.zip}
+                      {pickupFullAddress}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
@@ -358,7 +413,7 @@ const handleSubmit = async () => {
                   <div>
                     <p className="font-medium text-foreground">Deliver To</p>
                     <p className="text-sm text-muted-foreground">
-                      {formData.deliveryAddress || "54 RBI Colony"}, {formData.deliveryCity}, {formData.deliveryState} {formData.deliveryZip}
+                      {deliveryFullAddress}
                     </p>
                   </div>
                 </div>
@@ -375,7 +430,7 @@ const handleSubmit = async () => {
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
                     <span className="text-sm text-foreground">
-                      {formData.deliveryAddress || "54 RBI Colony"}, {formData.deliveryCity}, {formData.deliveryState} {formData.deliveryZip}
+                      {deliveryFullAddress}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
