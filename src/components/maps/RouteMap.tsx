@@ -9,9 +9,16 @@ import { createMarkerElement } from "@/components/maps/mapMarkerUtils";
 interface RouteMapProps {
   origin: string;
   destination: string;
+  originCoordinates?: [number, number] | null;
+  destinationCoordinates?: [number, number] | null;
 }
 
-const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
+const RouteMap: React.FC<RouteMapProps> = ({
+  origin,
+  destination,
+  originCoordinates,
+  destinationCoordinates,
+}) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<MapboxMap | null>(null);
   const pickupMarkerRef = useRef<Marker | null>(null);
@@ -91,10 +98,13 @@ const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
       const requestId = ++latestUpdateRequestIdRef.current;
       const isCurrentRequest = () => requestId === latestUpdateRequestIdRef.current;
 
-      const [pickupCoords, dropCoords] = await Promise.all([
-        geocodeAddress(normalizedOrigin),
-        geocodeAddress(normalizedDestination),
-      ]);
+      const [pickupCoords, dropCoords] =
+        originCoordinates && destinationCoordinates
+          ? [originCoordinates, destinationCoordinates]
+          : await Promise.all([
+              geocodeAddress(normalizedOrigin),
+              geocodeAddress(normalizedDestination),
+            ]);
 
       if (!isCurrentRequest()) return;
       if (!pickupCoords || !dropCoords) return;
@@ -185,7 +195,7 @@ const RouteMap: React.FC<RouteMapProps> = ({ origin, destination }) => {
         void updateMap();
       });
     }
-  }, [origin, destination]);
+  }, [origin, destination, originCoordinates, destinationCoordinates]);
 
   useEffect(() => {
     return () => {
