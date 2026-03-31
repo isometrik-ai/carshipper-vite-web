@@ -211,11 +211,37 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
                   const city  = formatted?.city || "";
                   const state = formatted?.stateCode || formatted?.state || "";
                   const zip   = formatted?.zipCode || "";
+                  const latitude =
+                    coOrdinates?.lat ??
+                    formatted?.lat ??
+                    null;
+                  const longitude =
+                    coOrdinates?.lng ??
+                    coOrdinates?.long ??
+                    formatted?.long ??
+                    null;
+                  const pickupLatNumber =
+                    latitude === null || latitude === undefined || latitude === ""
+                      ? undefined
+                      : Number(latitude);
+                  const pickupLngNumber =
+                    longitude === null || longitude === undefined || longitude === ""
+                      ? undefined
+                      : Number(longitude);
                   setValue("pickupAddress", line1,  { shouldDirty: true, shouldValidate: false });
                   setValue("pickupCity",    city,   { shouldDirty: true, shouldValidate: true });
                   setValue("pickupState",   state,  { shouldDirty: true, shouldValidate: true });
                   setValue("pickupZip",     zip,    { shouldDirty: true, shouldValidate: true });
-                  // parseAddressComponents(coOrdinates, addressData, address);
+                  updateFormData({
+                    pickupAddress: line1,
+                    pickupCity: city,
+                    pickupState: state,
+                    pickupZip: zip,
+                    pickupLatitude:
+                      Number.isFinite(pickupLatNumber) ? pickupLatNumber : undefined,
+                    pickupLongitude:
+                      Number.isFinite(pickupLngNumber) ? pickupLngNumber : undefined,
+                  });
                 }}
                 restrictToCitiesOnly={false}
                 setIsSearchAddress={(value: boolean) => {
