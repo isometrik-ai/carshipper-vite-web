@@ -1,4 +1,4 @@
-import { CREATE_NEW_QUOTE, GET_QUOTE_DETAILS, UPDATE_QUOTE, VIN_NUMBER_DETAILS } from "@/lib/api.endpoint-constants";
+import { CREATE_LEAD, CREATE_NEW_QUOTE, GET_QUOTE_DETAILS, UPDATE_QUOTE, VIN_NUMBER_DETAILS } from "@/lib/api.endpoint-constants";
 import { getWithToken, patchWithToken, postWithToken } from "./axios-request";
 
 export const CreateNewQuotePostAPI = async (
@@ -6,7 +6,7 @@ export const CreateNewQuotePostAPI = async (
     signal?: AbortSignal
   ) => {
     try {
-      const endpoint = CREATE_NEW_QUOTE;
+      const endpoint = CREATE_LEAD;
       const response = await postWithToken(endpoint, payload, {}, '', signal);
       return response?.data;
     } catch (error) {

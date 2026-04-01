@@ -7,11 +7,11 @@ export const DEFAULT_COUNTRY_CODE = 'us';
 export const DEFAULT_COUNTRY_CODE_SYMBOL = '+1';
 export const DEFAULT_CURRENCY_SYMBOl = "$";
 export const DEFAULT_CURRENCY_CODE = "USD";
-const rawApiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://5.161.218.11:7009";
 export const API_BASE_URL =
-  typeof window !== "undefined" && window.location?.protocol === "https:"
-    ? "/api/backend"
-    : (process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL.trim() !== '') ? process.env.NEXT_PUBLIC_API_BASE_URL : (() => { throw new Error('Missing or invalid NEXT_PUBLIC_API_BASE_URL environment variable'); })();
+  // typeof window !== "undefined" && window.location?.protocol === "https:"
+  //   ? "/api/backend"
+  //   : 
+    (process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL.trim() !== '') ? process.env.NEXT_PUBLIC_API_BASE_URL : (() => { throw new Error('Missing or invalid NEXT_PUBLIC_API_BASE_URL environment variable'); })();
 export const MAIN_API_URL = `${API_BASE_URL}/v2`;
 export const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_KEY;
 export const CUSTOM_WHITE_COLOR = "#FFFFFF";

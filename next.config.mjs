@@ -1,7 +1,7 @@
 import path from "path";
 import { dedupeRemotePatterns, toRemotePattern, toRemotePatternFromHost } from "./src/lib/urlHelpers.mjs";
 
-const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://5.161.218.11:7008";
+const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://carshippersapi.loadfinder.ai";
 const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 const strapiProductionUrl = process.env.NEXT_PUBLIC_STRAPI_PRODUCTION_URL;
 const gumletHost = process.env.NEXT_PUBLIC_GUMLET_HOST || process.env.NEXT_PUBLIC_GUMLET_CDN_HOST;
@@ -28,9 +28,9 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   compress: true,
-  async rewrites() {
-    return [{ source: "/api/backend/:path*", destination: `${backendUrl}/:path*` }];
-  },
+  // async rewrites() {
+  //   return [{ source: "/api/backend/:path*", destination: `${backendUrl}/:path*` }];
+  // },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
