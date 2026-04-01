@@ -7,9 +7,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ChatWidget from "@/components/ChatWidget";
+import dynamic from "next/dynamic";
+const Header = dynamic(() => import("@/components/Header"));
+const ChatWidget = dynamic(() => import("@/components/ChatWidget"), {
+  ssr: false,
+  loading: () => null,
+});
 import Script from "next/script";
 const inter = Inter({ subsets: ["latin"] });
 

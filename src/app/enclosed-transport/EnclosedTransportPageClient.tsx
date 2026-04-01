@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import QuoteForm from "@/components/QuoteForm";
+import dynamicImport from "next/dynamic";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useEnclosedTransport } from "@/api/enclosedTransport";
 import { getIcon } from "@/lib/icons";
@@ -13,6 +13,11 @@ import type { HeroSection, ComparisonSection, TestimonialsDisplay, FAQDisplay, C
 import type { TextSection } from "@/types/AboutPage.types";
 import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
 import type { VehicleTypesGrid, TrailerTypes } from "@/types/EnclosedTransport.types";
+
+const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
+  ssr: false,
+  loading: () => <PageSkeleton />,
+});
 
 export default function EnclosedTransportPageClient() {
   const { data, isLoading } = useEnclosedTransport();

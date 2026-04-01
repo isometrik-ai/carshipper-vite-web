@@ -3,16 +3,31 @@
 import { useCallback, useEffect, useState } from "react";
 import { ReadonlyURLSearchParams, useParams, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookingHeader } from "@/components/booking/BookingHeader";
-import { BookingProgress } from "@/components/booking/BookingProgress";
-import { ShippingMethodStep } from "@/components/booking/ShippingMethodStep";
+import dynamic from "next/dynamic";
 import type { Vehicle as ShippingVehicle } from "@/components/ui/dialogs/EditVehicleDialog";
 // import { ContactStep } from "@/components/booking/ContactStep";
-import { PickupStep } from "@/components/booking/PickupStep";
-import { DeliveryStep } from "@/components/booking/DeliveryStep";
-import { BookShipmentStep } from "@/components/booking/BookShipmentStep";
+const BookingHeader = dynamic(() =>
+  import("@/components/booking/BookingHeader").then((mod) => mod.BookingHeader)
+);
+const BookingProgress = dynamic(() =>
+  import("@/components/booking/BookingProgress").then((mod) => mod.BookingProgress)
+);
+const ShippingMethodStep = dynamic(() =>
+  import("@/components/booking/ShippingMethodStep").then((mod) => mod.ShippingMethodStep)
+);
+const PickupStep = dynamic(() =>
+  import("@/components/booking/PickupStep").then((mod) => mod.PickupStep)
+);
+const DeliveryStep = dynamic(() =>
+  import("@/components/booking/DeliveryStep").then((mod) => mod.DeliveryStep)
+);
+const BookShipmentStep = dynamic(() =>
+  import("@/components/booking/BookShipmentStep").then((mod) => mod.BookShipmentStep)
+);
 // import { BookingSummary } from "@/components/booking/BookingSummary";
-import { SuccessStep } from "@/components/booking/SuccessStep";
+const SuccessStep = dynamic(() =>
+  import("@/components/booking/SuccessStep").then((mod) => mod.SuccessStep)
+);
 import { QuoteGetDetailsAPI } from "@/services/quote-services";
 import { createNewShipmentBooking } from "@/services/booking-services";
 import { toast } from "sonner";

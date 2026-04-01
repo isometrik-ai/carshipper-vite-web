@@ -3,12 +3,17 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import QuoteForm from "@/components/QuoteForm";
+import dynamicImport from "next/dynamic";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useCaliforniaShipping } from "@/api/californiaShipping";
 import { Button } from "@/components/ui/button";
 import type { HeroSection, StatsBar, ProcessSection, FAQDisplay, CallToAction } from "@/types/LandingPage.types";
 import type { RouteTable, CityLinks } from "@/types/CaliforniaShipping.types";
+
+const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
+  ssr: false,
+  loading: () => <PageSkeleton />,
+});
 
 function isSafeNavigationUrl(url: string): boolean {
   try {

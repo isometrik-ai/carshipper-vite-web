@@ -1,11 +1,15 @@
 import { useMemo } from "react";
-import QuoteForm from "@/components/QuoteForm";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { getIcon, DEFAULT_ICON } from "@/lib/icons";
 import { getStrapiMediaUrl } from "@/lib/strapi";
 import type { HeroSection as HeroSectionType } from "@/types/LandingPage.types";
 import type { LucideIcon } from "lucide-react";
 import GumletImage from "@/components/media/GumletImage";
+
+const QuoteForm = dynamic(() => import("@/components/QuoteForm"), {
+  ssr: false,
+});
 
 interface HeroSectionProps {
   data?: HeroSectionType;

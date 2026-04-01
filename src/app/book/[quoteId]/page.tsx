@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import BookingPage from "@/containers/BookingPage";
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import Loader from "@/components/ui/loader/loader";
-export const dynamic = 'force-dynamic';
+
+
+const BookingPage = dynamic(() => import("@/containers/BookingPage"), {
+  ssr: false,
+});
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://carshippers.ai";
 

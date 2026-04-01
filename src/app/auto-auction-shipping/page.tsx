@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import QuoteForm from "@/components/QuoteForm";
+import dynamicImport from "next/dynamic";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useAutoAuctionShipping } from "@/api/autoAuctionShipping";
@@ -15,6 +15,11 @@ import type { TextSection } from "@/types/AboutPage.types";
 import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
 
 export const dynamic = 'force-dynamic';
+
+const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
+  ssr: false,
+  loading: () => <PageSkeleton />,
+});
 
 export default function AutoAuctionShipping() {
   const { data, isLoading } = useAutoAuctionShipping();
