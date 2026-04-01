@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
+import { appSecret, licenseKey } from "@/lib/config";
 
 /**
  * Builds the metadata object that must be sent
@@ -31,3 +32,28 @@ axiosInstance.interceptors.request.use(
 );
 
 export default axiosInstance;
+
+
+// leads api axios instance 
+
+const leadsAxiosInstance = axios.create();
+
+leadsAxiosInstance.interceptors.request.use(
+  (config) => {
+    // Axios may use AxiosHeaders; cast to any to safely mutate while
+    // keeping call sites strongly typed.
+    const headers: any = config.headers || {};
+
+    // Enforce exact leads header keys expected by downstream service.
+    // delete headers["app-secret"];
+    // delete headers["license-key"];
+    headers["appSecret"] = "SFMyNTY.g3QAAAACZAAEZGF0YXQAAAADbQAAAAlhY2NvdW50SWRtAAAAGDY5MWFkMjdjMzQ4ZjcwZjUxOGVlMDA1M20AAAAIa2V5c2V0SWRtAAAAJDk4MzIzZTQ2LWY4NzAtNDBiMS1hOWIzLTQ0YzdhMjhjZjkwYW0AAAAJcHJvamVjdElkbQAAACQwMzBmNjIzMS05ZDE3LTQxZjktOGE0Zi0yYTNhODMzNzE1ZmJkAAZzaWduZWRuBgBo2cE-nQE.eVQQiW9ZSvQxRPCur3cvQ-jp5vJB-eTOZ8TgwYWet_k";
+    headers["licenseKey"] = "lic-IMKS/zdVziEHEBWxJEWrSgMasbVNNrxT71e";
+
+    config.headers = headers;
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export { leadsAxiosInstance }

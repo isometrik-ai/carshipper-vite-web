@@ -1,5 +1,5 @@
 import { DEFAULT_COUNTRY_CODE, DEFAULT_CURRENCY_SYMBOl, MAIN_API_URL } from "@/lib/config";
-import axiosInstance from "./axios-base";
+import axiosInstance, { leadsAxiosInstance } from "./axios-base";
 
 
 const getUrl = (endpoint:string) => MAIN_API_URL + endpoint;
@@ -10,6 +10,10 @@ const commonHeader = {
     currencycode: DEFAULT_COUNTRY_CODE,
     currencysymbol: DEFAULT_CURRENCY_SYMBOl,
     platform: "3",
+};
+
+const commonLeadsHeader = {
+  "Content-Type": "application/json",
 };
 export const postWithToken = async (
     endpoint:string,
@@ -72,4 +76,31 @@ export const patchWithToken = async (
   }).catch((err)=>{
     return err
   });
+};
+
+export const postWithLeadsToken = async (
+  endpoint:string,
+  data:object,
+  otherHeaders = {},
+  isCustomURL:string,
+  signal?: AbortSignal
+) => {
+  return leadsAxiosInstance.post(isCustomURL || getUrl(endpoint), data, {
+    headers: { ...commonLeadsHeader, ...otherHeaders },
+    signal
+  }).catch((err)=>{
+    return err
+  });
+};
+
+export const getWithLeadsToken = async (endpoint: string, otherHeaders = {}, isCustomURL?:string, signal?: AbortSignal
+) => {
+  const finalUrl = isCustomURL || getUrl(endpoint);
+  
+  return leadsAxiosInstance
+    .get(finalUrl, {
+      headers: { ...commonLeadsHeader, ...otherHeaders },
+      signal
+    })
+    .catch(() => {});
 };

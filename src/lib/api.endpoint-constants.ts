@@ -4,3 +4,7 @@ export const GET_QUOTE_DETAILS = "/quote/get";
 export const VIN_NUMBER_DETAILS = "/vehicle/decode-vin";
 export const CREATE_NEW_SHIPMENT_BOOKING = "/booking/create";
 export const UPDATE_QUOTE = "/quote/update";
+export const CREATE_NEW_CONTACT = "/integrations/clients/contacts";
+export const CREATE_NEW_LEAD = "/integrations/leads";
+export const GET_LEAD_DETAILS = "/integrations/leads";
+export const CREATE_LEAD = "/createLead";
