@@ -417,149 +417,149 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           : [],
       };
 
-      const createdContact = await CreateNewContactPostAPI(contactPayload, controller.signal);
-      const contactId =
-        createdContact?.id ||
-        createdContact?.contact_id ||
-        createdContact?.contactId ||
-        createdContact?.data?.id ||
-        createdContact?.data?.contact_id ||
-        createdContact?.data?.contactId ||
-        createdContact?.data?.data?.id ||
-        createdContact?.data?.data?.contact_id ||
-        createdContact?.data?.data?.contactId;
+      // const createdContact = await CreateNewContactPostAPI(contactPayload, controller.signal);
+      // const contactId =
+      //   createdContact?.id ||
+      //   createdContact?.contact_id ||
+      //   createdContact?.contactId ||
+      //   createdContact?.data?.id ||
+      //   createdContact?.data?.contact_id ||
+      //   createdContact?.data?.contactId ||
+      //   createdContact?.data?.data?.id ||
+      //   createdContact?.data?.data?.contact_id ||
+      //   createdContact?.data?.data?.contactId;
 
-      if (!contactId) {
-        throw new Error("Contact ID not returned from contact API");
-      }
+      // if (!contactId) {
+      //   throw new Error("Contact ID not returned from contact API");
+      // }
 
-      // const contactId = "7d5c9438-de4d-484a-a1ef-373f564b1a9e";
-      const countryCode = (DEFAULT_COUNTRY_CODE || "US").toUpperCase();
-      const selectedTransportType = transportType === "enclosed" ? "Enclosed Transport" : "Open Transport";
-      const normalizeLeadPickupTimeframe = (value: string) => {
-        const raw = (value || "").trim().toLowerCase();
-        if (!raw) return "";
-        if (raw.includes("asap") || raw.includes("today") || raw.includes("tomorrow")) {
-          return "ASAP, today or tomorrow";
-        }
-        if (raw.includes("1-2") || raw.includes("1 to 2")) {
-          return "Within the next 1-2 weeks";
-        }
-        if (raw.includes("3-4") || raw.includes("3 to 4")) {
-          return "Within the next 3-4 weeks";
-        }
-        if (raw.includes("month")) {
-          return "More than 1 month out";
-        }
-        return value;
-      };
+      // // const contactId = "7d5c9438-de4d-484a-a1ef-373f564b1a9e";
+      // const countryCode = (DEFAULT_COUNTRY_CODE || "US").toUpperCase();
+      // const selectedTransportType = transportType === "enclosed" ? "Enclosed Transport" : "Open Transport";
+      // const normalizeLeadPickupTimeframe = (value: string) => {
+      //   const raw = (value || "").trim().toLowerCase();
+      //   if (!raw) return "";
+      //   if (raw.includes("asap") || raw.includes("today") || raw.includes("tomorrow")) {
+      //     return "ASAP, today or tomorrow";
+      //   }
+      //   if (raw.includes("1-2") || raw.includes("1 to 2")) {
+      //     return "Within the next 1-2 weeks";
+      //   }
+      //   if (raw.includes("3-4") || raw.includes("3 to 4")) {
+      //     return "Within the next 3-4 weeks";
+      //   }
+      //   if (raw.includes("month")) {
+      //     return "More than 1 month out";
+      //   }
+      //   return value;
+      // };
 
-      const selectedPickupTimeframe = normalizeLeadPickupTimeframe(timeframe || "");
-      const normalizeLeadMakeModel = (make: string, model: string) => {
-        const combined = `${make || ""} ${model || ""}`.replace(/\s+/g, " ").trim();
-        if (!combined) return "";
-        // Leads custom-field options currently use "Alfa Rome ..." spellings.
-        if (/^alfa romeo\s+/i.test(combined)) {
-          return combined.replace(/^alfa romeo\s+/i, "Alfa Rome ");
-        }
-        return combined;
-      };
-      const vehicleNameById = new Map(
-        vehicles.map((v) => [v.id, normalizeLeadMakeModel(v.make, v.model)])
-      );
+      // const selectedPickupTimeframe = normalizeLeadPickupTimeframe(timeframe || "");
+      // const normalizeLeadMakeModel = (make: string, model: string) => {
+      //   const combined = `${make || ""} ${model || ""}`.replace(/\s+/g, " ").trim();
+      //   if (!combined) return "";
+      //   // Leads custom-field options currently use "Alfa Rome ..." spellings.
+      //   if (/^alfa romeo\s+/i.test(combined)) {
+      //     return combined.replace(/^alfa romeo\s+/i, "Alfa Rome ");
+      //   }
+      //   return combined;
+      // };
+      // const vehicleNameById = new Map(
+      //   vehicles.map((v) => [v.id, normalizeLeadMakeModel(v.make, v.model)])
+      // );
 
-      const dropAddressItems = dropLocations.map((drop) => {
-        const mappedVehicleIds = drop.vehicleIds.length > 0 ? drop.vehicleIds : vehicles.map((v) => v.id);
-        return {
-          field_id: "da017d88-b328-401b-a30b-3f2f26d1dcfc",
-          sub_fields: [
-            {
-              field_id: "f6f9a199-db6d-4251-8745-9709eb9c063a",
-              value: {
-                address_line1: drop.location || "",
-                city: drop.city || "",
-                state: drop.state || "",
-                country: countryCode,
-                zip: drop.zip || "",
-                lat: drop.lat ?? null,
-                long: drop.lng ?? null,
-              },
-            },
-            {
-              field_id: "5ed03685-ce80-4960-b78a-14e9de3d044e",
-              items: mappedVehicleIds.map((vehicleId) => ({
-                field_id: "45541cab-7239-4790-b003-542e8daa37cf",
-                value: vehicleNameById.get(vehicleId) || "",
-              })),
-            },
-          ],
-        };
-      });
+      // const dropAddressItems = dropLocations.map((drop) => {
+      //   const mappedVehicleIds = drop.vehicleIds.length > 0 ? drop.vehicleIds : vehicles.map((v) => v.id);
+      //   return {
+      //     field_id: "da017d88-b328-401b-a30b-3f2f26d1dcfc",
+      //     sub_fields: [
+      //       {
+      //         field_id: "f6f9a199-db6d-4251-8745-9709eb9c063a",
+      //         value: {
+      //           address_line1: drop.location || "",
+      //           city: drop.city || "",
+      //           state: drop.state || "",
+      //           country: countryCode,
+      //           zip: drop.zip || "",
+      //           lat: drop.lat ?? null,
+      //           long: drop.lng ?? null,
+      //         },
+      //       },
+      //       {
+      //         field_id: "5ed03685-ce80-4960-b78a-14e9de3d044e",
+      //         items: mappedVehicleIds.map((vehicleId) => ({
+      //           field_id: "45541cab-7239-4790-b003-542e8daa37cf",
+      //           value: vehicleNameById.get(vehicleId) || "",
+      //         })),
+      //       },
+      //     ],
+      //   };
+      // });
 
-      const leadCarsItems = vehicles.map((v) => ({
-        field_id: "17e17a75-e6c3-45ea-92fa-e0a5c8846f4b",
-        sub_fields: [
-          { field_id: "5dd48ef7-fc7b-45d5-8023-dc4858d650a5", value: Number(v.year) || null },
-          {
-            field_id: "0e4c4ebd-d635-4f17-824d-d94cba90a951",
-            value: normalizeLeadMakeModel(v.make, v.model),
-          },
-          { field_id: "8cad15bc-cd12-4dbd-8c92-9ed5221b5504", value: v.vin || "" },
-          { field_id: "cc3da005-85fb-4641-89e5-8bfdcaad5b20", value: v.isRunning ?? true },
-        ],
-      }));
+      // const leadCarsItems = vehicles.map((v) => ({
+      //   field_id: "17e17a75-e6c3-45ea-92fa-e0a5c8846f4b",
+      //   sub_fields: [
+      //     { field_id: "5dd48ef7-fc7b-45d5-8023-dc4858d650a5", value: Number(v.year) || null },
+      //     {
+      //       field_id: "0e4c4ebd-d635-4f17-824d-d94cba90a951",
+      //       value: normalizeLeadMakeModel(v.make, v.model),
+      //     },
+      //     { field_id: "8cad15bc-cd12-4dbd-8c92-9ed5221b5504", value: v.vin || "" },
+      //     { field_id: "cc3da005-85fb-4641-89e5-8bfdcaad5b20", value: v.isRunning ?? true },
+      //   ],
+      // }));
 
-      const leadPayload = {
-        stage_id: "ff7c54aa-cb47-403d-afd9-cd39bb42b514",
-        client_id: String(contactId),
-        name: "carshippers",
-        custom_fields: [
-          {
-            field_id: "756cf9d8-6d95-488b-9193-20ae9249f2f0",
-            value: selectedTransportType,
-          },
-          {
-            field_id: "b3b462ee-216c-43bd-a0e7-5bcced0f76e3",
-            value: selectedPickupTimeframe,
-          },
-          {
-            field_id: "3aae6937-cdc2-405b-9904-02ef315cccbf",
-            items: dropAddressItems,
-          },
-          {
-            field_id: "743c6d5e-a995-4b1b-92e5-f290fcc11172",
-            value: {
-              address_line1: pickupLocation || "",
-              city: pickupCity || "",
-              state: pickupState || "",
-              country: countryCode,
-              zip: pickupZip || "",
-              lat: pickupLat ?? null,
-              long: pickupLng ?? null,
-            },
-          },
-          {
-            field_id: "25c1ed96-8956-49e6-863a-c78aef910c73",
-            items: leadCarsItems,
-          },
-        ],
-      };
+      // const leadPayload = {
+      //   stage_id: "ff7c54aa-cb47-403d-afd9-cd39bb42b514",
+      //   client_id: String(contactId),
+      //   name: "carshippers",
+      //   custom_fields: [
+      //     {
+      //       field_id: "756cf9d8-6d95-488b-9193-20ae9249f2f0",
+      //       value: selectedTransportType,
+      //     },
+      //     {
+      //       field_id: "b3b462ee-216c-43bd-a0e7-5bcced0f76e3",
+      //       value: selectedPickupTimeframe,
+      //     },
+      //     {
+      //       field_id: "3aae6937-cdc2-405b-9904-02ef315cccbf",
+      //       items: dropAddressItems,
+      //     },
+      //     {
+      //       field_id: "743c6d5e-a995-4b1b-92e5-f290fcc11172",
+      //       value: {
+      //         address_line1: pickupLocation || "",
+      //         city: pickupCity || "",
+      //         state: pickupState || "",
+      //         country: countryCode,
+      //         zip: pickupZip || "",
+      //         lat: pickupLat ?? null,
+      //         long: pickupLng ?? null,
+      //       },
+      //     },
+      //     {
+      //       field_id: "25c1ed96-8956-49e6-863a-c78aef910c73",
+      //       items: leadCarsItems,
+      //     },
+      //   ],
+      // };
 
-      const createdLead = await CreateNewLeadPostAPI(leadPayload, controller.signal);
-      const leadId =
-        createdLead?.lead_id ||
-        createdLead?.leadId ||
-        createdLead?.id ||
-        createdLead?.data?.data?.lead_id ||
-        createdLead?.data?.data?.leadId ||
-        createdLead?.data?.data?.id ||
-        createdLead?.data?.lead_id ||
-        createdLead?.data?.leadId ||
-        createdLead?.data?.id;
+      // const createdLead = await CreateNewLeadPostAPI(leadPayload, controller.signal);
+      // const leadId =
+      //   createdLead?.lead_id ||
+      //   createdLead?.leadId ||
+      //   createdLead?.id ||
+      //   createdLead?.data?.data?.lead_id ||
+      //   createdLead?.data?.data?.leadId ||
+      //   createdLead?.data?.data?.id ||
+      //   createdLead?.data?.lead_id ||
+      //   createdLead?.data?.leadId ||
+      //   createdLead?.data?.id;
 
-      if (!leadId) {
-        throw new Error("Lead ID not returned from lead API");
-      }
+      // if (!leadId) {
+      //   throw new Error("Lead ID not returned from lead API");
+      // }
       // // const leadId = "e58ca908-9f79-43e9-b90e-496bdfc2f838";
       // const leadDetails = await LeadsGetDetailsAPI(String(leadId), controller.signal);
       // const verifiedLeadId =
@@ -577,7 +577,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       const response = await CreateNewQuotePostAPI(
         {
           ...payload,
-          lead_id: String(leadId),
+          // lead_id: String(leadId),
         },
         controller.signal
       );

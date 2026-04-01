@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://5.161.218.11:7008';
+const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://carshippersapi.loadfinder.ai';
 const securityHeaders = [
   {
     key: 'X-Content-Type-Options',
@@ -31,11 +31,11 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   compress: true,
-  async rewrites() {
-    return [
-      { source: '/api/backend/:path*', destination: `${backendUrl}/:path*` },
-    ];
-  },
+  // async rewrites() {
+  //   return [
+  //     { source: '/api/backend/:path*', destination: `${backendUrl}/:path*` },
+  //   ];
+  // },
   async headers() {
     return [
       {
