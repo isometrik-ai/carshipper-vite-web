@@ -1021,7 +1021,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                 </div>
               ))}
             </div>
-
+{/* 
             {vehicles.length > 1 ? (
               <Button
                 type="button"
@@ -1032,7 +1032,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                 <Plus className="w-4 h-4 mr-2" />
                 {formConfig.buttonTexts.add_drop_location_button}
               </Button>
-            ) : null}
+            ) : null} */}
           </motion.div>
         )}
 
