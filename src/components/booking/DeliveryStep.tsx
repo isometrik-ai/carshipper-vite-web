@@ -33,6 +33,8 @@ const deliverySchema = z.object({
   deliveryState: z.string().min(2, "State is required"),
   deliveryZip: z.string().min(5, "Please enter a valid ZIP code"),
   deliveryBusinessName: z.string().optional(),
+  deliveryBuyerNumber: z.string().optional(),
+  deliveryLotNumber: z.string().optional(),
   deliveryContactName: z.string().min(2, "Contact name is required"),
   deliveryContactPhone: z.string().min(10, "Phone number is required"),
   deliveryBackupPhone: z.string().optional(),
@@ -288,7 +290,7 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
       </div>
 
       {/* Business Information (conditional) */}
-      {showBusinessFields && (
+      {/* {showBusinessFields && (
         <div className="bg-card rounded-2xl shadow-card overflow-hidden">
           <div className="bg-muted/50 px-6 py-4 flex items-center gap-3">
             <Building2 className="w-5 h-5 text-muted-foreground" />
@@ -306,8 +308,66 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
+      {/* Business Information (conditional) */}
+      {showBusinessFields && (
+        <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+          <div className="bg-muted/50 px-6 py-4 flex items-center gap-3">
+            <Building2 className="w-5 h-5 text-muted-foreground" />
+            <h2 className="text-lg font-semibold text-foreground">Business Information</h2>
+          </div>
+
+          <div className="p-6 space-y-4">
+          <div className="space-y-2">
+              <Label htmlFor="deliveryBusinessName">Business Name</Label>
+              <Input
+                id="deliveryBusinessName"
+                placeholder="Enter business name"
+                {...register("deliveryBusinessName")}
+              />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="buyerNumber">Buyer Number (Optional)</Label>
+                <Input
+                  id="buyerNumber"
+                  placeholder="Enter buyer number"
+                  {...register("deliveryBuyerNumber")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lotNumber">Lot Number (Optional)</Label>
+                <Input
+                  id="lotNumber"
+                  placeholder="Enter lot number"
+                  {...register("deliveryLotNumber")}
+                />
+              </div>
+            </div>
+
+            {/* <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="vinNumber">VIN Number (Optional)</Label>
+                <Input
+                  id="vinNumber"
+                  placeholder="Enter VIN number"
+                  {...register("vinNumber")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="vehicleColor">Vehicle Color (Optional)</Label>
+                <Input
+                  id="vehicleColor"
+                  placeholder="Enter vehicle color"
+                  {...register("vehicleColor")}
+                />
+              </div>
+            </div> */}
+          </div>
+        </div>
+      )}
       {/* Contact Information */}
       <div className="bg-card rounded-2xl shadow-card overflow-hidden">
         <div className="bg-muted/50 px-6 py-4 flex items-center gap-3">

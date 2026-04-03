@@ -8,3 +8,6 @@ export const CREATE_NEW_CONTACT = "/integrations/clients/contacts";
 export const CREATE_NEW_LEAD = "/integrations/leads";
 export const GET_LEAD_DETAILS = "/integrations/leads";
 export const CREATE_LEAD = "/createLead";
+export const GET_CONTACTS_LIST = "/account/contact/all";
+export const GET_VEHICLES_LIST = "/vehicleType";
+export const GET_VEHICLE_COLOR_LIST = "/color";
