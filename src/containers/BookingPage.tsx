@@ -29,7 +29,7 @@ const SuccessStep = dynamic(() =>
   import("@/components/booking/SuccessStep").then((mod) => mod.SuccessStep)
 );
 import { QuoteGetDetailsAPI } from "@/services/quote-services";
-import { createNewShipmentBooking, getAllContactList } from "@/services/booking-services";
+import { createNewShipmentBooking, getAllContactList, getAllVehiclesTypesList } from "@/services/booking-services";
 import { toast } from "sonner";
 import { formatFullAddress } from "@/lib/address";
 import { getClientIPAddress } from "@/lib/global";
@@ -703,8 +703,17 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       console.error("Failed to get contact list", error);
     }
   };
+  const getVehicleTypeList = async () => {
+    try{
+      const response = await getAllVehiclesTypesList();
+      console.log(response);
+    } catch (error) {
+      console.error("Failed to get contact list", error);
+    }
+  };
   useEffect(() => {
     getContactList();
+    getVehicleTypeList();
   }, []);
   
   if (isSubmitted) {

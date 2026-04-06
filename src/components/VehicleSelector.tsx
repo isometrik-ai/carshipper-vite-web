@@ -24,7 +24,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Car, Hash, Loader2, Trash2, Check, ChevronsUpDown } from "lucide-react";
+import { Car, Hash, Loader2, Trash2, Check, ChevronsUpDown, Palette, Briefcase, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { VehicleFieldConfig } from "@/types/QuoteForm.types";
@@ -34,6 +34,14 @@ import { VinNumberDetails } from "@/services/quote-services";
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: currentYear - 1979 + 1 }, (_, i) => (currentYear + 1 - i).toString());
 
+/** Matches EditVehicleDialog / booking personal-items weight bands */
+export const QUOTE_PERSONAL_ITEMS_OPTIONS = [
+  "None or less than 100 lbs.",
+  "100-150 lbs",
+  "150-200 lbs",
+  "More than 200 lbs",
+] as const;
+
 export interface Vehicle {
   id: string;
   year: string;
@@ -42,6 +50,10 @@ export interface Vehicle {
   isRunning: boolean | null;
   vin: string;
   vinLookupLoading: boolean;
+  color: string;
+  personalItems: string;
+  /** Body style / vehicle type from GET /vehicleType */
+  vehicleType: string;
 }
 
 interface VehicleSelectorProps {
@@ -52,6 +64,10 @@ interface VehicleSelectorProps {
   onRemove: () => void;
   vehicleFieldConfig?: VehicleFieldConfig
   vehicleData?: Record<string, string[]>;
+  vehicleColorOptions?: string[];
+  vehicleColorsLoading?: boolean;
+  vehicleTypeOptions?: string[];
+  vehicleTypesLoading?: boolean;
 }
 
 export const VehicleSelector = ({
@@ -62,6 +78,10 @@ export const VehicleSelector = ({
   onRemove,
   vehicleFieldConfig,
   vehicleData,
+  vehicleColorOptions = [],
+  vehicleColorsLoading = false,
+  vehicleTypeOptions = [],
+  vehicleTypesLoading = false,
 }: VehicleSelectorProps) => {
   const [makeModelOpen, setMakeModelOpen] = useState(false);
 
@@ -292,6 +312,105 @@ export const VehicleSelector = ({
               Vehicle data is not available. Please ensure vehicle data is configured in Strapi.
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Vehicle type (API: /vehicleType) */}
+      <div className="mt-3">
+        <Label className="text-xs text-muted-foreground flex items-center gap-1">
+          <Truck className="w-3 h-3" /> Vehicle type
+        </Label>
+        {vehicleTypesLoading ? (
+          <div className="mt-1 flex h-10 items-center gap-2 rounded-md border border-input bg-muted/50 px-3 text-xs text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+            Loading vehicle types…
+          </div>
+        ) : vehicleTypeOptions.length > 0 ? (
+          <Select
+            value={vehicle.vehicleType || undefined}
+            onValueChange={(value) => onUpdate({ vehicleType: value })}
+            disabled={vehicle.vinLookupLoading}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select vehicle type" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[280px]">
+              {vehicleTypeOptions.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Input
+            className="mt-1"
+            placeholder="e.g. SUV, Sedan"
+            value={vehicle.vehicleType}
+            onChange={(e) => onUpdate({ vehicleType: e.target.value })}
+            disabled={vehicle.vinLookupLoading}
+          />
+        )}
+      </div>
+
+      {/* Color & personal items (manual section) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+        <div>
+          <Label className="text-xs text-muted-foreground flex items-center gap-1">
+            <Palette className="w-3 h-3" /> Vehicle color
+          </Label>
+          {vehicleColorsLoading ? (
+            <div className="mt-1 flex h-10 items-center gap-2 rounded-md border border-input bg-muted/50 px-3 text-xs text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+              Loading colors…
+            </div>
+          ) : vehicleColorOptions.length > 0 ? (
+            <Select
+              value={vehicle.color || undefined}
+              onValueChange={(value) => onUpdate({ color: value })}
+              disabled={vehicle.vinLookupLoading}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select color" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[280px]">
+                {vehicleColorOptions.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              className="mt-1"
+              placeholder="Vehicle color"
+              value={vehicle.color}
+              onChange={(e) => onUpdate({ color: e.target.value })}
+              disabled={vehicle.vinLookupLoading}
+            />
+          )}
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground flex items-center gap-1">
+            <Briefcase className="w-3 h-3" /> Personal items
+          </Label>
+          <Select
+            value={vehicle.personalItems || QUOTE_PERSONAL_ITEMS_OPTIONS[0]}
+            onValueChange={(value) => onUpdate({ personalItems: value })}
+            disabled={vehicle.vinLookupLoading}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select weight range" />
+            </SelectTrigger>
+            <SelectContent>
+              {QUOTE_PERSONAL_ITEMS_OPTIONS.map((opt) => (
+                <SelectItem key={opt} value={opt}>
+                  {opt}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

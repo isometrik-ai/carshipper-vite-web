@@ -23,7 +23,7 @@ export const getAllContactList = async (
 ) => {
   const { skip, limit, search, isTmsOrCarrierVendor } = payload;
   try {
-    let endpoint = `${GET_CONTACTS_LIST}/all?limit=${limit}&skip=${skip}&status=1`;
+    let endpoint = `${GET_CONTACTS_LIST}?limit=${limit}&skip=${skip}&status=1`;
     if (search) {
       endpoint += `&search=${search}`;
     }
