@@ -52,6 +52,18 @@ const mapPersonalItemsForQuotePayload = (personalItems: string): string => {
   return "0-100";
 };
 
+/** API often returns i18n objects like `{ en: "Flatbed" }`; plain strings are also supported. */
+function pickLocalizedOrPlainString(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (value && typeof value === "object") {
+    const o = value as Record<string, unknown>;
+    if (typeof o.en === "string") return o.en.trim();
+    const first = Object.values(o).find((v) => typeof v === "string");
+    if (typeof first === "string") return first.trim();
+  }
+  return "";
+}
+
 function normalizeVehicleColorApiResponse(apiResponse: unknown): string[] {
   const body = (apiResponse as { data?: unknown })?.data ?? apiResponse;
   let list: unknown[] = [];
@@ -77,6 +89,7 @@ function normalizeVehicleColorApiResponse(apiResponse: unknown): string[] {
 }
 
 function normalizeVehicleTypesApiResponse(apiResponse: unknown): string[] {
+  if (apiResponse == null) return [];
   const body = (apiResponse as { data?: unknown })?.data ?? apiResponse;
   let list: unknown[] = [];
   if (Array.isArray(body)) list = body;
@@ -92,8 +105,11 @@ function normalizeVehicleTypesApiResponse(apiResponse: unknown): string[] {
       if (typeof item === "string") return item.trim();
       if (item && typeof item === "object") {
         const r = item as Record<string, unknown>;
-        const s = (r.name ?? r.type ?? r.vehicleType ?? r.label ?? r.title ?? "") as string;
-        return String(s).trim();
+        const fromTypeName = pickLocalizedOrPlainString(r.typeName);
+        const fallback = String(
+          r.name ?? r.type ?? r.vehicleType ?? r.label ?? r.title ?? r.equipmentsShortCode ?? ""
+        ).trim();
+        return (fromTypeName || fallback).trim();
       }
       return "";
     })
@@ -502,8 +518,9 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           make: v.make,
           model: v.model,
           is_running: v.isRunning ?? true,
-          type: (v.vehicleType || "").trim() || "SUV",
-          ...(v.color?.trim() ? { color: v.color.trim() } : {}),
+          vin: (v.vin || "").trim(),
+          // type: (v.vehicleType || "").trim(),
+          color: (v.color || "").trim(),
           personal_items_weight: mapPersonalItemsForQuotePayload(v.personalItems || ""),
         })),
         pickup_city: pickupCity,
