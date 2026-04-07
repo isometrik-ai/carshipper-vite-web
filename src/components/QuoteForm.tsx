@@ -519,7 +519,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           model: v.model,
           is_running: v.isRunning ?? true,
           vin: (v.vin || "").trim(),
-          // type: (v.vehicleType || "").trim(),
+          type: (v.vehicleType || "").trim(),
           color: (v.color || "").trim(),
           personal_items_weight: mapPersonalItemsForQuotePayload(v.personalItems || ""),
         })),
