@@ -32,37 +32,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-       <Script id="google-maps-init" strategy="beforeInteractive">
-        {`
-          (function () {
-            window.initGoogleMaps = function () {
-              window.googleMapsLoaded = true;
-              if (typeof window !== "undefined") {
-                window.dispatchEvent(new Event("google-maps-loaded"));
-              }
-            };
-            if (
-              typeof window !== "undefined" &&
-              window.google &&
-              window.google.maps &&
-              window.google.maps.places
-            ) {
-              window.googleMapsLoaded = true;
-              window.dispatchEvent(new Event("google-maps-loaded"));
-            }
-          })();
-        `}
-      </Script>
-
-      <Script
-        id="google-maps-script"
-        strategy="beforeInteractive"
-        src={
-          `https://maps.googleapis.com/maps/api/js?key=${googleApiKey}` +
-          "&libraries=places&callback=initGoogleMaps&loading=async"}
-        async
-        defer
-      />
         <QueryProvider>
           <TooltipProvider>
             <ErrorBoundary>
