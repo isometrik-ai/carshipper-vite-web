@@ -14,7 +14,6 @@ const ChatWidget = dynamic(() => import("@/components/ChatWidget"), {
   ssr: false,
   loading: () => null,
 });
-import Script from "next/script";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -28,7 +27,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>

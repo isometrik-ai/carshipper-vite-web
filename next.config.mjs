@@ -28,6 +28,10 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   compress: true,
+  // Smaller client bundles for barrel-heavy packages (lucide/date-fns are also optimized by default in Next 14)
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts"],
+  },
   // async rewrites() {
   //   return [{ source: "/api/backend/:path*", destination: `${backendUrl}/:path*` }];
   // },
