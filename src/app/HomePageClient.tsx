@@ -1,19 +1,19 @@
 'use client';
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useLandingPage } from "@/api/landingPage";
 import { usePageContentRenderer } from "@/utils/componentMapper";
-import { getAllActivePricingRulesList } from "@/services/pricing-services";
+import type { LandingPageResponse } from "@/types/LandingPage.types";
 
-export default function HomePageClient() {
-  const { data, isLoading, isError, error } = useLandingPage();
+type HomePageClientProps = {
+  initialData?: LandingPageResponse;
+};
+
+export default function HomePageClient({ initialData }: HomePageClientProps) {
+  const { data, isLoading, isError, error } = useLandingPage(initialData);
   const pageContent = useMemo(() => data?.data?.page_content || [], [data]);
   const renderedContent = usePageContentRenderer(pageContent);
-
-  useEffect(() => {
-    getAllActivePricingRulesList("");
-  }, []);
 
   if (isLoading && !data) {
     return <PageSkeleton />;

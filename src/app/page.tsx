@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { SEO_FALLBACKS, SEO_SITE } from "@/constants/seo";
 import { fetchStrapiSeoMetadata } from "@/lib/seo/strapiSeo";
+import { fetchLandingPage } from "@/api/landingPage";
 import HomePageClient from "./HomePageClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const SITE_URL = SEO_SITE.url;
 const DEFAULT_TITLE = SEO_FALLBACKS.global.title;
@@ -13,6 +14,13 @@ const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 const getHomeSeo = cache(() =>
   fetchStrapiSeoMetadata(STRAPI_API_URL, "/api/landing-page")
 );
+const getHomePageData = cache(async () => {
+  try {
+    return await fetchLandingPage();
+  } catch {
+    return undefined;
+  }
+});
 
 const toAbsoluteUrl = (url?: string | null): string | undefined => {
   if (!url) return undefined;
@@ -73,7 +81,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function HomePage() {
-  return <HomePageClient />;
+export default async function HomePage() {
+  const initialData = await getHomePageData();
+  return <HomePageClient initialData={initialData} />;
 }
 
