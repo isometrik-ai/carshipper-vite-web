@@ -3,8 +3,6 @@ import { SEO_FALLBACKS, SEO_SITE } from "@/constants/seo";
 import { fetchStrapiSeoMetadata } from "@/lib/seo/strapiSeo";
 import OemTransportPageClient from "./OemTransportPageClient";
 
-export const dynamic = "force-dynamic";
-
 const DEFAULT_TITLE = SEO_FALLBACKS.global.title;
 const DEFAULT_DESCRIPTION = SEO_FALLBACKS.global.description;
 const SITE_URL = SEO_SITE.url;

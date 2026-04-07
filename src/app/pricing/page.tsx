@@ -13,9 +13,6 @@ import type { HeroSection, CallToAction } from "@/types/LandingPage.types";
 import type { RouteTable } from "@/types/CaliforniaShipping.types";
 import type { ServiceTypesSection, PricingFactorsSection, IncludedItemsSection } from "@/types/Pricing.types";
 
-// Force dynamic rendering (no static generation)
-export const dynamic = 'force-dynamic';
-
 /**
  * Pricing page component
  * 

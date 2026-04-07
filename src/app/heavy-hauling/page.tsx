@@ -6,14 +6,11 @@ import dynamicImport from "next/dynamic";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useHeavyHauling } from "@/api/heavyHauling";
-import { getIcon } from "@/lib/icons";
-import { Weight, CheckCircle, AlertTriangle } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import type { HeroSection, ProcessSection } from "@/types/LandingPage.types";
 import type { ServiceList, ServiceCards, AlertWarning } from "@/types/AutoAuctionShipping.types";
 import type { TrailerTypes } from "@/types/EnclosedTransport.types";
 
-export const dynamic = 'force-dynamic';
 
 const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
   ssr: false,

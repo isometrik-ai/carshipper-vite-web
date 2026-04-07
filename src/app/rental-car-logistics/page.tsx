@@ -14,8 +14,6 @@ import type { HeroSection, FAQDisplay, CallToAction } from "@/types/LandingPage.
 import type { TextSection } from "@/types/AboutPage.types";
 import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
 
-export const dynamic = 'force-dynamic';
-
 const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
   ssr: false,
   loading: () => <PageSkeleton />,

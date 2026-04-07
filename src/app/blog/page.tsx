@@ -26,8 +26,6 @@ const formatDate = (dateString: string | null | undefined): string => {
   }
 };
 
-export const dynamic = 'force-dynamic';
-
 export default function Blog() {
   const { data, isLoading } = useBlogPage();
   const [searchQuery, setSearchQuery] = useState("");

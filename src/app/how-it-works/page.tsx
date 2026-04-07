@@ -13,8 +13,6 @@ import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { Button } from "@/components/ui/button";
 
-// Force dynamic rendering (no static generation)
-export const dynamic = 'force-dynamic';
 
 const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
   ssr: false,
