@@ -6,15 +6,10 @@ import dynamicImport from "next/dynamic";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useQuote } from "@/api/quote";
-import { getIcon } from "@/lib/icons";
-import { Shield, Clock, Star, Phone, CheckCircle, Info } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { HeroSection, StatsBar, CallToAction } from "@/types/LandingPage.types";
 import type { SectionIntro, ComparisonTable, SimpleStepsSection } from "@/types/Quote.types";
 import type { PricingFactorsSection } from "@/types/Pricing.types";
-
-export const dynamic = 'force-dynamic';
 
 const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
   ssr: false,

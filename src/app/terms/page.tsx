@@ -6,9 +6,6 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useTerms } from "@/api/terms";
 import type { PrivacySection } from "@/types/Privacy.types";
 
-// Force dynamic rendering (no static generation)
-export const dynamic = 'force-dynamic';
-
 /**
  * Terms of Service page component
  * 

@@ -2,21 +2,15 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import dynamicImport from "next/dynamic";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useLosAngelesShipping } from "@/api/losAngelesShipping";
-import { getIcon } from "@/lib/icons";
-import { MapPin, Phone, Building2, CheckCircle } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { HeroSection, StatsBar, FAQDisplay, CallToAction } from "@/types/LandingPage.types";
 import type { RouteTable } from "@/types/CaliforniaShipping.types";
 import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
 import type { NeighborhoodsSection, RelatedPagesSection } from "@/types/LosAngelesShipping.types";
-
-export const dynamic = 'force-dynamic';
 
 const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
   ssr: false,

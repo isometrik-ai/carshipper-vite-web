@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import type { EnclosedTransportResponse } from "@/types/EnclosedTransport.types";
 import EnclosedTransportPageClient from "./EnclosedTransportPageClient";
 
-export const dynamic = "force-dynamic";
-
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://carshippers.ai";
 const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
