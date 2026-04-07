@@ -79,37 +79,23 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
     };
   }, [countryCode, restrictToCitiesOnly]);
   
-  // Initialize the hook - it will handle the case when Google Maps isn't ready yet
-  // const {
-  //   ready,
-  //   value,
-  //   suggestions: { status, data },
-  //   setValue,
-  //   clearSuggestions,
-  // } = isLoaded ? usePlacesAutocomplete({
-  //   requestOptions,
-  //   debounce: 300,
-  // }) : null;
+  const places = usePlacesAutocomplete({
+    requestOptions,
+    debounce: 300,
+    initOnMount: false,
+  });
 
-    // ✅ ALWAYS call hook (no condition)
-    const places = usePlacesAutocomplete({
-      requestOptions,
-      debounce: 300,
-      initOnMount: false,
-    });
+  useEffect(() => {
+    if (!isLoaded || hasInitializedPlacesRef.current) return;
+    places.init();
+    hasInitializedPlacesRef.current = true;
+  }, [isLoaded]);
 
-    useEffect(() => {
-      if (!isLoaded || hasInitializedPlacesRef.current) return;
-      places.init();
-      hasInitializedPlacesRef.current = true;
-    }, [isLoaded]);
-  
-    // ✅ Safe values
-    const value = places.value || "";
-    const status = isLoaded ? places.suggestions.status : "";
-    const data = isLoaded ? places.suggestions.data : EMPTY_SUGGESTIONS;
-    const setValue = places.setValue;
-    const clearSuggestions = places.clearSuggestions;
+  const value = places.value || "";
+  const status = isLoaded ? places.suggestions.status : "";
+  const data = isLoaded ? places.suggestions.data : EMPTY_SUGGESTIONS;
+  const setValue = places.setValue;
+  const clearSuggestions = places.clearSuggestions;
 
   const [defaultAddress, setDefaultAddress] = useState<boolean>(false);
 
@@ -219,18 +205,6 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
     }
   },[placeValue]);
 
-  // useEffect(()=>{
-  //   if(callClearSuggestions) clearSuggestions();
-  // },[callClearSuggestions])
-  
-  // Clear everything when country code changes
-  // useEffect(() => {
-  //   setValue('', false);
-  //   clearSuggestions();
-  //   setDefaultAddress(false);
-  //   setIsSearchAddress(false);
-  // }, [countryCode]);
-
   return (
     <>
       <div className={googleSearchBarMainContainerClassName}>
@@ -253,7 +227,6 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
               }}
               onBlur={()=>{
                 onBlur();
-                // loadScript();
               }}
               onKeyDown={onKeyDown}
               placeholder={placeholderText}
