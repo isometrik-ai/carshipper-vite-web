@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
-import { cache } from "react";
 import { SEO_FALLBACKS, SEO_SITE } from "@/constants/seo";
-import { fetchStrapiSeoMetadata } from "@/lib/seo/strapiSeo";
+import { getLandingPageData } from "@/lib/landingPage.server";
+import { getLandingSeoFromData } from "@/lib/landingPage.shared";
 import HomePageClient from "./HomePageClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const SITE_URL = SEO_SITE.url;
 const DEFAULT_TITLE = SEO_FALLBACKS.global.title;
 const DEFAULT_DESCRIPTION = SEO_FALLBACKS.global.description;
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
-const getHomeSeo = cache(() =>
-  fetchStrapiSeoMetadata(STRAPI_API_URL, "/api/landing-page")
-);
 
 const toAbsoluteUrl = (url?: string | null): string | undefined => {
   if (!url) return undefined;
@@ -33,7 +29,8 @@ const parseRobots = (robots?: string | null): Metadata["robots"] => {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
-  const seo = await getHomeSeo();
+  const initialData = await getLandingPageData();
+  const seo = getLandingSeoFromData(initialData);
   const title = seo?.meta_title || DEFAULT_TITLE;
   const description = seo?.meta_description || DEFAULT_DESCRIPTION;
   const canonical = seo?.canonical_url || SITE_URL;
@@ -73,7 +70,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function HomePage() {
-  return <HomePageClient />;
+export default async function HomePage() {
+  const initialData = await getLandingPageData();
+  return <HomePageClient initialData={initialData} />;
 }
 
