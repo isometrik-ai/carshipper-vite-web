@@ -4,11 +4,19 @@ import { dedupeRemotePatterns, toRemotePattern, toRemotePatternFromHost } from "
 const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://carshippersapi.loadfinder.ai";
 const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 const strapiProductionUrl = process.env.NEXT_PUBLIC_STRAPI_PRODUCTION_URL;
+const strapiMediaOrigin = process.env.NEXT_PUBLIC_STRAPI_MEDIA_ORIGIN;
 const gumletHost = process.env.NEXT_PUBLIC_GUMLET_HOST || process.env.NEXT_PUBLIC_GUMLET_CDN_HOST;
 
 const remotePatterns = dedupeRemotePatterns([
   ...(strapiUrl ? [toRemotePattern(strapiUrl)] : []),
   ...(strapiProductionUrl ? [toRemotePattern(strapiProductionUrl)] : []),
+  ...(strapiMediaOrigin
+    ? strapiMediaOrigin
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((u) => toRemotePattern(u))
+    : []),
   ...(gumletHost ? [toRemotePatternFromHost(gumletHost)] : []),
   { protocol: "http", hostname: "localhost", port: "1337", pathname: "/uploads/**" },
   { protocol: "https", hostname: "localhost", port: "1337", pathname: "/uploads/**" },
