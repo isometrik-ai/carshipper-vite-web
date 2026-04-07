@@ -13,13 +13,13 @@ import type {
     CallToAction,
 } from "@/types/LandingPage.types";
 
-const TrustBar = dynamic(() => import("@/components/sections/TrustBar"));
-const ProcessStepsSection = dynamic(() => import("@/components/sections/ProcessStepsSection"));
-const WhyChooseUs = dynamic(() => import("@/components/sections/WhyChooseUs"));
-const PricingSection = dynamic(() => import("@/components/sections/PricingSection"));
-const TestimonialsSection = dynamic(() => import("@/components/sections/TestimonialsSection"));
-const FAQSection = dynamic(() => import("@/components/sections/FAQSection"));
-const FinalCTA = dynamic(() => import("@/components/sections/FinalCTA"));
+const TrustBar = dynamic(() => import("@/components/sections/TrustBar"), { ssr: false });
+const ProcessStepsSection = dynamic(() => import("@/components/sections/ProcessStepsSection"), { ssr: false });
+const WhyChooseUs = dynamic(() => import("@/components/sections/WhyChooseUs"), { ssr: false });
+const PricingSection = dynamic(() => import("@/components/sections/PricingSection"), { ssr: false });
+const TestimonialsSection = dynamic(() => import("@/components/sections/TestimonialsSection"), { ssr: false });
+const FAQSection = dynamic(() => import("@/components/sections/FAQSection"), { ssr: false });
+const FinalCTA = dynamic(() => import("@/components/sections/FinalCTA"), { ssr: false });
 
 /**
  * Type guard to check if component matches a specific type

@@ -1,5 +1,3 @@
-/* Inter is loaded via next/font in layout.tsx — avoid a second Google Fonts request and duplicate CSS */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
