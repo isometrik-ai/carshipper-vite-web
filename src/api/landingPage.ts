@@ -23,18 +23,14 @@ export const fetchLandingPage = async (): Promise<LandingPageResponse> => {
 export const useLandingPage = (initialData?: LandingPageResponse) => {
   const queryResult = useQuery({
     queryKey: ["landing-page"],
-    queryFn: () =>
-      fetchLandingPage().catch((error) => {
-        console.error("Failed to fetch landing page:", error);
-        throw error;
-      }),
+    queryFn: fetchLandingPage,
     initialData,
     refetchOnWindowFocus: false,
     refetchOnMount: initialData ? false : "always",
     staleTime: 60 * 1000,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
-    throwOnError: (error: Error, _query: Query<LandingPageResponse, Error, LandingPageResponse, string[]>) => {
+    throwOnError: (error: Error, _query) => {
       console.error("Landing page fetch error:", error);
       return true;
     },
