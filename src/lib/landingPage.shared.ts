@@ -34,6 +34,10 @@ export const fetchLandingPageData = async (): Promise<LandingPageResponse> => {
 
     return response;
   } catch (error) {
+    if (!(error instanceof Error)) {
+      // Wrap non-Error objects to prevent unhandled rejection
+      throw new LandingPageFetchError(`Failed to fetch landing page: Unknown error`, error);
+    }
     throw toLandingPageFetchError(error);
   }
 };
