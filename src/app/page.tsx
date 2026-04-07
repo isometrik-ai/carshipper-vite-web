@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SEO_FALLBACKS, SEO_SITE } from "@/constants/seo";
-import { getLandingPageData, getLandingSeoFromData } from "@/lib/landingPage.server";
+import { getLandingPageData } from "@/lib/landingPage.server";
+import { getLandingSeoFromData } from "@/lib/landingPage.shared";
 import HomePageClient from "./HomePageClient";
 
 export const revalidate = 60;
