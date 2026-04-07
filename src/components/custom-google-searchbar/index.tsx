@@ -3,57 +3,9 @@ import { KeyWordSearchIcon } from '@/assets/icons/key-word-search-icon';
 import React, { useEffect, useState, useMemo, ReactNode, useRef } from 'react';
 import usePlacesAutocomplete, { getGeocode, getLatLng } from 'use-places-autocomplete';
 import { DEFAULT_COUNTRY_CODE } from '@/lib/config';
+import { useGoogleMapsScript } from '@/hooks/use-google-place-script';
 
-// Helper function to check if Google Maps is loaded
-const isGoogleMapsLoaded = (): boolean => {
-  if (typeof window === "undefined") return false;
-
-  const w = window as any;
-  return !!(w.google?.maps?.places);
-};
-
-// Hook to wait for Google Maps to load
-const useGoogleMapsLoader = () => {
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    // Check if already loaded
-    if (isGoogleMapsLoaded() || (typeof window !== 'undefined' && (window as any).googleMapsLoaded)) {
-      setIsLoaded(true);
-      return;
-    }
-
-    // Check if script exists
-    const script = document.querySelector('#google-maps-script');
-    if (!script) {
-      console.warn('Google Maps script not found');
-      return;
-    }
-
-    // Listen for the custom event
-    const handleGoogleMapsLoaded = () => {
-      setIsLoaded(true);
-    };
-
-    window.addEventListener('google-maps-loaded', handleGoogleMapsLoaded);
-
-    // Also poll as a fallback
-    const checkInterval = setInterval(() => {
-      if (isGoogleMapsLoaded() || (typeof window !== 'undefined' && (window as any).googleMapsLoaded)) {
-        setIsLoaded(true);
-        clearInterval(checkInterval);
-      }
-    }, 100);
-
-    // Cleanup
-    return () => {
-      clearInterval(checkInterval);
-      window.removeEventListener('google-maps-loaded', handleGoogleMapsLoaded);
-    };
-  }, []);
-
-  return isLoaded;
-};
+const EMPTY_SUGGESTIONS: any[] = [];
 
 interface googleSearchBarProps{
   searchInputClassName?:string
@@ -113,10 +65,10 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
     restrictToCitiesOnly = false,
     } = {...props};
   
-  // Wait for Google Maps to load before using the hook
-  const isGoogleMapsReady = useGoogleMapsLoader();
+  const { isLoaded, loadScript } = useGoogleMapsScript();
   const [enhancedSuggestions, setEnhancedSuggestions] = useState<any[]>([]);
   const zipCache = useRef<Record<string, string>>({});
+  const hasInitializedPlacesRef = useRef(false);
   
   // Memoize the request options: country restriction + address vs cities only
   const requestOptions = useMemo(() => {
@@ -128,16 +80,36 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
   }, [countryCode, restrictToCitiesOnly]);
   
   // Initialize the hook - it will handle the case when Google Maps isn't ready yet
-  const {
-    ready,
-    value,
-    suggestions: { status, data },
-    setValue,
-    clearSuggestions,
-  } = usePlacesAutocomplete({
-    requestOptions,
-    debounce: 300,
-  });
+  // const {
+  //   ready,
+  //   value,
+  //   suggestions: { status, data },
+  //   setValue,
+  //   clearSuggestions,
+  // } = isLoaded ? usePlacesAutocomplete({
+  //   requestOptions,
+  //   debounce: 300,
+  // }) : null;
+
+    // ✅ ALWAYS call hook (no condition)
+    const places = usePlacesAutocomplete({
+      requestOptions,
+      debounce: 300,
+      initOnMount: false,
+    });
+
+    useEffect(() => {
+      if (!isLoaded || hasInitializedPlacesRef.current) return;
+      places.init();
+      hasInitializedPlacesRef.current = true;
+    }, [isLoaded]);
+  
+    // ✅ Safe values
+    const value = places.value || "";
+    const status = isLoaded ? places.suggestions.status : "";
+    const data = isLoaded ? places.suggestions.data : EMPTY_SUGGESTIONS;
+    const setValue = places.setValue;
+    const clearSuggestions = places.clearSuggestions;
 
   const [defaultAddress, setDefaultAddress] = useState<boolean>(false);
 
@@ -213,7 +185,7 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
       const sourceData = restrictToCitiesOnly ? filteredSuggestions : data;
 
       if (status !== "OK" || !sourceData?.length) {
-        setEnhancedSuggestions([]);
+        setEnhancedSuggestions((prev) => (prev.length ? [] : prev));
         return;
       }
 
@@ -260,89 +232,97 @@ export default function AddressAutocomplete(props:googleSearchBarProps) {
   // }, [countryCode]);
 
   return (
-    <div className={googleSearchBarMainContainerClassName}>
-      <div className={`flex items-center border-[1px]
-        border-custom-text-input-border rounded-[8px] ${googleSearchBarMainWrapperClassName}`}>
-        {showSearchIcon && <div className='flex items-center justify-center w-[25px] h-[25px] ml-[15px] mt-1'>
-          <KeyWordSearchIcon width={20.45} height={20} />
-        </div>}
-        {showSearchPointNameReactNode && <div className='searchPointNameReactNodeWrapper'>
-          {searchPointNameReactNode}
-        </div>}
-        <div className='flex w-full items-center'>
-          <input
-            value={value}
-            onChange={handleInput}
-            onPaste={handlePaste}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            onKeyDown={onKeyDown}
-            placeholder={placeholderText}
-            className={`p-[8px] ${searchInputClassName} outline-none`}
-            style={{padding: "8px 4px", width: mainContainerWidth, height: mainContainerHeight}}
-            readOnly={isDisabled}
-          />
-          {showNavigationIconReactNode && <span className='mr-[10px]'>
-            {showNavigationIconReactNode}
-          </span>}
-          {value?.length > 0 && <span
-          className={`mt-[10px] pr-[10px] mr-[20px] cursor-pointer ${closeIconClassName}`}
-          onClick={()=>{
-            setValue('', true);
-            setDefaultAddress(false);
-            setIsSearchAddress(false);
-            clearAllValues();
-          }}>
-            <CloseNewIcon width={20} height={20} />
+    <>
+      <div className={googleSearchBarMainContainerClassName}>
+        <div className={`flex items-center border-[1px]
+          border-custom-text-input-border rounded-[8px] ${googleSearchBarMainWrapperClassName}`}>
+          {showSearchIcon && <div className='flex items-center justify-center w-[25px] h-[25px] ml-[15px] mt-1'>
+            <KeyWordSearchIcon width={20.45} height={20} />
+          </div>}
+          {showSearchPointNameReactNode && <div className='searchPointNameReactNodeWrapper'>
+            {searchPointNameReactNode}
+          </div>}
+          <div className='flex w-full items-center'>
+            <input
+              value={value}
+              onChange={handleInput}
+              onPaste={handlePaste}
+              onFocus={()=>{
+                onFocus();
+                loadScript();
+              }}
+              onBlur={()=>{
+                onBlur();
+                // loadScript();
+              }}
+              onKeyDown={onKeyDown}
+              placeholder={placeholderText}
+              className={`p-[8px] ${searchInputClassName} outline-none`}
+              style={{padding: "8px 4px", width: mainContainerWidth, height: mainContainerHeight}}
+              readOnly={isDisabled}
+            />
+            {showNavigationIconReactNode && <span className='mr-[10px]'>
+              {showNavigationIconReactNode}
+            </span>}
+            {value?.length > 0 && <span
+            className={`mt-[10px] pr-[10px] mr-[20px] cursor-pointer ${closeIconClassName}`}
+            onClick={()=>{
+              setValue('', true);
+              setDefaultAddress(false);
+              setIsSearchAddress(false);
+              clearAllValues();
+            }}>
+              <CloseNewIcon width={20} height={20} />
 
-          </span>}
+            </span>}
+            </div>
           </div>
-        </div>
-      {/* Suggestions dropdown */}
-      {(status === "OK" && !defaultAddress) && (
-        <ul style={{ listStyle: "none", padding: 0 }} className={AddressListContainerClassName}>
-          {/* {(restrictToCitiesOnly ? filteredSuggestions : data).map(({ place_id, description }) => (
-            <li
-              key={place_id}
-              onClick={() => handleSelect(description)}
-              style={{ cursor: "pointer", padding: "8px", background: "var(--white-color)", margin: "4px 0"}}
-            >
-              {description}
-            </li>
-          ))} */}
-          {restrictToCitiesOnly ? enhancedSuggestions.map((item: any) => {
-            const { place_id, description, zip, structured_formatting } = item;
-
-            const mainText = structured_formatting?.main_text;
-            const secondaryText = structured_formatting?.secondary_text;
-
-            return (
+        {/* Suggestions dropdown */}
+        {(status === "OK" && !defaultAddress && isLoaded) && (
+          <ul style={{ listStyle: "none", padding: 0 }} className={AddressListContainerClassName}>
+            {/* {(restrictToCitiesOnly ? filteredSuggestions : data).map(({ place_id, description }) => (
               <li
                 key={place_id}
                 onClick={() => handleSelect(description)}
-                style={{
-                  cursor: "pointer",
-                  padding: "8px",
-                  background: "var(--white-color)",
-                  margin: "4px 0"
-                }}
+                style={{ cursor: "pointer", padding: "8px", background: "var(--white-color)", margin: "4px 0"}}
               >
-                <strong>{mainText}</strong>
-                {secondaryText && `, ${secondaryText}`}
-                {zip && ` ${zip}`}
+                {description}
               </li>
-            );
-            }) : data?.map(({ place_id, description }) => (
-            <li
-              key={place_id}
-              onClick={() => handleSelect(description)}
-              style={{ cursor: "pointer", padding: "8px", background: "var(--white-color)", margin: "4px 0"}}
-            >
-              {description}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+            ))} */}
+            {restrictToCitiesOnly ? enhancedSuggestions.map((item: any) => {
+              const { place_id, description, zip, structured_formatting } = item;
+
+              const mainText = structured_formatting?.main_text;
+              const secondaryText = structured_formatting?.secondary_text;
+
+              return (
+                <li
+                  key={place_id}
+                  onClick={() => handleSelect(description)}
+                  style={{
+                    cursor: "pointer",
+                    padding: "8px",
+                    background: "var(--white-color)",
+                    margin: "4px 0"
+                  }}
+                >
+                  <strong>{mainText}</strong>
+                  {secondaryText && `, ${secondaryText}`}
+                  {zip && ` ${zip}`}
+                </li>
+              );
+              }) : data?.map(({ place_id, description }) => (
+              <li
+                key={place_id}
+                onClick={() => handleSelect(description)}
+                style={{ cursor: "pointer", padding: "8px", background: "var(--white-color)", margin: "4px 0"}}
+              >
+                {description}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
   );
 }
