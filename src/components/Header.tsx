@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHeader } from "@/api/header";
-import { getIcon, DEFAULT_ICON } from "@/lib/icons";
-import { Skeleton } from "@/components/ui/skeleton";
+import { getIcon } from "@/lib/icons";
+import HeaderLoadingSkeleton from "@/components/HeaderLoadingSkeleton";
 import type { LucideIcon } from "lucide-react";
 import type { HeaderData, NavLink } from "@/types/Header.types";
 
@@ -189,37 +189,11 @@ const Header = () => {
   // Reserve the same horizontal layout as the loaded header (nav + phone + CTA + mobile toggle) to reduce CLS.
   if (isLoading && !data) {
     return (
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
-        <div className="container mx-auto px-4">
-          <div
-            className="flex items-center justify-between gap-4 h-16 md:h-20"
-            role="status"
-            aria-label="Loading site header"
-          >
-            <Logo
-              logoText={DEFAULT_LOGO_TEXT}
-              logoHighlight={DEFAULT_LOGO_HIGHLIGHT}
-              logoIcon={DEFAULT_ICON}
-            />
-
-            <nav className="hidden md:flex items-center gap-8" aria-hidden="true">
-              {FALLBACK_NAV_LINKS.map((link) => (
-                <Skeleton key={link.id} className="h-4 w-16 lg:w-20 shrink-0" />
-              ))}
-            </nav>
-
-            <div className="hidden md:flex items-center gap-4 shrink-0">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-9 w-36 rounded-md" />
-            </div>
-
-            <Skeleton
-              className="md:hidden h-10 w-10 shrink-0 rounded-lg"
-              aria-hidden="true"
-            />
-          </div>
-        </div>
-      </header>
+      <HeaderLoadingSkeleton
+        logoText={DEFAULT_LOGO_TEXT}
+        logoHighlight={DEFAULT_LOGO_HIGHLIGHT}
+        navLinks={FALLBACK_NAV_LINKS}
+      />
     );
   }
 

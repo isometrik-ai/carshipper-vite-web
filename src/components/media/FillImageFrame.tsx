@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import React, { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type FillImageFrameProps = {
@@ -25,6 +25,16 @@ export default function FillImageFrame({
   aspectClassName = "aspect-video",
   fullBleed = false,
 }: FillImageFrameProps) {
+  // Enforce 'object-cover' class for images with 'fill' layout if children include images
+  const enhancedChildren = React.Children.map(children, child => {
+    if (React.isValidElement(child) && child.type === 'img') {
+      const existingClass = child.props.className || '';
+      // Add 'object-cover' if not present
+      const newClassName = existingClass.includes('object-cover') ? existingClass : `${existingClass} object-cover`;
+      return React.cloneElement(child, { className: newClassName });
+    }
+    return child;
+  });
   return (
     <div
       className={cn(
@@ -33,7 +43,7 @@ export default function FillImageFrame({
         className
       )}
     >
-      {children}
+      {enhancedChildren}
     </div>
   );
 }
