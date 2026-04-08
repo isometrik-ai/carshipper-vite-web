@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Lock, ArrowRight, ArrowLeft, Plus, MapPin, Check, X, Truck, Shield, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -129,6 +130,45 @@ const emptyVehicle = (): Vehicle => ({
   personalItems: "None or less than 100 lbs.",
   vehicleType: "SUV",
 });
+
+const QuoteFormLoadingSkeleton = () => {
+  return (
+    <div
+      className="bg-card rounded-2xl shadow-2xl p-6 md:p-8 overflow-hidden min-h-[36rem]"
+      role="status"
+      aria-label="Loading quote form"
+    >
+      <div className="mb-6 space-y-3">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-6 w-36 rounded-full" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <Skeleton className="h-2 w-full rounded-full" />
+      </div>
+
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-40" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      </div>
+
+      <div className="mt-8 flex items-center justify-between gap-3">
+        <Skeleton className="h-10 w-24" />
+        <Skeleton className="h-10 w-28" />
+      </div>
+    </div>
+  );
+};
 
 const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormProps) => {
   const { data, isLoading: isConfigLoading } = useQuoteForm();
@@ -763,9 +803,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   // Show loading state if config is loading
   if (isConfigLoading && !data) {
     return (
-      <div className="flex-1" role="main" aria-label="Main content">
-        <PageSkeleton withHeaderOffset={false} />
-      </div>
+      <QuoteFormLoadingSkeleton />
     );
   }
 
