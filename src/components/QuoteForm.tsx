@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Lock, ArrowRight, ArrowLeft, Plus, MapPin, Check, X, Truck, Shield, Tra
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { VehicleSelector, Vehicle, getVehicleDisplayName, isVehicleComplete } from "./VehicleSelector";
+import { getAllVehicleColorsList, getAllVehiclesTypesList } from "@/services/booking-services";
 import { useQuoteForm } from "@/api/quoteForm";
 import { getIcon } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
@@ -41,6 +42,93 @@ interface DropLocation {
 }
 
 type Step = "vehicles" | "running" | "pickup" | "drops" | "transport" | "timeframe" | "contact";
+
+const mapPersonalItemsForQuotePayload = (personalItems: string): string => {
+  const normalized = (personalItems || "").toLowerCase().trim();
+  if (normalized.includes("none") || normalized.includes("less than 100")) return "0-100";
+  if (normalized.includes("100-150")) return "100-150";
+  if (normalized.includes("150-200")) return "150-200";
+  if (normalized.includes("more than 200")) return "200+";
+  return "0-100";
+};
+
+/** API often returns i18n objects like `{ en: "Flatbed" }`; plain strings are also supported. */
+function pickLocalizedOrPlainString(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (value && typeof value === "object") {
+    const o = value as Record<string, unknown>;
+    if (typeof o.en === "string") return o.en.trim();
+    const first = Object.values(o).find((v) => typeof v === "string");
+    if (typeof first === "string") return first.trim();
+  }
+  return "";
+}
+
+function normalizeVehicleColorApiResponse(apiResponse: unknown): string[] {
+  const body = (apiResponse as { data?: unknown })?.data ?? apiResponse;
+  let list: unknown[] = [];
+  if (Array.isArray(body)) list = body;
+  else if (body && typeof body === "object") {
+    const o = body as Record<string, unknown>;
+    if (Array.isArray(o.data)) list = o.data as unknown[];
+    else if (Array.isArray(o.colors)) list = o.colors as unknown[];
+    else if (Array.isArray(o.items)) list = o.items as unknown[];
+  }
+  return list
+    .map((item) => {
+      if (typeof item === "string") return item.trim();
+      if (item && typeof item === "object") {
+        const r = item as Record<string, unknown>;
+        const s = (r.name ?? r.colorName ?? r.color ?? r.label ?? r.title ?? "") as string;
+        return String(s).trim();
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function normalizeVehicleTypesApiResponse(apiResponse: unknown): string[] {
+  if (apiResponse == null) return [];
+  const body = (apiResponse as { data?: unknown })?.data ?? apiResponse;
+  let list: unknown[] = [];
+  if (Array.isArray(body)) list = body;
+  else if (body && typeof body === "object") {
+    const o = body as Record<string, unknown>;
+    if (Array.isArray(o.data)) list = o.data as unknown[];
+    else if (Array.isArray(o.vehicleTypes)) list = o.vehicleTypes as unknown[];
+    else if (Array.isArray(o.types)) list = o.types as unknown[];
+    else if (Array.isArray(o.items)) list = o.items as unknown[];
+  }
+  return list
+    .map((item) => {
+      if (typeof item === "string") return item.trim();
+      if (item && typeof item === "object") {
+        const r = item as Record<string, unknown>;
+        const fromTypeName = pickLocalizedOrPlainString(r.typeName);
+        const fallback = String(
+          r.name ?? r.type ?? r.vehicleType ?? r.label ?? r.title ?? r.equipmentsShortCode ?? ""
+        ).trim();
+        return (fromTypeName || fallback).trim();
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+}
+
+const emptyVehicle = (): Vehicle => ({
+  id: Date.now().toString(),
+  year: "",
+  make: "",
+  model: "",
+  isRunning: null,
+  vin: "",
+  vinLookupLoading: false,
+  color: "",
+  personalItems: "None or less than 100 lbs.",
+  vehicleType: "SUV",
+});
 
 const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormProps) => {
   const { data, isLoading: isConfigLoading } = useQuoteForm();
@@ -110,8 +198,55 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
 
   // Vehicles
   const [vehicles, setVehicles] = useState<Vehicle[]>([
-    { id: "1", year: "", make: "", model: "", isRunning: null, vin: "", vinLookupLoading: false }
+    {
+      id: "1",
+      year: "",
+      make: "",
+      model: "",
+      isRunning: null,
+      vin: "",
+      vinLookupLoading: false,
+      color: "",
+      personalItems: "None or less than 100 lbs.",
+      vehicleType: "SUV",
+    },
   ]);
+
+  const [vehicleColorOptions, setVehicleColorOptions] = useState<string[]>([]);
+  const [vehicleColorsLoading, setVehicleColorsLoading] = useState(true);
+  const [vehicleTypeOptions, setVehicleTypeOptions] = useState<string[]>([]);
+  const [vehicleTypesLoading, setVehicleTypesLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [colorRes, typesRes] = await Promise.all([
+          getAllVehicleColorsList(),
+          getAllVehiclesTypesList(),
+        ]);
+        const colorRaw = (colorRes as { data?: unknown })?.data ?? colorRes;
+        const typesRaw = (typesRes as { data?: unknown })?.data ?? typesRes;
+        if (!cancelled) {
+          setVehicleColorOptions(normalizeVehicleColorApiResponse(colorRaw));
+          setVehicleTypeOptions(normalizeVehicleTypesApiResponse(typesRaw));
+        }
+      } catch {
+        if (!cancelled) {
+          setVehicleColorOptions([]);
+          setVehicleTypeOptions([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setVehicleColorsLoading(false);
+          setVehicleTypesLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Locations
   const [pickupLocation, setPickupLocation] = useState(defaultOrigin);
@@ -163,7 +298,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   }, [formConfig.stepCounterFormat, currentStepIndex, STEPS.length]);
 
   const addVehicle = useCallback(() => {
-    setVehicles([...vehicles, { id: Date.now().toString(), year: "", make: "", model: "", isRunning: null, vin: "", vinLookupLoading: false }]);
+    setVehicles([...vehicles, emptyVehicle()]);
   }, [vehicles]);
 
 
@@ -383,6 +518,10 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           make: v.make,
           model: v.model,
           is_running: v.isRunning ?? true,
+          vin: (v.vin || "").trim(),
+          type: (v.vehicleType || "").trim(),
+          color: (v.color || "").trim(),
+          personal_items_weight: mapPersonalItemsForQuotePayload(v.personalItems || ""),
         })),
         pickup_city: pickupCity,
         pickup_state: pickupState,
@@ -710,6 +849,10 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                   showRemove={vehicles.length > 1}
                   onUpdate={(updates) => updateVehicle(vehicle.id, updates)}
                   onRemove={() => removeVehicle(vehicle.id)}
+                  vehicleColorOptions={vehicleColorOptions}
+                  vehicleColorsLoading={vehicleColorsLoading}
+                  vehicleTypeOptions={vehicleTypeOptions}
+                  vehicleTypesLoading={vehicleTypesLoading}
                   vehicleFieldConfig={formConfig.vehicleFieldConfig || {
                     id: 0,
                     vehicle_label_format: "Vehicle {index}",
@@ -1021,7 +1164,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                 </div>
               ))}
             </div>
-
+{/* 
             {vehicles.length > 1 ? (
               <Button
                 type="button"
@@ -1032,7 +1175,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                 <Plus className="w-4 h-4 mr-2" />
                 {formConfig.buttonTexts.add_drop_location_button}
               </Button>
-            ) : null}
+            ) : null} */}
           </motion.div>
         )}
 

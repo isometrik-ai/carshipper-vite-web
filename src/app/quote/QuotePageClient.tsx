@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import dynamicImport from "next/dynamic";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
@@ -23,11 +23,17 @@ type QuotePageClientProps = {
 };
 
 export default function QuotePageClient({ initialData }: QuotePageClientProps = {}) {
+  const prefersReducedMotion = useReducedMotion();
+  const heroInitial = prefersReducedMotion ? false : { opacity: 0, y: 12 };
+  const heroAnimate = { opacity: 1, y: 0 };
+  const fadeInitial = prefersReducedMotion ? false : { opacity: 0 };
+  const heroTransition = { duration: prefersReducedMotion ? 0.2 : 0.35 };
+
   const { data, isLoading } = useQuote(initialData);
 
   const pageData = useMemo(() => {
     if (!data?.data?.page_content) return null;
-    const content = data.data.page_content;
+    const content = data.data.page_content ?? [];
     const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
     const statsBar = content.find(c => c.__component === "shared.stats-bar") as StatsBar | undefined;
     const sectionIntro = content.find(c => c.__component === "shared.section-intro") as SectionIntro | undefined;
@@ -87,9 +93,9 @@ export default function QuotePageClient({ initialData }: QuotePageClientProps = 
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 items-start">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                initial={heroInitial}
+                animate={heroAnimate}
+                transition={heroTransition}
               >
                 <h1 className="text-4xl md:text-5xl font-bold mb-6">
                   {pageData.hero?.main_headline || "Get Your Quote"}{" "}
@@ -104,9 +110,9 @@ export default function QuotePageClient({ initialData }: QuotePageClientProps = 
                 ) : null}
               </motion.div>
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+                initial={fadeInitial}
+                animate={{ opacity: 1 }}
+                transition={{ ...heroTransition, delay: prefersReducedMotion ? 0 : 0.05 }}
                 className="min-h-[min(36rem,75vh)] w-full"
               >
                 <QuoteForm />
