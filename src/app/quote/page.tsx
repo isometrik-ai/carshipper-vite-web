@@ -1,4 +1,5 @@
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+import { logQuoteFetchFailure } from "@/api/quote";
 import { QUOTE_PAGE_QUERY_KEY, QUOTE_PAGE_STALE_MS } from "@/lib/quotePage.queries";
 import { fetchQuotePageData } from "@/lib/quotePage.utils";
 import QuotePageClient from "./QuotePageClient";
@@ -14,7 +15,8 @@ export default async function QuotePage() {
       queryFn: fetchQuotePageData,
       staleTime: QUOTE_PAGE_STALE_MS,
     });
-  } catch {
+  } catch (error) {
+    logQuoteFetchFailure(error);
     // Prefetch failed (e.g. Strapi down); client `useQuote` will run `queryFn` once mounted.
   }
 
