@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Car, Pencil, Trash2, Plus, Scan, CarFront, CheckCircle2, Briefcase, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { VinNumberDetails } from "@/services/quote-services";
+import { QUOTE_PERSONAL_ITEMS_OPTIONS } from "@/components/VehicleSelector";
 
 export interface Vehicle {
   id: string;
@@ -32,7 +33,7 @@ interface EditVehicleDialogProps {
 const years = Array.from({ length: 30 }, (_, i) => 2026 - i);
 const makes = ["Acura", "Audi", "BMW", "Buick", "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia", "Lexus", "Lincoln", "Mazda", "Mercedes-Benz", "Nissan", "Porsche", "Ram", "Subaru", "Tesla", "Toyota", "Volkswagen", "Volvo"];
 const vehicleTypes = ["Sedan", "SUV", "Truck", "Van", "Coupe", "Convertible", "Wagon", "Hatchback", "Motorcycle"];
-const personalItemsOptions = ["None or less than 100 lbs.", "100-200 lbs", "200+", "More than 200 lbs"];
+const personalItemsOptions = useMemo(() => QUOTE_PERSONAL_ITEMS_OPTIONS, []);
 
 export function EditVehicleDialog({
   open,
