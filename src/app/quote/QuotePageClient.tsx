@@ -7,7 +7,6 @@ import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useQuote } from "@/api/quote";
 import { Button } from "@/components/ui/button";
-import type { QuoteResponse } from "@/types/Quote.types";
 import type { HeroSection, StatsBar, CallToAction } from "@/types/LandingPage.types";
 import type { SectionIntro, ComparisonTable, SimpleStepsSection } from "@/types/Quote.types";
 import type { PricingFactorsSection } from "@/types/Pricing.types";
@@ -17,12 +16,8 @@ const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
   loading: () => <PageSkeleton />,
 });
 
-type QuotePageClientProps = {
-  initialData?: QuoteResponse;
-};
-
-export default function QuotePageClient({ initialData }: QuotePageClientProps) {
-  const { data, isLoading } = useQuote(initialData);
+export default function QuotePageClient() {
+  const { data, isLoading } = useQuote();
 
   const pageData = useMemo(() => {
     if (!data?.data?.page_content) return null;

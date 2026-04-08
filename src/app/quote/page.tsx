@@ -1,9 +1,26 @@
+import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+import { QUOTE_PAGE_QUERY_KEY, QUOTE_PAGE_STALE_MS } from "@/lib/quotePage.queries";
+import { fetchQuotePageData } from "@/lib/quotePage.utils";
 import QuotePageClient from "./QuotePageClient";
-import { getQuotePageData } from "@/lib/quotePage.server";
 
 export const revalidate = 60;
 
 export default async function QuotePage() {
-  const initialData = await getQuotePageData();
-  return <QuotePageClient initialData={initialData} />;
+  const queryClient = new QueryClient();
+
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: QUOTE_PAGE_QUERY_KEY,
+      queryFn: fetchQuotePageData,
+      staleTime: QUOTE_PAGE_STALE_MS,
+    });
+  } catch {
+    // Prefetch failed (e.g. Strapi down); client `useQuote` will run `queryFn` once mounted.
+  }
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <QuotePageClient />
+    </HydrationBoundary>
+  );
 }

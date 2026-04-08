@@ -1,20 +1,18 @@
-import { Query, useQuery } from "@tanstack/react-query";
-import type { QuoteResponse } from "@/types/Quote.types";
-import { fetchQuotePageData } from "@/lib/quotePage.shared";
+import { useQuery } from "@tanstack/react-query";
+import { fetchQuotePageData } from "@/lib/quotePage.utils";
+import { QUOTE_PAGE_QUERY_KEY, QUOTE_PAGE_STALE_MS } from "@/lib/quotePage.queries";
 
 /**
- * React Query hook for fetching Quote page data (optional SSR `initialData` from `getQuotePageData`).
+ * Quote marketing page data. Hydrates from server `HydrationBoundary` when prefetched; otherwise fetches on the client.
  */
-export const useQuote = (initialData?: QuoteResponse) =>
+export const useQuote = () =>
     useQuery({
-        queryKey: ["quote"],
+        queryKey: QUOTE_PAGE_QUERY_KEY,
         queryFn: fetchQuotePageData,
-        initialData,
+        staleTime: QUOTE_PAGE_STALE_MS,
         refetchOnWindowFocus: false,
-        refetchOnMount: initialData ? false : "always",
-        staleTime: 60 * 1000,
-        throwOnError:(error: Error, query: Query<QuoteResponse, Error, QuoteResponse, string[]>) => {
-            console.error('Quote fetch error:', error);
+        throwOnError: (error: Error) => {
+            console.error("Quote fetch error:", error);
             return true;
         },
     });
