@@ -33,7 +33,7 @@ export default function QuotePageClient({ initialData }: QuotePageClientProps = 
 
   const pageData = useMemo(() => {
     if (!data?.data?.page_content) return null;
-    const content = data.data.page_content;
+    const content = data.data.page_content ?? [];
     const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
     const statsBar = content.find(c => c.__component === "shared.stats-bar") as StatsBar | undefined;
     const sectionIntro = content.find(c => c.__component === "shared.section-intro") as SectionIntro | undefined;
