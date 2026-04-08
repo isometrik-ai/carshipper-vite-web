@@ -5,37 +5,52 @@ import { motion } from "framer-motion";
 import dynamicImport from "next/dynamic";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { useRentalCarLogistics } from "@/api/rentalCarLogistics";
-import { getIcon } from "@/lib/icons";
-import type { LucideIcon } from "lucide-react";
+import { useQuote } from "@/api/quote";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import type { HeroSection, FAQDisplay, CallToAction } from "@/types/LandingPage.types";
-import type { TextSection } from "@/types/AboutPage.types";
-import type { ServiceCards } from "@/types/AutoAuctionShipping.types";
+import type { QuoteResponse } from "@/types/Quote.types";
+import type { HeroSection, StatsBar, CallToAction } from "@/types/LandingPage.types";
+import type { SectionIntro, ComparisonTable, SimpleStepsSection } from "@/types/Quote.types";
+import type { PricingFactorsSection } from "@/types/Pricing.types";
 
 const QuoteForm = dynamicImport(() => import("@/components/QuoteForm"), {
   ssr: false,
   loading: () => <PageSkeleton />,
 });
 
-export default function RentalCarLogistics() {
-  const { data, isLoading } = useRentalCarLogistics();
+type QuotePageClientProps = {
+  /** Optional seed data; production uses server prefetch + hydration instead. */
+  initialData?: QuoteResponse;
+};
+
+export default function QuotePageClient({ initialData }: QuotePageClientProps = {}) {
+  const { data, isLoading } = useQuote(initialData);
 
   const pageData = useMemo(() => {
     if (!data?.data?.page_content) return null;
     const content = data.data.page_content;
     const heroSection = content.find(c => c.__component === "shared.hero-section") as HeroSection | undefined;
-    const textSection = content.find(c => c.__component === "shared.text-section") as TextSection | undefined;
-    const serviceCards = content.find(c => c.__component === "shared.service-cards") as ServiceCards | undefined;
-    const faqDisplay = content.find(c => c.__component === "shared.faq-display") as FAQDisplay | undefined;
+    const statsBar = content.find(c => c.__component === "shared.stats-bar") as StatsBar | undefined;
+    const sectionIntro = content.find(c => c.__component === "shared.section-intro") as SectionIntro | undefined;
+    const distanceTable = content.find(c => 
+      c.__component === "shared.comparison-table" && 
+      (c as ComparisonTable).section_title === "Average Cost by Distance"
+    ) as ComparisonTable | undefined;
+    const vehicleTable = content.find(c => 
+      c.__component === "shared.comparison-table" && 
+      (c as ComparisonTable).section_title === "Average Cost by Vehicle Type"
+    ) as ComparisonTable | undefined;
+    const pricingFactors = content.find(c => c.__component === "shared.pricing-factors-section") as PricingFactorsSection | undefined;
+    const simpleSteps = content.find(c => c.__component === "shared.simple-steps-section") as SimpleStepsSection | undefined;
     const cta = content.find(c => c.__component === "shared.call-to-action") as CallToAction | undefined;
 
     return {
       hero: heroSection,
-      textSection,
-      serviceCards,
-      faq: faqDisplay,
+      stats: statsBar,
+      sectionIntro,
+      distanceTable,
+      vehicleTable,
+      pricingFactors,
+      simpleSteps,
       cta,
     };
   }, [data]);
@@ -67,7 +82,7 @@ export default function RentalCarLogistics() {
   return (
     <>
       <PageSEO seoMetadata={data?.data?.seo_metadata} pageContent={pageContent} />
-      <main className="flex-1 pt-20">
+      <div className="flex-1 pt-20">
         <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background">
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 items-start">
@@ -77,7 +92,7 @@ export default function RentalCarLogistics() {
                 transition={{ duration: 0.5 }}
               >
                 <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                  {pageData.hero?.main_headline || "Rental Car Logistics"}{" "}
+                  {pageData.hero?.main_headline || "Get Your Quote"}{" "}
                   {pageData.hero?.highlighted_text ? (
                     <span className="text-primary">{pageData.hero.highlighted_text}</span>
                   ) : null}
@@ -92,6 +107,7 @@ export default function RentalCarLogistics() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
+                className="min-h-[min(36rem,75vh)] w-full"
               >
                 <QuoteForm />
               </motion.div>
@@ -99,36 +115,22 @@ export default function RentalCarLogistics() {
           </div>
         </section>
 
-        {pageData.textSection ? (
-          <section className="py-16 md:py-20 bg-muted/30">
+        {pageData.stats ? (
+          <section className="py-8 bg-muted/30">
             <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-card rounded-2xl p-8 border border-border"
-                >
-                  {pageData.textSection.section_title ? (
-                    <h2 className="text-2xl font-bold mb-4">{pageData.textSection.section_title}</h2>
-                  ) : null}
-                  {pageData.textSection.paragraphs ? (
-                    <div className="text-muted-foreground">
-                      {pageData.textSection.paragraphs.split('\n\n').map((paragraph: string, index: number) => (
-                        <p key={index} className={index > 0 ? "mt-4" : ""}>
-                          {paragraph}
-                        </p>
-                      ))}
-                    </div>
-                  ) : null}
-                </motion.div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {pageData.stats.statistics && pageData.stats.statistics.map((stat: { id?: number; value: string; label: string }) => (
+                  <div key={stat.id ?? stat.label} className="text-center">
+                    <div className="text-2xl font-bold text-primary">{stat.value}</div>
+                    <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
         ) : null}
 
-        {pageData.serviceCards ? (
+        {pageData.simpleSteps ? (
           <section className="py-16 md:py-24">
             <div className="container mx-auto px-4">
               <motion.div
@@ -138,33 +140,39 @@ export default function RentalCarLogistics() {
                 transition={{ duration: 0.5 }}
                 className="text-center mb-12"
               >
-                {pageData.serviceCards.section_title ? (
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">{pageData.serviceCards.section_title}</h2>
+                {pageData.simpleSteps.section_title ? (
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4">{pageData.simpleSteps.section_title}</h2>
                 ) : null}
               </motion.div>
-              {pageData.serviceCards.service_cards && pageData.serviceCards.service_cards.length > 0 ? (
+              {pageData.simpleSteps.steps && pageData.simpleSteps.steps.length > 0 ? (
                 <div className="grid md:grid-cols-3 gap-8">
-                  {pageData.serviceCards.service_cards.map((card: any, index: number) => {
-                    const CardIcon = card.icon_name
-                      ? (getIcon(card.icon_name) as LucideIcon)
-                      : null;
+                  {pageData.simpleSteps.steps.map((step, index) => {
+                    const s = step as {
+                      id?: number;
+                      step_title?: string;
+                      title?: string;
+                      step_description?: string;
+                      description?: string;
+                    };
+                    const title = s.step_title ?? s.title ?? "";
+                    const description = s.step_description ?? s.description;
                     return (
-                      <motion.div
-                        key={card.id || index}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                        className="bg-card p-6 rounded-2xl border border-border text-center"
-                      >
-                        {CardIcon ? (
-                          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                            <CardIcon className="w-6 h-6 text-primary" aria-hidden="true" />
-                          </div>
-                        ) : null}
-                        <h3 className="text-xl font-semibold mb-2">{card.title}</h3>
-                        <p className="text-muted-foreground">{card.description}</p>
-                      </motion.div>
+                    <motion.div
+                      key={s.id ?? index}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="text-center"
+                    >
+                      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl font-bold text-primary">{index + 1}</span>
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+                      {description ? (
+                        <p className="text-muted-foreground">{description}</p>
+                      ) : null}
+                    </motion.div>
                     );
                   })}
                 </div>
@@ -183,14 +191,14 @@ export default function RentalCarLogistics() {
                 transition={{ duration: 0.5 }}
               >
                 <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-                  {pageData.cta.headline || "Get Your Rental Car Logistics Quote"}
+                  {pageData.cta.headline || "Ready to Get Started?"}
                 </h2>
                 {pageData.cta.primary_button ? (
                   <Button
                     variant="secondary"
                     size="xl"
                     onClick={() => {
-                      if (pageData.cta.primary_button?.button_link) {
+                      if (pageData.cta?.primary_button?.button_link) {
                         window.location.href = pageData.cta.primary_button.button_link;
                       } else {
                         window.location.href = "/#quote-form";
@@ -198,15 +206,13 @@ export default function RentalCarLogistics() {
                     }}
                   >
                     {pageData.cta.primary_button.button_text || "Get Your Free Quote"}
-                    <ArrowRight className="w-5 h-5" aria-hidden="true" />
                   </Button>
                 ) : null}
               </motion.div>
             </div>
           </section>
         ) : null}
-      </main>
+      </div>
     </>
   );
 }
-

@@ -4,12 +4,22 @@ import { dedupeRemotePatterns, toRemotePattern, toRemotePatternFromHost } from "
 const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://carshippersapi.loadfinder.ai";
 const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 const strapiProductionUrl = process.env.NEXT_PUBLIC_STRAPI_PRODUCTION_URL;
+const strapiMediaOrigin = process.env.NEXT_PUBLIC_STRAPI_MEDIA_ORIGIN;
 const gumletHost = process.env.NEXT_PUBLIC_GUMLET_HOST || process.env.NEXT_PUBLIC_GUMLET_CDN_HOST;
 
 const remotePatterns = dedupeRemotePatterns([
   ...(strapiUrl ? [toRemotePattern(strapiUrl)] : []),
   ...(strapiProductionUrl ? [toRemotePattern(strapiProductionUrl)] : []),
+  ...(strapiMediaOrigin
+    ? strapiMediaOrigin
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((u) => toRemotePattern(u))
+    : []),
   ...(gumletHost ? [toRemotePatternFromHost(gumletHost)] : []),
+  // Strapi Cloud serves uploads on per-project hosts: *.media.strapiapp.com
+  { protocol: "https", hostname: "*.media.strapiapp.com", pathname: "/**" },
   { protocol: "http", hostname: "localhost", port: "1337", pathname: "/uploads/**" },
   { protocol: "https", hostname: "localhost", port: "1337", pathname: "/uploads/**" },
 ]);
@@ -28,6 +38,10 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   compress: true,
+  // Smaller client bundles for barrel-heavy packages (lucide/date-fns are also optimized by default in Next 14)
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts"],
+  },
   // async rewrites() {
   //   return [{ source: "/api/backend/:path*", destination: `${backendUrl}/:path*` }];
   // },

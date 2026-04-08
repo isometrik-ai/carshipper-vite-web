@@ -14,8 +14,6 @@ import type { LucideIcon } from "lucide-react";
 import type { HeroSection, CallToAction } from "@/types/LandingPage.types";
 import type { TrackingForm, TrackingStepsSection } from "@/types/TrackShipment.types";
 
-export const dynamic = 'force-dynamic';
-
 export default function TrackShipment() {
   const { data, isLoading } = useTrackShipment();
   const [trackingNumber, setTrackingNumber] = useState("");

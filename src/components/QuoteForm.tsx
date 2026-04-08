@@ -764,7 +764,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   if (isConfigLoading && !data) {
     return (
       <div className="flex-1" role="main" aria-label="Main content">
-        <PageSkeleton />
+        <PageSkeleton withHeaderOffset={false} />
       </div>
     );
   }

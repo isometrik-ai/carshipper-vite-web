@@ -3,8 +3,6 @@ import { cache } from "react";
 import type { CaliforniaShippingResponse } from "@/types/CaliforniaShipping.types";
 import CaliforniaShippingPageClient from "./CaliforniaShippingPageClient";
 
-export const dynamic = "force-dynamic";
-
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://carshippers.ai";
 const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 const HAS_VALID_STRAPI_API_URL =

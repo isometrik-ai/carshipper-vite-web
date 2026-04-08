@@ -18,9 +18,6 @@ import { Input } from "@/components/ui/input";
 import type { FAQHero, FAQCategories, ContactCTA, FAQItem } from "@/types/FAQ.types";
 import type { CallToAction } from "@/types/LandingPage.types";
 
-// Force dynamic rendering (no static generation)
-export const dynamic = 'force-dynamic';
-
 /**
  * FAQ page component
  * 

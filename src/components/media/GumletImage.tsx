@@ -1,4 +1,5 @@
-import Image, { ImageLoaderProps, type ImageLoader, type ImageProps } from "next/image";
+import Image, { type ImageProps } from "next/image";
+import { cn } from "@/lib/utils";
 import { buildGumletUrl } from "@/lib/urlHelpers.mjs";
 
 type GumletImageProps = Omit<ImageProps, "loader"> & {
@@ -8,46 +9,77 @@ type GumletImageProps = Omit<ImageProps, "loader"> & {
    */
   gumletHost?: string;
   /**
-   * If provided, only rewrite image URLs that start with this origin (no trailing slash),
-   * e.g. "https://cms.example.com". Helpful when your `src` is a full Strapi URL.
+   * Allowed source URL prefix(es). Defaults to env: API URL, optional production URL, and
+   * `NEXT_PUBLIC_STRAPI_MEDIA_ORIGIN` (Strapi Cloud media host, e.g. `https://xxx.media.strapiapp.com`).
    */
-  sourceOrigin?: string;
+  sourceOrigin?: string | string[];
 };
 
-const gumletLoader: ImageLoader = ({ src, width, quality }) => {
-  // We read env at runtime so this component works across environments.
-  const gumletHost = process.env.NEXT_PUBLIC_GUMLET_HOST ?? process.env.NEXT_PUBLIC_GUMLET_CDN_HOST ?? undefined;
-  const sourceOrigin = process.env.NEXT_PUBLIC_STRAPI_API_URL ?? undefined;
-  if (!gumletHost || !sourceOrigin) {
-    throw new Error("Missing required environment variables for GumletImage");
+function gumletSourceOriginsFromEnv(): string[] {
+  const raw = [
+    process.env.NEXT_PUBLIC_STRAPI_API_URL,
+    process.env.NEXT_PUBLIC_STRAPI_PRODUCTION_URL,
+    process.env.NEXT_PUBLIC_STRAPI_MEDIA_ORIGIN,
+  ];
+  const out: string[] = [];
+  for (const r of raw) {
+    if (!r) continue;
+    for (const part of r.split(",")) {
+      const s = part.trim();
+      if (s) out.push(s);
+    }
   }
+  return out;
+}
 
-  return buildGumletUrl({
-    src,
-    gumletHost: gumletHost || undefined,
-    sourceOrigin: sourceOrigin || undefined,
-    width,
-    quality,
-  });
-};
-const loader = (args: any): string =>
-  buildGumletUrl({
-    src: args.src,
-    width: args.width,
-    quality: args.quality,
-    gumletHost:
-      args?.gumletHost ??
-      process.env.NEXT_PUBLIC_GUMLET_HOST ??
-      process.env.NEXT_PUBLIC_GUMLET_CDN_HOST ??
-      undefined,
-    sourceOrigin: args?.sourceOrigin ?? process.env.NEXT_PUBLIC_STRAPI_API_URL ?? undefined,
-  });
+function resolveGumletLoaderArgs(gumletHost?: string, sourceOrigin?: string | string[]) {
+  const origins =
+    sourceOrigin !== undefined
+      ? Array.isArray(sourceOrigin)
+        ? sourceOrigin
+        : [sourceOrigin]
+      : gumletSourceOriginsFromEnv();
+
+  const host =
+    gumletHost ??
+    process.env.NEXT_PUBLIC_GUMLET_HOST ??
+    process.env.NEXT_PUBLIC_GUMLET_CDN_HOST ??
+    undefined;
+
+  return { host, origins };
+}
 
 export default function GumletImage({
   gumletHost,
   sourceOrigin,
+  className,
+  fill,
   ...props
 }: GumletImageProps) {
-  return <Image {...props} loader={() => loader(props)} />;
+  const { host, origins } = resolveGumletLoaderArgs(gumletHost, sourceOrigin);
+  /** Default `object-cover` for `fill` layouts so parents keep a stable box (CLS). Override via `className`. */
+  const mergedClassName = cn(fill && "object-cover", className);
+
+  // No Gumlet account: use Next.js default optimizer (see `images.remotePatterns` in next.config).
+  if (!host || origins.length === 0) {
+    return <Image {...props} fill={fill} className={mergedClassName} />;
+  }
+
+  return (
+    <Image
+      {...props}
+      fill={fill}
+      className={mergedClassName}
+      loader={({ src, width, quality }) =>
+        buildGumletUrl({
+          src,
+          width,
+          quality,
+          gumletHost: host,
+          sourceOrigin: origins,
+        })
+      }
+    />
+  );
 }
 

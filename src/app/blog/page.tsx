@@ -9,6 +9,7 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useBlogPage } from "@/api/blog";
 import { getStrapiMediaUrl } from "@/lib/strapi";
 import GumletImage from "@/components/media/GumletImage";
+import FillImageFrame from "@/components/media/FillImageFrame";
 import { Search, Calendar, ArrowRight, Tag } from "lucide-react";
 import Link from "next/link";
 
@@ -25,8 +26,6 @@ const formatDate = (dateString: string | null | undefined): string => {
     return dateString;
   }
 };
-
-export const dynamic = 'force-dynamic';
 
 export default function Blog() {
   const { data, isLoading } = useBlogPage();
@@ -182,16 +181,15 @@ export default function Blog() {
                       className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg transition-shadow"
                     >
                     {featuredSrc ? (
-                      <div className="aspect-video bg-muted relative">
+                      <FillImageFrame>
                         <GumletImage
                           src={featuredSrc}
                           alt={post.title || "Blog post"}
                           fill
                           priority={index < 3}
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          className="object-cover"
                         />
-                      </div>
+                      </FillImageFrame>
                     ) : null}
                       <div className="p-6">
                         {post.category ? (

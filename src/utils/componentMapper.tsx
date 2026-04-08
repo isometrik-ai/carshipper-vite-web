@@ -1,12 +1,6 @@
 import { useMemo } from "react";
+import dynamic from "next/dynamic";
 import HeroSection from "@/components/sections/HeroSection";
-import TrustBar from "@/components/sections/TrustBar";
-import HowItWorks from "@/components/sections/HowItWorks";
-import WhyChooseUs from "@/components/sections/WhyChooseUs";
-import PricingSection from "@/components/sections/PricingSection";
-import TestimonialsSection from "@/components/sections/TestimonialsSection";
-import FAQSection from "@/components/sections/FAQSection";
-import FinalCTA from "@/components/sections/FinalCTA";
 import type {
     PageContentComponent,
     HeroSection as HeroSectionType,
@@ -18,7 +12,14 @@ import type {
     FAQDisplay,
     CallToAction,
 } from "@/types/LandingPage.types";
-import ProcessStepsSection from "@/components/sections/ProcessStepsSection";
+
+const TrustBar = dynamic(() => import("@/components/sections/TrustBar"), { ssr: false });
+const ProcessStepsSection = dynamic(() => import("@/components/sections/ProcessStepsSection"), { ssr: false });
+const WhyChooseUs = dynamic(() => import("@/components/sections/WhyChooseUs"), { ssr: false });
+const PricingSection = dynamic(() => import("@/components/sections/PricingSection"), { ssr: false });
+const TestimonialsSection = dynamic(() => import("@/components/sections/TestimonialsSection"), { ssr: false });
+const FAQSection = dynamic(() => import("@/components/sections/FAQSection"), { ssr: false });
+const FinalCTA = dynamic(() => import("@/components/sections/FinalCTA"), { ssr: false });
 
 /**
  * Type guard to check if component matches a specific type

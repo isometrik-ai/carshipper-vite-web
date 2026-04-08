@@ -1,32 +1,35 @@
-import { Query, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import type { QuoteResponse } from "@/types/Quote.types";
-import { STRAPI_API_URL } from "@/lib/strapi";
-/**
- * Fetches Quote page data from Strapi with full population
- */
-const fetchQuote = async (): Promise<QuoteResponse> => {
-    try {
-        const response = await fetch(`${STRAPI_API_URL}/api/quote?populate[seo_metadata]=*&populate[seo_metadata][populate][og_image][fields][0]=url&populate[seo_metadata][populate][og_image][fields][1]=alternativeText&populate[seo_metadata][populate][og_image][fields][2]=width&populate[seo_metadata][populate][og_image][fields][3]=height&populate[seo_metadata][populate][twitter_image][fields][0]=url&populate[seo_metadata][populate][twitter_image][fields][1]=alternativeText&populate[seo_metadata][populate][twitter_image][fields][2]=width&populate[seo_metadata][populate][twitter_image][fields][3]=height&populate[page_content][on][shared.hero-section][populate]=*&populate[page_content][on][shared.stats-bar][populate]=*&populate[page_content][on][shared.section-intro][populate]=*&populate[page_content][on][shared.comparison-table][populate]=*&populate[page_content][on][shared.pricing-factors-section][populate]=*&populate[page_content][on][shared.simple-steps-section][populate]=*&populate[page_content][on][shared.call-to-action][populate]=*`);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch Quote page: ${response.statusText}`);
-        }
-        return await response.json();
-    } catch (error) {
-        // Log error or handle fallback
-        throw error;
-    }
-};
+import { fetchQuotePageData } from "@/lib/quotePage.utils";
+import { QUOTE_PAGE_QUERY_KEY, QUOTE_PAGE_STALE_MS } from "@/lib/quotePage.queries";
+
+/** Shared logging for failed quote page fetches (prefetch on server or `useQuote` on client). */
+export function logQuoteFetchFailure(error: unknown): void {
+  const err = error instanceof Error ? error : new Error(String(error));
+  console.error("Quote fetch error:", err);
+}
 
 /**
- * React Query hook for fetching Quote page data
+ * React Query `throwOnError` handler: logs and propagates to the error boundary.
  */
-export const useQuote = () =>
-    useQuery({
-        queryKey: ["quote"],
-        queryFn: fetchQuote,
-        refetchOnWindowFocus: false,
-        throwOnError:(error: Error, query: Query<QuoteResponse, Error, QuoteResponse, string[]>) => {
-            console.error('Quote fetch error:', error);
-            return true;
-        },
-    });
+export function handleQuoteQueryError(error: unknown): boolean {
+  logQuoteFetchFailure(error);
+  return true;
+}
+
+/**
+ * Quote marketing page data.
+ * - With `HydrationBoundary` + prefetch (see `src/app/quote/page.tsx`), omit `initialData` — the hydrated cache is used.
+ * - Pass `initialData` when seeding from props (e.g. tests or a parent that already fetched).
+ */
+export const useQuote = (initialData?: QuoteResponse) =>
+  useQuery({
+    queryKey: QUOTE_PAGE_QUERY_KEY,
+    queryFn: fetchQuotePageData,
+    initialData,
+    staleTime: QUOTE_PAGE_STALE_MS,
+    refetchOnWindowFocus: false,
+    /** When `initialData` is provided, skip mount refetch; otherwise follow QueryClient defaults (hydration-friendly). */
+    refetchOnMount: initialData !== undefined ? false : undefined,
+    throwOnError: handleQuoteQueryError,
+  });

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SEO_FALLBACKS, SEO_SITE } from "@/constants/seo";
+import ResourceHints from "@/components/ResourceHints";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,12 +11,21 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Footer from "@/components/Footer";
 import dynamic from "next/dynamic";
 const Header = dynamic(() => import("@/components/Header"));
+/** Reserves the same footprint as the chat FAB so the lazy chunk does not pop in from nothing (CLS). */
 const ChatWidget = dynamic(() => import("@/components/ChatWidget"), {
   ssr: false,
-  loading: () => null,
+  loading: () => (
+    <div
+      className="fixed bottom-6 right-6 z-50 h-14 w-14 shrink-0 rounded-full bg-muted/30 animate-pulse"
+      aria-hidden
+    />
+  ),
 });
-import Script from "next/script";
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  adjustFontFallback: true,
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SEO_SITE.url),
@@ -28,41 +38,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <ResourceHints />
+      </head>
       <body className={inter.className}>
-       <Script id="google-maps-init" strategy="beforeInteractive">
-        {`
-          (function () {
-            window.initGoogleMaps = function () {
-              window.googleMapsLoaded = true;
-              if (typeof window !== "undefined") {
-                window.dispatchEvent(new Event("google-maps-loaded"));
-              }
-            };
-            if (
-              typeof window !== "undefined" &&
-              window.google &&
-              window.google.maps &&
-              window.google.maps.places
-            ) {
-              window.googleMapsLoaded = true;
-              window.dispatchEvent(new Event("google-maps-loaded"));
-            }
-          })();
-        `}
-      </Script>
-
-      <Script
-        id="google-maps-script"
-        strategy="beforeInteractive"
-        src={
-          `https://maps.googleapis.com/maps/api/js?key=${googleApiKey}` +
-          "&libraries=places&callback=initGoogleMaps&loading=async"}
-        async
-        defer
-      />
         <QueryProvider>
           <TooltipProvider>
             <ErrorBoundary>
