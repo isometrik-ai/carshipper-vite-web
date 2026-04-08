@@ -37,8 +37,8 @@ const YEARS = Array.from({ length: currentYear - 1979 + 1 }, (_, i) => (currentY
 /** Matches EditVehicleDialog / booking personal-items weight bands */
 export const QUOTE_PERSONAL_ITEMS_OPTIONS = [
   "None or less than 100 lbs.",
-  "100-150 lbs",
-  "150-200 lbs",
+  "100-200 lbs",
+  // "150-200 lbs",
   "More than 200 lbs",
 ] as const;
 
@@ -319,7 +319,7 @@ export const VehicleSelector = ({
       {/* Vehicle type (API: /vehicleType) */}
       <div className="mt-3">
         <Label className="text-xs text-muted-foreground flex items-center gap-1">
-          <Truck className="w-3 h-3" /> Vehicle type
+          <Truck className="w-3 h-3" /> Vehicle type (Optional)
         </Label>
         {vehicleTypesLoading ? (
           <div className="mt-1 flex h-10 items-center gap-2 rounded-md border border-input bg-muted/50 px-3 text-xs text-muted-foreground">
@@ -358,7 +358,7 @@ export const VehicleSelector = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
         <div>
           <Label className="text-xs text-muted-foreground flex items-center gap-1">
-            <Palette className="w-3 h-3" /> Vehicle color
+            <Palette className="w-3 h-3" /> Vehicle color (Optional)
           </Label>
           {vehicleColorsLoading ? (
             <div className="mt-1 flex h-10 items-center gap-2 rounded-md border border-input bg-muted/50 px-3 text-xs text-muted-foreground">
@@ -394,7 +394,7 @@ export const VehicleSelector = ({
         </div>
         <div>
           <Label className="text-xs text-muted-foreground flex items-center gap-1">
-            <Briefcase className="w-3 h-3" /> Personal items
+            <Briefcase className="w-3 h-3" /> Personal items (Optional)
           </Label>
           <Select
             value={vehicle.personalItems || QUOTE_PERSONAL_ITEMS_OPTIONS[0]}

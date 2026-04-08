@@ -124,6 +124,8 @@ export function DeliveryStep({ formData, updateFormData, onNext, onBack, quoteDa
       deliveryBackupPhone: data.deliveryBackupPhone || "",
       deliveryNotes: data.deliveryNotes,
       deliveryWillBePresent: data.deliveryWillBePresent,
+      deliveryBuyerNumber: data.deliveryBuyerNumber || "",
+      deliveryLotNumber: data.deliveryLotNumber || "",
     });
     onNext();
   };

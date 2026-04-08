@@ -332,7 +332,7 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            {/* <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="vinNumber">VIN Number (Optional)</Label>
                 <Input
@@ -349,7 +349,7 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
                   {...register("vehicleColor")}
                 />
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       )}

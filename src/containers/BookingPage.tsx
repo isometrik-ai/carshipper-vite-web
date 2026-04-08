@@ -342,10 +342,10 @@ const mapQuoteVehiclesToShippingVehicles = (
     operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
     personalItems: (() => {
       const weight = (v?.personal_items_weight || "").toLowerCase().trim();
-      if (weight === "100-150") return "100-150 lbs";
-      if (weight === "150-200") return "150-200 lbs";
-      if (weight === "200+" || weight.includes("more")) return "More than 200 lbs";
-      return "None or less than 100 lbs.";
+      if (weight === "100-150") return "100-200";
+      if (weight === "150-200") return "150-200";
+      if (weight === "200+" || weight.includes("more")) return "200+";
+      return "0-100";
     })(),
   }));
 };
@@ -668,7 +668,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
             state: pickupAddress.state,
             zip: pickupAddress.zip,
           },
-          charge_now: false,
+          charge_now: true,
         },
         terms: {
           accepted: formData.agreedToTerms,
