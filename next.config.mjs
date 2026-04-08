@@ -18,6 +18,8 @@ const remotePatterns = dedupeRemotePatterns([
         .map((u) => toRemotePattern(u))
     : []),
   ...(gumletHost ? [toRemotePatternFromHost(gumletHost)] : []),
+  // Strapi Cloud serves uploads on per-project hosts: *.media.strapiapp.com
+  { protocol: "https", hostname: "*.media.strapiapp.com", pathname: "/**" },
   { protocol: "http", hostname: "localhost", port: "1337", pathname: "/uploads/**" },
   { protocol: "https", hostname: "localhost", port: "1337", pathname: "/uploads/**" },
 ]);

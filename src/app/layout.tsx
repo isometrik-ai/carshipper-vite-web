@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SEO_FALLBACKS, SEO_SITE } from "@/constants/seo";
+import ResourceHints from "@/components/ResourceHints";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
@@ -29,6 +30,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <ResourceHints />
+      </head>
       <body className={inter.className}>
         <QueryProvider>
           <TooltipProvider>

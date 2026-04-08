@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import dynamic from "next/dynamic";
-import Loader from "@/components/ui/loader/loader";
-
+import BookingPageLoading from "@/components/booking/BookingPageLoading";
 
 const BookingPage = dynamic(() => import("@/containers/BookingPage"), {
   ssr: false,
+  loading: () => <BookingPageLoading />,
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://carshippers.ai";
@@ -40,13 +39,6 @@ export async function generateMetadata({
   };
 }
 
-function Loading() {
-  return <div className="flex h-screen items-center justify-center">
-      <Loader />
-      Loading Booking Details...
-    </div>;
-}
-
 export default function Page({ 
   params, 
   searchParams 
@@ -55,11 +47,9 @@ export default function Page({
   searchParams: { tier?: string };
 }) {
   return (
-    <Suspense fallback={<Loading />}>
-      <BookingPage 
-        quoteId={params?.quoteId} 
-        initialTier={searchParams?.tier as "saver" | "priority" | "rush" | undefined}
-      />
-    </Suspense>
+    <BookingPage 
+      quoteId={params?.quoteId} 
+      initialTier={searchParams?.tier as "saver" | "priority" | "rush" | undefined}
+    />
   );
 }
