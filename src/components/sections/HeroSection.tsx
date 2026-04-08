@@ -172,7 +172,7 @@ const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
 
           {/* Right: Quote Form */}
           {showQuoteForm ? (
-            <div className="lg:pl-8" aria-label="Quote form section">
+            <div className="lg:pl-8 min-h-[min(36rem,75vh)] w-full" aria-label="Quote form section">
               <QuoteForm />
             </div>
           ) : null}

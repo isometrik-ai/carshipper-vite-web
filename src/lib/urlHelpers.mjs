@@ -51,6 +51,17 @@ export function dedupeRemotePatterns(patterns) {
   });
 }
 
+/**
+ * @param {string | string[] | undefined} sourceOrigin
+ *   One or more allowed URL prefixes (e.g. Strapi API + Strapi Cloud media host).
+ *   Strapi often returns assets on `*.media.strapiapp.com` while the API is `*.strapiapp.com`.
+ */
+function normalizeSourceOrigins(sourceOrigin) {
+  if (!sourceOrigin) return [];
+  const list = Array.isArray(sourceOrigin) ? sourceOrigin : [sourceOrigin];
+  return list.map((o) => normalizeNoTrailingSlash(String(o).trim())).filter(Boolean);
+}
+
 export function buildGumletUrl(params) {
   const { src, gumletHost, sourceOrigin, width, quality } = params;
   if (!gumletHost) return src;
@@ -59,9 +70,10 @@ export function buildGumletUrl(params) {
   const srcUrl = tryUrl(src);
   if (!srcUrl) return src;
 
-  if (sourceOrigin) {
-    const origin = normalizeNoTrailingSlash(sourceOrigin);
-    if (!src.startsWith(origin)) return src;
+  const origins = normalizeSourceOrigins(sourceOrigin);
+  if (origins.length > 0) {
+    const allowed = origins.some((origin) => src.startsWith(origin));
+    if (!allowed) return src;
   }
 
   // Validate width and quality to be positive integers
