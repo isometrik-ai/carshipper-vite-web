@@ -6,6 +6,7 @@ import { getStrapiMediaUrl } from "@/lib/strapi";
 import type { HeroSection as HeroSectionType } from "@/types/LandingPage.types";
 import type { LucideIcon } from "lucide-react";
 import GumletImage from "@/components/media/GumletImage";
+import FillImageFrame from "@/components/media/FillImageFrame";
 
 const QuoteForm = dynamic(() => import("@/components/QuoteForm"), {
   ssr: false,
@@ -64,8 +65,8 @@ const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
       {/* Background Image - Only show for quote form variant */}
       {showQuoteForm ? (
         <>
-          <div className="absolute inset-0 bg-muted" aria-hidden>
-            <div className="relative h-full min-h-full w-full">
+          <div className="absolute inset-0" aria-hidden>
+            <FillImageFrame fullBleed>
               <GumletImage
                 src={backgroundImageUrl || "/hero-bg.jpg"}
                 alt={heroData.backgroundImage?.alternativeText || "Car shipping background"}
@@ -74,7 +75,7 @@ const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
                 sizes="100vw"
                 className="object-center"
               />
-            </div>
+            </FillImageFrame>
           </div>
           
           {/* Overlay Gradient */}
