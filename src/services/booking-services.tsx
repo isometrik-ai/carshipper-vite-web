@@ -23,17 +23,17 @@ export const getAllContactList = async (
 ) => {
   const { skip, limit, search, isTmsOrCarrierVendor } = payload;
   try {
-    let endpoint = `${GET_CONTACTS_LIST}?limit=${limit}&skip=${skip}&status=1`;
+    let endpoint = `${GET_CONTACTS_LIST}/all?limit=${limit}&skip=${skip}&status=1`;
     if (search) {
-      endpoint += `&search=${search}`;
+      endpoint += `&search=${encodeURIComponent(search?.toLowerCase())}`;
     }
-    if (isTmsOrCarrierVendor) {
+    if (isTmsOrCarrierVendor !== undefined) {
       endpoint += `&isTmsOrCarrierVendor=${isTmsOrCarrierVendor}`;
     }
     const response = await getWithToken(endpoint, {}, "");
-    return response;
+    return { success: true, data: response };
   } catch (error) {
-    return error;
+    return { success: false, error: error.message || error };
   }
 };
 

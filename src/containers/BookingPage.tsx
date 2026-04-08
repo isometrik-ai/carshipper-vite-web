@@ -29,7 +29,7 @@ const SuccessStep = dynamic(() =>
   import("@/components/booking/SuccessStep").then((mod) => mod.SuccessStep)
 );
 import { QuoteGetDetailsAPI } from "@/services/quote-services";
-import { createNewShipmentBooking, getAllContactList, getAllVehiclesTypesList } from "@/services/booking-services";
+import { createNewShipmentBooking, getAllVehiclesTypesList } from "@/services/booking-services";
 import { toast } from "sonner";
 import { formatFullAddress } from "@/lib/address";
 import { getClientIPAddress } from "@/lib/global";
@@ -64,6 +64,10 @@ export interface BookingFormData {
   pickupBackupPhone: string;
   pickupWillBePresent: boolean;
   // Delivery Details
+  deliveryBuyerNumber: string;
+  deliveryLotNumber: string;
+  deliveryVinNumber: string;
+  deliveryVehicleColor: string;
   deliveryAddress: string;
   deliveryLatitude?: number;
   deliveryLongitude?: number;
@@ -109,6 +113,10 @@ const initialFormData: BookingFormData = {
   pickupBackupPhone: "",
   pickupWillBePresent: true,
   deliveryAddress: "",
+  deliveryBuyerNumber: "",
+  deliveryLotNumber: "",
+  deliveryVinNumber: "",
+  deliveryVehicleColor: "",
   deliveryLatitude: undefined,
   deliveryLongitude: undefined,
   deliveryCity: "Duluth",
@@ -621,6 +629,18 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
           address: deliveryAddress,
           business_info: {
             name: formData.deliveryBusinessName || fullName || "N/A",
+            ...(formData.deliveryBuyerNumber?.trim()
+            ? { buyer_number: formData.deliveryBuyerNumber.trim() }
+            : {}),
+          ...(formData.deliveryLotNumber?.trim()
+            ? { lot_number: formData.deliveryLotNumber.trim() }
+            : {}),
+          ...(formData.deliveryVinNumber?.trim()
+            ? { vn_number: formData.deliveryVinNumber.trim() }
+            : {}),
+          ...(formData.deliveryVehicleColor?.trim()
+            ? { color: formData.deliveryVehicleColor.trim() }
+            : {}),
           },
           contact: {
             name: formData.deliveryContactName || fullName,
@@ -695,14 +715,6 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
     }
   };
 
-  const getContactList = async () => {
-    try{
-      const response = await getAllContactList();
-      console.log(response);
-    } catch (error) {
-      console.error("Failed to get contact list", error);
-    }
-  };
   const getVehicleTypeList = async () => {
     try{
       const response = await getAllVehiclesTypesList();
@@ -712,7 +724,6 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
     }
   };
   useEffect(() => {
-    getContactList();
     getVehicleTypeList();
   }, []);
   

@@ -141,31 +141,31 @@ export const VehicleSelector = ({
     onUpdate({ vinLookupLoading: true });
 
     try {
-      const responseData = await fetch(
-        `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`
-      );
-      const dataRes = await responseData.json();
-      console.log('datares', dataRes);
-      // const response = await VinNumberDetails({ vin: vin });
-      // const data = response?.data;
-      // if (Object.keys(data).length > 0) {
-      //   const year = data?.year || "";
-      //   const make = data?.make || "";
-      //   const model = data?.model || "";
+      // const responseData = await fetch(
+      //   `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`
+      // );
+      // const dataRes = await responseData.json();
+      // console.log('datares', dataRes);
+      const response = await VinNumberDetails({ vin: vin });
+      const data = response?.data;
+      if (Object.keys(data).length > 0) {
+        const year = data?.year || "";
+        const make = data?.make || "";
+        const model = data?.model || "";
 
-      //   if (make && model) {
-      //     onUpdate({
-      //       year,
-      //       make,
-      //       model,
-      //       vinLookupLoading: false,
-      //     });
-      //     toast.success("Vehicle details found!");
-      //   } else {
-      //     toast.error("Could not decode VIN. Please select manually.");
-      //     onUpdate({ vinLookupLoading: false });
-      //   }
-      // }
+        if (make && model) {
+          onUpdate({
+            year,
+            make,
+            model,
+            vinLookupLoading: false,
+          });
+          toast.success("Vehicle details found!");
+        } else {
+          toast.error("Could not decode VIN. Please select manually.");
+          onUpdate({ vinLookupLoading: false });
+        }
+      }
     } catch (error) {
       toast.error("VIN lookup failed. Please select manually.");
       onUpdate({ vinLookupLoading: false });

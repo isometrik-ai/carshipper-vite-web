@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { getIcon, DEFAULT_ICON } from "@/lib/icons";
 import { getStrapiMediaUrl } from "@/lib/strapi";
 import type { HeroSection as HeroSectionType } from "@/types/LandingPage.types";
@@ -18,6 +18,12 @@ interface HeroSectionProps {
 }
 
 const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
+  const prefersReducedMotion = useReducedMotion();
+  const fadeInUpInitial = prefersReducedMotion ? false : { opacity: 0, y: 12 };
+  const fadeInUpAnimate = { opacity: 1, y: 0 };
+  const fadeOnlyInitial = prefersReducedMotion ? false : { opacity: 0 };
+  const shortTransition = { duration: prefersReducedMotion ? 0.2 : 0.35 };
+
   // Extract data with fallbacks
   const heroData = useMemo(() => {
     return {
@@ -93,16 +99,16 @@ const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
         <div className={`grid ${showQuoteForm ? "lg:grid-cols-2" : ""} gap-12 lg:gap-16 items-center`}>
           {/* Left: Value Proposition */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={fadeInUpInitial}
+            animate={fadeInUpAnimate}
+            transition={shortTransition}
             className={`${showQuoteForm ? "text-primary-foreground" : "max-w-3xl mx-auto text-center"}`}
           >
             {heroData.tagline ? (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+                initial={fadeOnlyInitial}
+                animate={{ opacity: 1 }}
+                transition={{ ...shortTransition, delay: prefersReducedMotion ? 0 : 0.05 }}
                 className="inline-flex items-center gap-2 bg-primary-foreground/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6"
               >
                 <TaglineIcon className="w-4 h-4" aria-hidden="true" />
@@ -135,9 +141,9 @@ const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
                   return (
                     <motion.div
                       key={indicator.id || indicator.text}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                      initial={fadeOnlyInitial}
+                      animate={{ opacity: 1 }}
+                      transition={{ ...shortTransition, delay: prefersReducedMotion ? 0 : 0.2 + index * 0.06 }}
                       className="flex items-center gap-2"
                       role="listitem"
                     >
@@ -154,9 +160,9 @@ const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
             {/* Stats Preview - Only show for quote form variant */}
             {showQuoteForm && heroData.statistics.length > 0 ? (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
+                initial={fadeOnlyInitial}
+                animate={{ opacity: 1 }}
+                transition={{ ...shortTransition, delay: prefersReducedMotion ? 0 : 0.25 }}
                 className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-primary-foreground/20"
                 role="list"
                 aria-label="Statistics"
