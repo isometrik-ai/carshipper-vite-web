@@ -32,7 +32,7 @@ interface EditVehicleDialogProps {
 const years = Array.from({ length: 30 }, (_, i) => 2026 - i);
 const makes = ["Acura", "Audi", "BMW", "Buick", "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia", "Lexus", "Lincoln", "Mazda", "Mercedes-Benz", "Nissan", "Porsche", "Ram", "Subaru", "Tesla", "Toyota", "Volkswagen", "Volvo"];
 const vehicleTypes = ["Sedan", "SUV", "Truck", "Van", "Coupe", "Convertible", "Wagon", "Hatchback", "Motorcycle"];
-const personalItemsOptions = ["None or less than 100 lbs.", "100-150 lbs", "150-200 lbs", "More than 200 lbs"];
+const personalItemsOptions = ["None or less than 100 lbs.", "100-200 lbs", "200+", "More than 200 lbs"];
 
 export function EditVehicleDialog({
   open,
