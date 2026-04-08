@@ -57,22 +57,22 @@ const HeroSection = ({ data, showQuoteForm = true }: HeroSectionProps) => {
   }, [heroData.backgroundImage]);
 
   return (
-    <section 
-      className={`relative ${showQuoteForm ? "min-h-screen pt-20" : "py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background"}`}
+    <section
+      className={`relative ${showQuoteForm ? "min-h-screen overflow-hidden pt-20" : "py-16 md:py-24 bg-gradient-to-b from-secondary/50 to-background"}`}
       aria-label="Hero section"
     >
       {/* Background Image - Only show for quote form variant */}
       {showQuoteForm ? (
         <>
-          <div className="absolute inset-0">
-            <div className="relative h-full w-full">
+          <div className="absolute inset-0 bg-muted" aria-hidden>
+            <div className="relative h-full min-h-full w-full">
               <GumletImage
                 src={backgroundImageUrl || "/hero-bg.jpg"}
                 alt={heroData.backgroundImage?.alternativeText || "Car shipping background"}
                 fill
                 priority
                 sizes="100vw"
-                style={{ objectFit: "cover", objectPosition: "center" }}
+                className="object-center"
               />
             </div>
           </div>

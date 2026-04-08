@@ -180,14 +180,13 @@ export default function Blog() {
                       className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg transition-shadow"
                     >
                     {featuredSrc ? (
-                      <div className="aspect-video bg-muted relative">
+                      <div className="relative aspect-video overflow-hidden bg-muted">
                         <GumletImage
                           src={featuredSrc}
                           alt={post.title || "Blog post"}
                           fill
                           priority={index < 3}
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          className="object-cover"
                         />
                       </div>
                     ) : null}

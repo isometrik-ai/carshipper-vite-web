@@ -1,4 +1,5 @@
 import Image, { type ImageProps } from "next/image";
+import { cn } from "@/lib/utils";
 import { buildGumletUrl } from "@/lib/urlHelpers.mjs";
 
 type GumletImageProps = Omit<ImageProps, "loader"> & {
@@ -51,18 +52,24 @@ function resolveGumletLoaderArgs(gumletHost?: string, sourceOrigin?: string | st
 export default function GumletImage({
   gumletHost,
   sourceOrigin,
+  className,
+  fill,
   ...props
 }: GumletImageProps) {
   const { host, origins } = resolveGumletLoaderArgs(gumletHost, sourceOrigin);
+  /** Default `object-cover` for `fill` layouts so parents keep a stable box (CLS). Override via `className`. */
+  const mergedClassName = cn(fill && "object-cover", className);
 
   // No Gumlet account: use Next.js default optimizer (see `images.remotePatterns` in next.config).
   if (!host || origins.length === 0) {
-    return <Image {...props} />;
+    return <Image {...props} fill={fill} className={mergedClassName} />;
   }
 
   return (
     <Image
       {...props}
+      fill={fill}
+      className={mergedClassName}
       loader={({ src, width, quality }) =>
         buildGumletUrl({
           src,
