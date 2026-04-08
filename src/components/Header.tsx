@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHeader } from "@/api/header";
-import { getIcon, DEFAULT_ICON } from "@/lib/icons";
+import { getIcon } from "@/lib/icons";
+import HeaderLoadingSkeleton from "@/components/HeaderLoadingSkeleton";
 import type { LucideIcon } from "lucide-react";
 import type { HeaderData, NavLink } from "@/types/Header.types";
 
@@ -185,20 +186,14 @@ const Header = () => {
     setIsMenuOpen(false);
   }, []);
 
-  // Show minimal loading state - don't block the entire header
+  // Reserve the same horizontal layout as the loaded header (nav + phone + CTA + mobile toggle) to reduce CLS.
   if (isLoading && !data) {
     return (
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 md:h-20">
-            <Logo
-              logoText={DEFAULT_LOGO_TEXT}
-              logoHighlight={DEFAULT_LOGO_HIGHLIGHT}
-              logoIcon={DEFAULT_ICON}
-            />
-          </div>
-        </div>
-      </header>
+      <HeaderLoadingSkeleton
+        logoText={DEFAULT_LOGO_TEXT}
+        logoHighlight={DEFAULT_LOGO_HIGHLIGHT}
+        navLinks={FALLBACK_NAV_LINKS}
+      />
     );
   }
 
