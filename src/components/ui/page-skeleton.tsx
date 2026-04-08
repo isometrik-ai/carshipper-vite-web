@@ -1,12 +1,28 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+export type PageSkeletonProps = {
+  /**
+   * Adds top padding for the fixed site header. Set `false` when this skeleton is already
+   * inside a region that accounts for the header (e.g. QuoteForm in HeroSection).
+   * @default true
+   */
+  withHeaderOffset?: boolean;
+};
 
 /**
- * Generic page skeleton component for loading states
- * Provides a consistent loading experience across all pages
+ * Generic page skeleton for loading states. Uses min-height + optional header offset to reduce CLS.
  */
-export const PageSkeleton = () => {
+export const PageSkeleton = ({ withHeaderOffset = true }: PageSkeletonProps = {}) => {
   return (
-    <div className="w-full space-y-8 py-8" role="status" aria-label="Loading page content">
+    <div
+      className={cn(
+        "w-full min-h-[65vh] space-y-8 pb-12",
+        withHeaderOffset ? "pt-20" : "py-8"
+      )}
+      role="status"
+      aria-label="Loading page content"
+    >
       {/* Hero Section Skeleton */}
       <section className="container mx-auto px-4 space-y-4">
         <Skeleton className="h-16 w-3/4 mx-auto" />

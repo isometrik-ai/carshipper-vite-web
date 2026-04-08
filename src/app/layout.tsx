@@ -11,11 +11,21 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Footer from "@/components/Footer";
 import dynamic from "next/dynamic";
 const Header = dynamic(() => import("@/components/Header"));
+/** Reserves the same footprint as the chat FAB so the lazy chunk does not pop in from nothing (CLS). */
 const ChatWidget = dynamic(() => import("@/components/ChatWidget"), {
   ssr: false,
-  loading: () => null,
+  loading: () => (
+    <div
+      className="fixed bottom-6 right-6 z-50 h-14 w-14 shrink-0 rounded-full bg-muted/30 animate-pulse"
+      aria-hidden
+    />
+  ),
 });
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  adjustFontFallback: true,
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SEO_SITE.url),
