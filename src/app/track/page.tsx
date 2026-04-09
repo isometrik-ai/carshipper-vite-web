@@ -175,14 +175,18 @@ export default function TrackShipment() {
                 className="text-center mb-12"
               >
                 {pageData.trackingSteps.section_title ? (
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">{pageData.trackingSteps.section_title}</h2>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                    {pageData.trackingSteps.section_title}</h2>
                 ) : null}
               </motion.div>
-              {pageData.trackingSteps.steps && pageData.trackingSteps.steps.length > 0 ? (
+              {Array.isArray(pageData.trackingSteps.steps) && pageData.trackingSteps.steps.length > 0 ? (
                 <div className="grid md:grid-cols-3 gap-8">
-                  {pageData.trackingSteps.steps.map((step: any, index: number) => (
-                    <motion.div
-                      key={step.id || index}
+                  {pageData.trackingSteps.steps.map((step: any, index: number) => {
+                    const StepIcon = step.icon_name
+                    ? (getIcon(step.icon_name) as LucideIcon)
+                    : null;
+                    return (<motion.div
+                      key={step?.id || index}
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
@@ -190,14 +194,22 @@ export default function TrackShipment() {
                       className="text-center"
                     >
                       <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <span className="text-2xl font-bold text-primary">{index + 1}</span>
+                        {StepIcon ? (
+                          <StepIcon className="w-6 h-6 text-primary" aria-hidden="true" />
+                        ) : null}
+                        {/* <span className="text-2xl font-bold text-primary">{index + 1}</span> */}
                       </div>
-                      <h3 className="text-xl font-semibold mb-2">{step.step_title}</h3>
-                      {step.step_description ? (
-                        <p className="text-muted-foreground">{step.step_description}</p>
+                      <h3 className="text-xl font-semibold mb-2">
+                        {step?.step_title || step?.label}
+                      </h3>
+                      {step?.step_description || step?.status ? (
+                        <p className="text-muted-foreground">
+                          {step?.step_description || step?.status}
+                        </p>
                       ) : null}
                     </motion.div>
-                  ))}
+                  );
+                })}
                 </div>
               ) : null}
             </div>
