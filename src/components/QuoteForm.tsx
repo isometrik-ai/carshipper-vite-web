@@ -10,7 +10,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Lock, ArrowRight, ArrowLeft, Plus, MapPin, Check, X, Truck, Shield, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { VehicleSelector, Vehicle, getVehicleDisplayName, isVehicleComplete } from "./VehicleSelector";
+import { VehicleSelector, getVehicleDisplayName, isVehicleComplete } from "./VehicleSelector";
+import type { Vehicle } from "@/types/Vehicle";
+import { VEHICLE_TYPE_OPTIONS } from "@/constants/vehicleForm";
 import { getAllVehicleColorsList, getAllVehiclesTypesList } from "@/services/booking-services";
 import { useQuoteForm } from "@/api/quoteForm";
 import { getIcon } from "@/lib/icons";
@@ -23,7 +25,6 @@ import { CreateNewContactPostAPI, CreateNewLeadPostAPI, LeadsGetDetailsAPI } fro
 import CustomPhoneNumberInputField from "@/components/ui/customPhoneNumber/phoneInput";
 import { emailValidator } from "@/lib/helpers";
 import { getSafeQuoteRoute } from "@/shared/routes";
-import { vehicleTypes } from "./ui/dialogs/EditVehicleDialog";
 
 interface QuoteFormProps {
   defaultOrigin?: string;
@@ -120,15 +121,15 @@ function normalizeVehicleTypesApiResponse(apiResponse: unknown): string[] {
 
 const emptyVehicle = (): Vehicle => ({
   id: Date.now().toString(),
-  year: "",
+  year: 0,
   make: "",
   model: "",
-  isRunning: null,
+  operational: null,
   vin: "",
   vinLookupLoading: false,
   color: "",
   personalItems: "None or less than 100 lbs.",
-  vehicleType: "SUV",
+  type: "SUV",
 });
 
 const QuoteFormLoadingSkeleton = () => {
@@ -240,21 +241,21 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   const [vehicles, setVehicles] = useState<Vehicle[]>([
     {
       id: "1",
-      year: "",
+      year: 0,
       make: "",
       model: "",
-      isRunning: null,
+      operational: null,
       vin: "",
       vinLookupLoading: false,
       color: "",
       personalItems: "None or less than 100 lbs.",
-      vehicleType: "SUV",
+      type: "SUV",
     },
   ]);
 
   const [vehicleColorOptions, setVehicleColorOptions] = useState<string[]>([]);
   const [vehicleColorsLoading, setVehicleColorsLoading] = useState(false);
-  const [vehicleTypeOptions, setVehicleTypeOptions] = useState<string[]>(vehicleTypes || []);
+  const [vehicleTypeOptions, setVehicleTypeOptions] = useState<string[]>([...VEHICLE_TYPE_OPTIONS]);
   const [vehicleTypesLoading, setVehicleTypesLoading] = useState(false);
 
   // useEffect(() => {
@@ -376,7 +377,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       case "vehicles":
         return vehicles.every(v => isVehicleComplete(v));
       case "running":
-        return vehicles.every(v => v.isRunning !== null);
+        return vehicles.every((v) => v.operational !== null);
       case "pickup":
         return (
           pickupLocation.trim().length > 0 &&
@@ -543,6 +544,24 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         return totalDistance + currentDistance;
       }, 0);
 
+      const normalizeLeadPickupTimeframe = (value: string) => {
+        const raw = (value || "").trim().toLowerCase();
+        if (!raw) return "";
+        if (raw.includes("asap") || raw.includes("today") || raw.includes("tomorrow")) {
+          return "ASAP, today or tomorrow";
+        }
+        if (raw.includes("1-2") || raw.includes("1 to 2")) {
+          return "Within the next 1-2 weeks";
+        }
+        if (raw.includes("3-4") || raw.includes("3 to 4")) {
+          return "Within the next 3-4 weeks";
+        }
+        if (raw.includes("month")) {
+          return "More than 1 month out";
+        }
+        return value;
+      };
+      
       const payload = {
         pickup_zip: pickupZip,
         // delivery_zip: primaryDrop?.zip || "",
@@ -557,12 +576,13 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           year: Number(v.year),
           make: v.make,
           model: v.model,
-          is_running: v.isRunning ?? true,
+          is_running: v.operational ?? true,
           vin: (v.vin || "").trim(),
-          type: (v.vehicleType || "").trim(),
+          type: (v.type || "").trim() || "SUV",
           color: (v.color || "").trim(),
           personal_items_weight: mapPersonalItemsForQuotePayload(v.personalItems || ""),
         })),
+        pickup_timeframe: (normalizeLeadPickupTimeframe(timeframe)|| "").trim(),
         pickup_city: pickupCity,
         pickup_state: pickupState,
         pickup_addLine1: pickupLocation || "",
@@ -615,23 +635,6 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       // // const contactId = "7d5c9438-de4d-484a-a1ef-373f564b1a9e";
       // const countryCode = (DEFAULT_COUNTRY_CODE || "US").toUpperCase();
       // const selectedTransportType = transportType === "enclosed" ? "Enclosed Transport" : "Open Transport";
-      // const normalizeLeadPickupTimeframe = (value: string) => {
-      //   const raw = (value || "").trim().toLowerCase();
-      //   if (!raw) return "";
-      //   if (raw.includes("asap") || raw.includes("today") || raw.includes("tomorrow")) {
-      //     return "ASAP, today or tomorrow";
-      //   }
-      //   if (raw.includes("1-2") || raw.includes("1 to 2")) {
-      //     return "Within the next 1-2 weeks";
-      //   }
-      //   if (raw.includes("3-4") || raw.includes("3 to 4")) {
-      //     return "Within the next 3-4 weeks";
-      //   }
-      //   if (raw.includes("month")) {
-      //     return "More than 1 month out";
-      //   }
-      //   return value;
-      // };
 
       // const selectedPickupTimeframe = normalizeLeadPickupTimeframe(timeframe || "");
       // const normalizeLeadMakeModel = (make: string, model: string) => {
@@ -684,7 +687,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       //       value: normalizeLeadMakeModel(v.make, v.model),
       //     },
       //     { field_id: "8cad15bc-cd12-4dbd-8c92-9ed5221b5504", value: v.vin || "" },
-      //     { field_id: "cc3da005-85fb-4641-89e5-8bfdcaad5b20", value: v.isRunning ?? true },
+      //     { field_id: "cc3da005-85fb-4641-89e5-8bfdcaad5b20", value: v.operational ?? true },
       //   ],
       // }));
 
@@ -951,25 +954,29 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
                     </p>
                     <div className="grid grid-cols-2 gap-4">
                       {runningOptions.map((option) => {
-                        const isSelected = vehicle.isRunning === option.value;
-                        const isRunning = option.value === true;
+                        const isSelected = vehicle.operational === option.value;
+                        const runsAndDrives = option.value === true;
                         const IconComponent = getIcon(option.icon_name) as LucideIcon;
 
                         return (
                           <button
                             key={option.id || option.label}
                             type="button"
-                            onClick={() => updateVehicle(vehicle.id, { isRunning: option.value as boolean | null })}
+                            onClick={() =>
+                              updateVehicle(vehicle.id, {
+                                operational: option.value as boolean | null,
+                              })
+                            }
                             className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2
                               ${isSelected
-                                ? isRunning
+                                ? runsAndDrives
                                   ? 'border-success bg-success/10 text-success'
                                   : 'border-destructive bg-destructive/10 text-destructive'
                                 : 'border-border hover:border-muted-foreground'}`}
                           >
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center
                               ${isSelected
-                                ? isRunning
+                                ? runsAndDrives
                                   ? 'bg-success text-success-foreground'
                                   : 'bg-destructive text-destructive-foreground'
                                 : 'bg-muted'}`}>

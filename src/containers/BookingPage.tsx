@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ReadonlyURLSearchParams, useParams, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
-import type { Vehicle as ShippingVehicle } from "@/components/ui/dialogs/EditVehicleDialog";
+import type { Vehicle as ShippingVehicle } from "@/types/Vehicle";
 // import { ContactStep } from "@/components/booking/ContactStep";
 const BookingHeader = dynamic(() =>
   import("@/components/booking/BookingHeader").then((mod) => mod.BookingHeader)
@@ -298,7 +298,7 @@ const steps = [
   { id: 2, name: "Pickup", shortName: "Pickup" },
   { id: 3, name: "Delivery", shortName: "Delivery" },
   { id: 4, name: "Book Shipment", shortName: "Book" },
-  // { id: 5, name: "Thank You", shortName: "Done" },
+  { id: 5, name: "Thank You", shortName: "Done" },
 ];
 
 const normalizeLocationType = (locationType?: string): string => {
@@ -345,7 +345,7 @@ const mapQuoteVehiclesToShippingVehicles = (
     make: v?.make || "",
     model: v?.model || "",
     type: v?.type || "SUV",
-    operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
+    operational: v?.is_running ?? v?.condition === "runs_and_drives" ? true : false,
     color: v?.color ?? "",
     personalItems: (() => {
       const weight = (v?.personal_items_weight || "").toLowerCase().trim();
@@ -467,7 +467,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               make: v.make,
               model: v.model,
               type: v.type || "SUV",
-              condition: "runs_and_drives", //v.operational === false ? "inoperable" : "runs_and_drives",
+              condition: v.operational === true ? "runs_and_drives" : "not_running",
               personal_items_weight: mapPersonalItemsForBooking(v.personalItems || ""),
               color: (v.color ? (v.color as string).trim() : ""),
             }))
@@ -477,7 +477,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               make: v.make,
               model: v.model,
               type: v.type || "SUV",
-              condition: "runs_and_drives", //|| v.condition || "runs_and_drives",
+              condition: v.operational === true ? "runs_and_drives" : "not_running",
               personal_items_weight: v.personal_items_weight || "0-100",
               color: (v.color ? (v.color as string).trim() : ""),
             }))
@@ -726,27 +726,27 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
     }
   };
   
-  // if (isSubmitted) {
-  //   return (
-  //     <div className="min-h-screen bg-muted">
-  //       <BookingHeader quoteId={quoteId || mappedQuoteData?.quoteId || ""} />
-  //       <SuccessStep 
-  //         formData={formData} 
-  //         quoteId={quoteId || mappedQuoteData?.quoteId || ""}
-  //         tier={selectedTier}
-  //         price={price}
-  //         vehicle={
-  //           mappedQuoteData?.vehicle ?? {
-  //             year: 0,
-  //             make: "",
-  //             model: "",
-  //           }
-  //         }
-  //         vehicles={mappedQuoteData?.vehicles ?? []}
-  //       />
-  //     </div>
-  //   );
-  // }
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-muted">
+        <BookingHeader quoteId={quoteId || mappedQuoteData?.quoteId || ""} />
+        <SuccessStep 
+          formData={formData} 
+          quoteId={quoteId || mappedQuoteData?.quoteId || ""}
+          tier={selectedTier}
+          price={price}
+          vehicle={
+            mappedQuoteData?.vehicle ?? {
+              year: 0,
+              make: "",
+              model: "",
+            }
+          }
+          vehicles={mappedQuoteData?.vehicles ?? []}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted">

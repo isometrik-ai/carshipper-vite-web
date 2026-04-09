@@ -28,33 +28,13 @@ import { Car, Hash, Loader2, Trash2, Check, ChevronsUpDown, Palette, Briefcase, 
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { VehicleFieldConfig } from "@/types/QuoteForm.types";
+import type { Vehicle } from "@/types/Vehicle";
+import { QUOTE_PERSONAL_ITEMS_OPTIONS } from "@/constants/vehicleForm";
 import { VinNumberDetails } from "@/services/quote-services";
 
 // Generate years from current year + 1 down to 1980
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: currentYear - 1979 + 1 }, (_, i) => (currentYear + 1 - i).toString());
-
-/** Matches EditVehicleDialog / booking personal-items weight bands */
-export const QUOTE_PERSONAL_ITEMS_OPTIONS = [
-  "None or less than 100 lbs.",
-  "100-200 lbs",
-  // "150-200 lbs",
-  "More than 200 lbs",
-] as const;
-
-export interface Vehicle {
-  id: string;
-  year: string;
-  make: string;
-  model: string;
-  isRunning: boolean | null;
-  vin: string;
-  vinLookupLoading: boolean;
-  color: string;
-  personalItems: string;
-  /** Body style / vehicle type from GET /vehicleType */
-  vehicleType: string;
-}
 
 interface VehicleSelectorProps {
   vehicle: Vehicle;
@@ -154,8 +134,9 @@ export const VehicleSelector = ({
         const model = data?.model || "";
 
         if (make && model) {
+          const y = parseInt(String(year).replace(/\D/g, ""), 10);
           onUpdate({
-            year,
+            year: Number.isFinite(y) ? y : 0,
             make,
             model,
             vinLookupLoading: false,
@@ -176,11 +157,12 @@ export const VehicleSelector = ({
     ? `${vehicle.make}|${vehicle.model}`
     : "";
 
-  const displayValue = vehicle.year && vehicle.make && vehicle.model
-    ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
-    : vehicle.make && vehicle.model
-      ? `${vehicle.make} ${vehicle.model}`
-      : "";
+  const displayValue =
+    vehicle.year > 0 && vehicle.make && vehicle.model
+      ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+      : vehicle.make && vehicle.model
+        ? `${vehicle.make} ${vehicle.model}`
+        : "";
 
   return (
     <div className="p-4 bg-muted/50 rounded-lg">
@@ -241,8 +223,8 @@ export const VehicleSelector = ({
         <div>
           <Label className="text-xs text-muted-foreground">{config.yearLabel}</Label>
           <Select
-            value={vehicle.year}
-            onValueChange={(value) => onUpdate({ year: value })}
+            value={vehicle.year > 0 ? String(vehicle.year) : ""}
+            onValueChange={(value) => onUpdate({ year: parseInt(value, 10) || 0 })}
             disabled={vehicle.vinLookupLoading}
           >
             <SelectTrigger className="mt-1">
@@ -328,8 +310,8 @@ export const VehicleSelector = ({
           </div>
         ) : vehicleTypeOptions.length > 0 ? (
           <Select
-            value={vehicle.vehicleType || undefined}
-            onValueChange={(value) => onUpdate({ vehicleType: value })}
+            value={vehicle.type || undefined}
+            onValueChange={(value) => onUpdate({ type: value })}
             disabled={vehicle.vinLookupLoading}
           >
             <SelectTrigger className="mt-1">
@@ -347,8 +329,8 @@ export const VehicleSelector = ({
           <Input
             className="mt-1"
             placeholder="e.g. SUV, Sedan"
-            value={vehicle.vehicleType}
-            onChange={(e) => onUpdate({ vehicleType: e.target.value })}
+            value={vehicle.type}
+            onChange={(e) => onUpdate({ type: e.target.value })}
             disabled={vehicle.vinLookupLoading}
           />
         )}
@@ -429,7 +411,7 @@ export const VehicleSelector = ({
 };
 
 export const getVehicleDisplayName = (vehicle: Vehicle, index: number): string => {
-  if (vehicle.year && vehicle.make && vehicle.model) {
+  if (vehicle.year > 0 && vehicle.make && vehicle.model) {
     return `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
   }
   if (vehicle.make && vehicle.model) {

@@ -11,8 +11,8 @@ interface SuccessStepProps {
   quoteId: string;
   tier: "saver" | "priority" | "rush";
   price: number;
-  vehicle: { year: number; make: string; model: string };
-  vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
+  vehicle: { year: number; make: string; model: string, color?: string, type?: string, vin?: string };
+  vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean, color?: string, type?: string, vin?: string }>;
 }
 
 const tierNames = {
@@ -98,7 +98,7 @@ export function SuccessStep({ formData, quoteId, tier, price, vehicle, vehicles 
           </motion.p>
 
           {/* Confirmation Details */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -140,7 +140,7 @@ export function SuccessStep({ formData, quoteId, tier, price, vehicle, vehicles 
                 ))}
               </div>
             </motion.div>
-          )}
+          )} */}
 
           {/* Next Steps */}
           <motion.div
