@@ -11,7 +11,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { EditPickupDateDialog } from "@/components/ui/dialogs/EditPickupDateDialog";
-import { EditVehicleDialog, Vehicle } from "@/components/ui/dialogs/EditVehicleDialog";
+import type { Vehicle } from "@/types/Vehicle";
+import { EditVehicleDialog } from "@/components/ui/dialogs/EditVehicleDialog";
 import { EditAddressDialog } from "@/components/ui/dialogs/EditAddressDialog";
 import { EditTransportTypeDialog } from "@/components/booking/EditTransportTypeDialog";
 import { QuoteGetDetailsAPI, UpdateQuote } from "@/services/quote-services";
@@ -136,6 +137,7 @@ export function ShippingMethodStep({
       type: v?.type || "SUV",
       operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
       color: (v?.color || "").trim(),
+      vin: (v?.vin || "").trim(),
       personalItems: (() => {
         const weight = (v?.personal_items_weight || "").toLowerCase().trim();
         if (weight === "100-150") return "100-200";
@@ -143,7 +145,6 @@ export function ShippingMethodStep({
         if (weight === "200+" || weight.includes("more")) return "200+";
         return "0-100";
       })(),
-      vin: v?.vin ?? "",
     }));
   };
 
@@ -306,8 +307,10 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
       year: v.year,
       make: v.make,
       model: v.model,
-      is_running: v.operational,
+      is_running: v.operational ?? true,
+      type: (v.type || "").trim(),
       color: (v.color || "").trim(),
+      vin: (v.vin || "").trim(),
     })),
     delivery: deliveries,
     };
@@ -349,7 +352,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
     },
     { 
       label: "Condition", 
-      value: primaryVehicle.operational ? "Runs and Drives" : "Inoperable",
+      value: primaryVehicle.operational === false ? "Inoperable" : "Runs and Drives",
       indent: true,
     },
     { 

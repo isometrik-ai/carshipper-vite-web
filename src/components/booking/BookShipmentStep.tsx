@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { BookingFormData } from "@/containers/BookingPage";
+import type { Vehicle } from "@/types/Vehicle";
 import { cn } from "@/lib/utils";
 import { EditPriceOptionDialog } from "@/components/ui/dialogs/EditPriceOptionDialog";
 import { getStripe } from "@/utils/stripe-utils";
@@ -22,14 +23,7 @@ interface BookShipmentStepProps {
   tier: "saver" | "priority" | "rush";
   price: number;
   onTierChange?: (tier: "saver" | "priority" | "rush", price: number) => void;
-  selectedVehicles?: Array<{
-    year: number;
-    make: string;
-    model: string;
-    type?: string;
-    operational?: boolean;
-    personalItems?: string;
-  }>;
+  selectedVehicles?: Vehicle[];
   quoteData: {
     vehicle: { year: number; make: string; model: string };
     vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
@@ -107,11 +101,18 @@ const handleSubmit = async () => {
       : Array.isArray(quoteData.vehicles) && quoteData.vehicles.length > 0
       ? quoteData.vehicles
       : [quoteData.vehicle];
-  const primaryVehicle = effectiveVehicles[0];
+  const primaryVehicle = effectiveVehicles[0] as {
+    year: number;
+    make: string;
+    model: string;
+    type?: string;
+  };
   const vehicleSummary =
     effectiveVehicles.length > 1
       ? `${effectiveVehicles.length} vehicles`
-      : `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}${(primaryVehicle as any)?.type ? ` (${(primaryVehicle as any).type})` : ""}`;
+      : `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}${
+          primaryVehicle.type ? ` (${primaryVehicle.type})` : ""
+        }`;
 
   const pickupAddressLine1 = formData.pickupAddress || quoteData?.origin?.addLine1 || "";
   const pickupAddressLine2 = quoteData?.origin?.addLine2 || "";

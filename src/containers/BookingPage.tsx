@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ReadonlyURLSearchParams, useParams, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
-import type { Vehicle as ShippingVehicle } from "@/components/ui/dialogs/EditVehicleDialog";
+import type { Vehicle as ShippingVehicle } from "@/types/Vehicle";
 // import { ContactStep } from "@/components/booking/ContactStep";
 const BookingHeader = dynamic(() =>
   import("@/components/booking/BookingHeader").then((mod) => mod.BookingHeader)

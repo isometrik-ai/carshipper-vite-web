@@ -9,19 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { VinNumberDetails } from "@/services/quote-services";
-import { QUOTE_PERSONAL_ITEMS_OPTIONS } from "@/components/VehicleSelector";
-
-export interface Vehicle {
-  id: string;
-  year: number;
-  make: string;
-  model: string;
-  type: string;
-  operational: boolean;
-  personalItems: string;
-  color?: string;
-  vin?: string;
-}
+import type { Vehicle } from "@/types/Vehicle";
+import { QUOTE_PERSONAL_ITEMS_OPTIONS, VEHICLE_TYPE_OPTIONS } from "@/constants/vehicleForm";
 
 interface EditVehicleDialogProps {
   open: boolean;
@@ -32,7 +21,6 @@ interface EditVehicleDialogProps {
 
 export const years = Array.from({ length: 30 }, (_, i) => 2026 - i);
 export const makes = ["Acura", "Audi", "BMW", "Buick", "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia", "Lexus", "Lincoln", "Mazda", "Mercedes-Benz", "Nissan", "Porsche", "Ram", "Subaru", "Tesla", "Toyota", "Volkswagen", "Volvo"];
-export const vehicleTypes = ["Sedan", "SUV", "Truck", "Van", "Coupe", "Convertible", "Wagon", "Hatchback", "Motorcycle"];
 const personalItemsOptions = QUOTE_PERSONAL_ITEMS_OPTIONS;
 
 export function EditVehicleDialog({
@@ -66,11 +54,17 @@ export function EditVehicleDialog({
     operational: true,
     personalItems: "None or less than 100 lbs.",
     color: "",
+    vin: "",
   });
 
   const handleEditVehicle = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
-    setFormData(vehicle);
+    setFormData({
+      ...vehicle,
+      operational: vehicle.operational ?? true,
+      vin: vehicle.vin ?? "",
+      color: vehicle.color ?? "",
+    });
     setIsAddingNew(true);
     setAddMethod("manual");
   };
@@ -89,6 +83,7 @@ export function EditVehicleDialog({
       operational: true,
       personalItems: "None or less than 100 lbs.",
       color: "",
+      vin: "",
     });
     setVinInput("");
     setIsAddingNew(true);
@@ -124,7 +119,7 @@ export function EditVehicleDialog({
             operational: prev.operational ?? true,
             personalItems: prev.personalItems || "None or less than 100 lbs.",
             color: prev.color ?? "",
-            vin: vinInput,
+            vin: vinInput.trim(),
           }));
           toast.success("Vehicle details found!");
           setAddMethod("manual");
@@ -150,10 +145,10 @@ export function EditVehicleDialog({
       make: formData.make || "",
       model: formData.model || "",
       type: formData.type || "SUV",
-      operational: formData.operational ?? true,
+      operational: formData.operational !== false,
       personalItems: formData.personalItems || "None or less than 100 lbs.",
       color: (formData.color || "").trim(),
-      vin: formData.vin,
+      vin: (formData.vin || "").trim(),
     };
 
     if (editingVehicle) {
@@ -282,8 +277,8 @@ export function EditVehicleDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {vehicleTypes.map(type => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    {VEHICLE_TYPE_OPTIONS.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -304,7 +299,7 @@ export function EditVehicleDialog({
               <div className="space-y-2">
                 <Label>Is the vehicle operational?</Label>
                 <RadioGroup
-                  value={formData.operational ? "yes" : "no"}
+                  value={formData.operational === false ? "no" : "yes"}
                   onValueChange={(v) => setFormData({ ...formData, operational: v === "yes" })}
                   className="flex gap-4"
                 >
@@ -410,7 +405,7 @@ export function EditVehicleDialog({
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Operational</p>
-                    <p className="font-medium">{vehicle.operational ? "Yes" : "No"}</p>
+                    <p className="font-medium">{vehicle.operational === false ? "No" : "Yes"}</p>
                   </div>
                 </div>
 
