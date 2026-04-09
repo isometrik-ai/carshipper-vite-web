@@ -179,7 +179,7 @@ export default function TrackShipment() {
                     {pageData.trackingSteps.section_title}</h2>
                 ) : null}
               </motion.div>
-              {pageData.trackingSteps.steps && pageData.trackingSteps.steps.length > 0 ? (
+              {Array.isArray(pageData.trackingSteps.steps) && pageData.trackingSteps.steps.length > 0 ? (
                 <div className="grid md:grid-cols-3 gap-8">
                   {pageData.trackingSteps.steps.map((step: any, index: number) => {
                     const StepIcon = step.icon_name
