@@ -345,7 +345,7 @@ const mapQuoteVehiclesToShippingVehicles = (
     make: v?.make || "",
     model: v?.model || "",
     type: v?.type || "SUV",
-    operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
+    operational: v?.is_running ?? v?.condition === "runs_and_drives" ? true : false,
     color: v?.color ?? "",
     personalItems: (() => {
       const weight = (v?.personal_items_weight || "").toLowerCase().trim();
@@ -467,7 +467,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               make: v.make,
               model: v.model,
               type: v.type || "SUV",
-              condition: "runs_and_drives", //v.operational === false ? "inoperable" : "runs_and_drives",
+              condition: v.operational === true ? "runs_and_drives" : "not_running",
               personal_items_weight: mapPersonalItemsForBooking(v.personalItems || ""),
               color: (v.color ? (v.color as string).trim() : ""),
             }))
@@ -477,7 +477,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               make: v.make,
               model: v.model,
               type: v.type || "SUV",
-              condition: "runs_and_drives", //|| v.condition || "runs_and_drives",
+              condition: v.operational === true ? "runs_and_drives" : "not_running",
               personal_items_weight: v.personal_items_weight || "0-100",
               color: (v.color ? (v.color as string).trim() : ""),
             }))
