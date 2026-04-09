@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Lock, ArrowRight, ArrowLeft, Plus, MapPin, Check, X, Truck, Shield, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,7 +15,6 @@ import { getAllVehicleColorsList, getAllVehiclesTypesList } from "@/services/boo
 import { useQuoteForm } from "@/api/quoteForm";
 import { getIcon } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
-import { PageSkeleton } from "./ui/page-skeleton";
 import AddressAutocomplete from "./custom-google-searchbar";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/config";
 import { getFormattedAddressFromGooglePlace } from "@/lib/global";
@@ -23,6 +23,7 @@ import { CreateNewContactPostAPI, CreateNewLeadPostAPI, LeadsGetDetailsAPI } fro
 import CustomPhoneNumberInputField from "@/components/ui/customPhoneNumber/phoneInput";
 import { emailValidator } from "@/lib/helpers";
 import { getSafeQuoteRoute } from "@/shared/routes";
+import { vehicleTypes } from "./ui/dialogs/EditVehicleDialog";
 
 interface QuoteFormProps {
   defaultOrigin?: string;
@@ -130,6 +131,45 @@ const emptyVehicle = (): Vehicle => ({
   vehicleType: "SUV",
 });
 
+const QuoteFormLoadingSkeleton = () => {
+  return (
+    <div
+      className="bg-card rounded-2xl shadow-2xl p-6 md:p-8 overflow-hidden min-h-[36rem]"
+      role="status"
+      aria-label="Loading quote form"
+    >
+      <div className="mb-6 space-y-3">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-6 w-36 rounded-full" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <Skeleton className="h-2 w-full rounded-full" />
+      </div>
+
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-40" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      </div>
+
+      <div className="mt-8 flex items-center justify-between gap-3">
+        <Skeleton className="h-10 w-24" />
+        <Skeleton className="h-10 w-28" />
+      </div>
+    </div>
+  );
+};
+
 const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormProps) => {
   const { data, isLoading: isConfigLoading } = useQuoteForm();
   const router = useRouter();
@@ -213,40 +253,40 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   ]);
 
   const [vehicleColorOptions, setVehicleColorOptions] = useState<string[]>([]);
-  const [vehicleColorsLoading, setVehicleColorsLoading] = useState(true);
-  const [vehicleTypeOptions, setVehicleTypeOptions] = useState<string[]>([]);
-  const [vehicleTypesLoading, setVehicleTypesLoading] = useState(true);
+  const [vehicleColorsLoading, setVehicleColorsLoading] = useState(false);
+  const [vehicleTypeOptions, setVehicleTypeOptions] = useState<string[]>(vehicleTypes || []);
+  const [vehicleTypesLoading, setVehicleTypesLoading] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [colorRes, typesRes] = await Promise.all([
-          getAllVehicleColorsList(),
-          getAllVehiclesTypesList(),
-        ]);
-        const colorRaw = (colorRes as { data?: unknown })?.data ?? colorRes;
-        const typesRaw = (typesRes as { data?: unknown })?.data ?? typesRes;
-        if (!cancelled) {
-          setVehicleColorOptions(normalizeVehicleColorApiResponse(colorRaw));
-          setVehicleTypeOptions(normalizeVehicleTypesApiResponse(typesRaw));
-        }
-      } catch {
-        if (!cancelled) {
-          setVehicleColorOptions([]);
-          setVehicleTypeOptions([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setVehicleColorsLoading(false);
-          setVehicleTypesLoading(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // useEffect(() => {
+  //   let cancelled = false;
+  //   (async () => {
+  //     try {
+  //       const [colorRes, typesRes] = await Promise.all([
+  //         getAllVehicleColorsList(),
+  //         getAllVehiclesTypesList(),
+  //       ]);
+  //       const colorRaw = (colorRes as { data?: unknown })?.data ?? colorRes;
+  //       const typesRaw = (typesRes as { data?: unknown })?.data ?? typesRes;
+  //       if (!cancelled) {
+  //         setVehicleColorOptions(normalizeVehicleColorApiResponse(colorRaw));
+  //         setVehicleTypeOptions(normalizeVehicleTypesApiResponse(typesRaw));
+  //       }
+  //     } catch {
+  //       if (!cancelled) {
+  //         setVehicleColorOptions([]);
+  //         setVehicleTypeOptions([]);
+  //       }
+  //     } finally {
+  //       if (!cancelled) {
+  //         setVehicleColorsLoading(false);
+  //         setVehicleTypesLoading(false);
+  //       }
+  //     }
+  //   })();
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, []);
 
   // Locations
   const [pickupLocation, setPickupLocation] = useState(defaultOrigin);
@@ -763,9 +803,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   // Show loading state if config is loading
   if (isConfigLoading && !data) {
     return (
-      <div className="flex-1" role="main" aria-label="Main content">
-        <PageSkeleton withHeaderOffset={false} />
-      </div>
+      <QuoteFormLoadingSkeleton />
     );
   }
 
@@ -1383,6 +1421,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           <Button
             type="button"
             variant="outline"
+            size="lg"
             className="flex-1"
             onClick={handleBackClick}
           >

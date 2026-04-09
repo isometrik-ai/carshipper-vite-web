@@ -29,9 +29,8 @@ const SuccessStep = dynamic(() =>
   import("@/components/booking/SuccessStep").then((mod) => mod.SuccessStep)
 );
 import { QuoteGetDetailsAPI } from "@/services/quote-services";
-import { createNewShipmentBooking, getAllVehiclesTypesList } from "@/services/booking-services";
+import { createNewShipmentBooking } from "@/services/booking-services";
 import { toast } from "sonner";
-import { formatFullAddress } from "@/lib/address";
 import { getClientIPAddress } from "@/lib/global";
 
 export interface BookingFormData {
@@ -137,15 +136,17 @@ const initialFormData: BookingFormData = {
 type BookingQuoteData = {
   quoteId: string;
   quote_id: string;
-  vehicle: { year: number; make: string; model: string };
+  vehicle: { year: number; make: string; model: string, color?: string, type?: string, vin?: string };
   vehicles: Array<{
     year: number;
     make: string;
     model: string;
     is_running?: boolean;
     type?: string;
+    color?: string;
     personal_items_weight?: string;
     condition?: string;
+    vin?: string;
   }>;
   origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string; latitude: number; longitude: number | undefined };
   destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string; latitude: number; longitude: number | undefined };
@@ -237,6 +238,9 @@ const mapQuoteDetailsToBookingQuoteData = (
       year: vehicle.year ?? 0,
       make: vehicle.make ?? "",
       model: vehicle.model ?? "",
+      color: vehicle.color ?? "",
+      type: vehicle.type ?? "",
+      vin: vehicle.vin ?? "",
     },
     vehicles: vehiclesFromQuote.map((v: any) => ({
       year: v?.year ?? 0,
@@ -244,8 +248,10 @@ const mapQuoteDetailsToBookingQuoteData = (
       model: v?.model ?? "",
       is_running: v?.is_running,
       type: v?.type,
+      color: v?.color ?? "",
       personal_items_weight: v?.personal_items_weight,
       condition: v?.condition,
+      vin: v?.vin ?? "",
     })),
     origin: {
       addLine1: pickup.addLine1 ?? "",
@@ -292,7 +298,7 @@ const steps = [
   { id: 2, name: "Pickup", shortName: "Pickup" },
   { id: 3, name: "Delivery", shortName: "Delivery" },
   { id: 4, name: "Book Shipment", shortName: "Book" },
-  { id: 5, name: "Thank You", shortName: "Done" },
+  // { id: 5, name: "Thank You", shortName: "Done" },
 ];
 
 const normalizeLocationType = (locationType?: string): string => {
@@ -340,6 +346,7 @@ const mapQuoteVehiclesToShippingVehicles = (
     model: v?.model || "",
     type: v?.type || "SUV",
     operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
+    color: v?.color ?? "",
     personalItems: (() => {
       const weight = (v?.personal_items_weight || "").toLowerCase().trim();
       if (weight === "100-150") return "100-200";
@@ -347,6 +354,7 @@ const mapQuoteVehiclesToShippingVehicles = (
       if (weight === "200+" || weight.includes("more")) return "200+";
       return "0-100";
     })(),
+    vin: v?.vin ?? "",
   }));
 };
 
@@ -461,6 +469,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               type: v.type || "SUV",
               condition: "runs_and_drives", //v.operational === false ? "inoperable" : "runs_and_drives",
               personal_items_weight: mapPersonalItemsForBooking(v.personalItems || ""),
+              color: (v.color ? (v.color as string).trim() : ""),
             }))
           : vehicleFromQuote.length > 0
           ? vehicleFromQuote.map((v: any) => ({
@@ -470,6 +479,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               type: v.type || "SUV",
               condition: "runs_and_drives", //|| v.condition || "runs_and_drives",
               personal_items_weight: v.personal_items_weight || "0-100",
+              color: (v.color ? (v.color as string).trim() : ""),
             }))
           : [
               {
@@ -479,6 +489,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                 type: "SUV",
                 condition: "runs_and_drives",
                 personal_items_weight: "0-100",
+                color:"",
               }
             ];
 
@@ -714,40 +725,28 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       });
     }
   };
-
-  const getVehicleTypeList = async () => {
-    try{
-      const response = await getAllVehiclesTypesList();
-      console.log(response);
-    } catch (error) {
-      console.error("Failed to get contact list", error);
-    }
-  };
-  useEffect(() => {
-    getVehicleTypeList();
-  }, []);
   
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen bg-muted">
-        <BookingHeader quoteId={quoteId || mappedQuoteData?.quoteId || ""} />
-        <SuccessStep 
-          formData={formData} 
-          quoteId={quoteId || mappedQuoteData?.quoteId || ""}
-          tier={selectedTier}
-          price={price}
-          vehicle={
-            mappedQuoteData?.vehicle ?? {
-              year: 0,
-              make: "",
-              model: "",
-            }
-          }
-          vehicles={mappedQuoteData?.vehicles ?? []}
-        />
-      </div>
-    );
-  }
+  // if (isSubmitted) {
+  //   return (
+  //     <div className="min-h-screen bg-muted">
+  //       <BookingHeader quoteId={quoteId || mappedQuoteData?.quoteId || ""} />
+  //       <SuccessStep 
+  //         formData={formData} 
+  //         quoteId={quoteId || mappedQuoteData?.quoteId || ""}
+  //         tier={selectedTier}
+  //         price={price}
+  //         vehicle={
+  //           mappedQuoteData?.vehicle ?? {
+  //             year: 0,
+  //             make: "",
+  //             model: "",
+  //           }
+  //         }
+  //         vehicles={mappedQuoteData?.vehicles ?? []}
+  //       />
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-muted">
@@ -771,7 +770,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                     quoteData={
                       mappedQuoteData ?? {
                         quoteId: quoteId || "",
-                        vehicle: { year: 0, make: "", model: "" },
+                        vehicle: { year: 0, make: "", model: "", color: "", type: "", vin: "" },
                         vehicles: [],
                         origin: { addLine1: "", addLine2: "", city: "", state: "", zip: "" },
                         destination: { addLine1: "", addLine2: "", city: "", state: "", zip: "" },
@@ -802,8 +801,10 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                       mappedQuoteData ?? {
                         quoteId: quoteId || "",
                         quote_id: quoteId || "",
-                        vehicle: { year: 0, make: "", model: "" },
-                        vehicles: [],
+                        vehicle: { year: 0, make: "", model: "", color: "", type: "", vin: "" },
+                        vehicles: [
+                          { year: 0, make: "", model: "", color: "", type: "", vin: "" },
+                        ],
                         origin: { addLine1:"", addLine2:"", city: "",
                           state: "", zip: "",
                         latitude: undefined,
@@ -836,7 +837,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                       mappedQuoteData ?? {
                         quoteId: quoteId || "",
                         quote_id: quoteId || "",
-                        vehicle: { year: 0, make: "", model: "" },
+                        vehicle: { year: 0, make: "", model: "", color: "", type: "", vin: "" },
                         vehicles: [],
                         origin: { addLine1:"", addLine2:"", city: "", state: "", zip: "",
                           latitude: undefined,
@@ -874,7 +875,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
                       mappedQuoteData ?? {
                         quoteId: quoteId || "",
                         quote_id: quoteId || "",
-                        vehicle: { year: 0, make: "", model: "" },
+                        vehicle: { year: 0, make: "", model: "", color: "", type:"", vin:"" },
                         vehicles: [],
                         origin: { addLine1:"", addLine2:"",
                           city: "", state: "", zip: "",

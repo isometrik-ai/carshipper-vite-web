@@ -21,15 +21,17 @@ import { BasicAddress, formatAddressWithEllipsis, formatFullAddress } from "@/li
 interface ShippingMethodStepProps {
   quoteData: {
     quoteId: string;
-    vehicle: { year: number; make: string; model: string };
+    vehicle: { year: number; make: string; model: string, color?: string, type?: string, vin?: string };
     vehicles?: Array<{
       year: number;
       make: string;
       model: string;
       is_running?: boolean;
       type?: string;
+      color?: string;
       personal_items_weight?: string;
       condition?: string;
+      vin?: string;
     }>;
     origin: {
       addLine1: string;
@@ -117,8 +119,10 @@ export function ShippingMethodStep({
       model: string;
       is_running?: boolean;
       type?: string;
+      color?: string;
       personal_items_weight?: string;
       condition?: string;
+      vin?: string;
     }> =
       Array.isArray(quoteData.vehicles) && quoteData.vehicles.length > 0
         ? quoteData.vehicles
@@ -131,6 +135,7 @@ export function ShippingMethodStep({
       model: v?.model || "",
       type: v?.type || "SUV",
       operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
+      color: (v?.color || "").trim(),
       personalItems: (() => {
         const weight = (v?.personal_items_weight || "").toLowerCase().trim();
         if (weight === "100-150") return "100-200";
@@ -138,6 +143,7 @@ export function ShippingMethodStep({
         if (weight === "200+" || weight.includes("more")) return "200+";
         return "0-100";
       })(),
+      vin: v?.vin ?? "",
     }));
   };
 
@@ -301,6 +307,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
       make: v.make,
       model: v.model,
       is_running: v.operational,
+      color: (v.color || "").trim(),
     })),
     delivery: deliveries,
     };
@@ -348,6 +355,11 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
     { 
       label: "Personal Items", 
       value: primaryVehicle.personalItems,
+      indent: true,
+    },
+    {
+      label: "Color",
+      value: (primaryVehicle.color || "").trim() || "—",
       indent: true,
     },
     { 

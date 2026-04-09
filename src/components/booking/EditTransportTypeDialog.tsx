@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Truck, DollarSign, HelpCircle, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,11 @@ export function EditTransportTypeDialog({
     onSave(selected);
     onOpenChange(false);
   };
-
+  
+  useEffect(() => {
+    setSelected(currentType);
+  }, [currentType]);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-hidden flex flex-col">
