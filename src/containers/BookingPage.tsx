@@ -717,7 +717,6 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       });
 
       setIsSubmitted(true);
-      setCurrentStep((prev) => prev + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.error("Booking submission failed", error);
