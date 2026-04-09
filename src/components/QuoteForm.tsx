@@ -253,9 +253,9 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
   ]);
 
   const [vehicleColorOptions, setVehicleColorOptions] = useState<string[]>([]);
-  const [vehicleColorsLoading, setVehicleColorsLoading] = useState(true);
+  const [vehicleColorsLoading, setVehicleColorsLoading] = useState(false);
   const [vehicleTypeOptions, setVehicleTypeOptions] = useState<string[]>(vehicleTypes || []);
-  const [vehicleTypesLoading, setVehicleTypesLoading] = useState(true);
+  const [vehicleTypesLoading, setVehicleTypesLoading] = useState(false);
 
   // useEffect(() => {
   //   let cancelled = false;
@@ -1421,10 +1421,11 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           <Button
             type="button"
             variant="outline"
+            size="lg"
             className="flex-1"
             onClick={handleBackClick}
           >
-            <ArrowLeft className="w-5 h-5 mr-2" />
+            <ArrowLeft className="w-4 h-4 mr-2" />
             {formConfig.buttonTexts.back_button}
           </Button>
         ) : null}

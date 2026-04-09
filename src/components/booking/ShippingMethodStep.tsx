@@ -21,7 +21,7 @@ import { BasicAddress, formatAddressWithEllipsis, formatFullAddress } from "@/li
 interface ShippingMethodStepProps {
   quoteData: {
     quoteId: string;
-    vehicle: { year: number; make: string; model: string };
+    vehicle: { year: number; make: string; model: string, color?: string, type?: string, vin?: string };
     vehicles?: Array<{
       year: number;
       make: string;
@@ -31,6 +31,7 @@ interface ShippingMethodStepProps {
       color?: string;
       personal_items_weight?: string;
       condition?: string;
+      vin?: string;
     }>;
     origin: {
       addLine1: string;
@@ -121,6 +122,7 @@ export function ShippingMethodStep({
       color?: string;
       personal_items_weight?: string;
       condition?: string;
+      vin?: string;
     }> =
       Array.isArray(quoteData.vehicles) && quoteData.vehicles.length > 0
         ? quoteData.vehicles
@@ -141,6 +143,7 @@ export function ShippingMethodStep({
         if (weight === "200+" || weight.includes("more")) return "200+";
         return "0-100";
       })(),
+      vin: v?.vin ?? "",
     }));
   };
 

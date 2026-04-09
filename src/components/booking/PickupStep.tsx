@@ -53,8 +53,8 @@ interface PickupStepProps {
   onNext: () => void;
   onBack: () => void;
   quoteData: {
-    vehicle: { year: number; make: string; model: string };
-    vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean }>;
+    vehicle: { year: number; make: string; model: string, color?: string, type?: string, vin?: string };
+    vehicles?: Array<{ year: number; make: string; model: string; is_running?: boolean, color?: string, type?: string, vin?: string }>;
     origin: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
     destination: { addLine1: string; addLine2: string; city: string; state: string; zip: string };
     earliestPickup: string;
