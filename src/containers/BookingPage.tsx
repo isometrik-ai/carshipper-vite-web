@@ -341,7 +341,7 @@ const mapQuoteVehiclesToShippingVehicles = (
     model: v?.model || "",
     type: v?.type || "SUV",
     operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
-    color: (v?.color || "").trim(),
+    color: v?.color ? (v.color as string).trim() : "",
     personalItems: (() => {
       const weight = (v?.personal_items_weight || "").toLowerCase().trim();
       if (weight === "100-150") return "100-200";

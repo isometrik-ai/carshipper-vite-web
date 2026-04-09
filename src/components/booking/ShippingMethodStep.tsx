@@ -356,7 +356,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
     },
     {
       label: "Color",
-      value: (primaryVehicle.color || "").trim() || "Not set",
+      value: (primaryVehicle.color || "").trim() || "—",
       indent: true,
     },
     { 
