@@ -8,6 +8,9 @@ interface PricingSectionProps {
     saver: number;
     priority: number;
     rush: number;
+    saverRatingEstimatedPickupDays: string;
+    priorityRatingEstimatedPickupDays: string;
+    rushRatingEstimatedPickupDays: string;
   };
 }
 
@@ -102,7 +105,10 @@ export function PricingSection({ quoteId, prices }: PricingSectionProps) {
                 </thead>
                 <tbody>
                   {[
-                    ["Pickup Window", "1-5 days", "1-3 days", "Often next day"],
+                    ["Pickup Window", 
+                      prices.saverRatingEstimatedPickupDays ?? "1-5 days",
+                      prices?.priorityRatingEstimatedPickupDays ?? "1-3 days",
+                      prices.rushRatingEstimatedPickupDays ?? "Often next-day"],
                     ["Price Lock Guarantee", "—", "✓", "✓"],
                     ["Carrier Quality", "Good (4.0+★)", "Excellent (4.5+★)", "Premium (4.8+★)"],
                     ["Insurance Coverage", "✓ Included", "✓ Included", "✓ Included"],

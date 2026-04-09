@@ -31,6 +31,11 @@ interface BookShipmentStepProps {
     destination: { addLine1:string, addLine2:string, city: string; state: string; zip: string; latitude?: number; longitude?: number };
     earliestPickup: string;
     transportType: string;
+    prices?: {
+      saver: number;
+      priority: number;
+      rush: number;
+    };
     customer?: {
       name: string;
       email: string;
@@ -43,12 +48,6 @@ const tierNames = {
   saver: "Saver Rate",
   priority: "Priority Rate",
   rush: "Rush Service",
-};
-
-const tierPrices = {
-  saver: 931,
-  priority: 1275,
-  rush: 1900,
 };
 
 export function BookShipmentStep({
@@ -65,6 +64,12 @@ export function BookShipmentStep({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [priceDialogOpen, setPriceDialogOpen] = useState(false);
+
+  const tierPrices = {
+    saver: quoteData?.prices?.saver ?? 931,
+    priority: quoteData?.prices?.priority ?? 1275,
+    rush: quoteData?.prices?.rush ?? 1900,
+  };
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));

@@ -18,7 +18,9 @@ interface HeroSectionProps {
     make: string;
     model: string;
     is_running?: boolean;
+    condition?: string;
   };
+  transportType?: string;
   distance: string | number;
   transitTime: string | number;
   earliestPickup: string | number;
@@ -28,6 +30,7 @@ export function HeroSection({
   origin,
   destination,
   vehicle,
+  transportType,
   distance,
   transitTime,
   earliestPickup,
@@ -58,6 +61,21 @@ export function HeroSection({
     }
     const value = String(earliestPickup)?.trim();
     return value || "TBD";
+  })();
+
+  const operableText = (() => {
+    if (vehicle?.is_running === false) return "Inoperable";
+    if (vehicle?.is_running === true) return "Operable";
+    if ((vehicle?.condition || "").toLowerCase().includes("inoperable")) return "Inoperable";
+    return "Operable";
+  })();
+
+  const transportTypeText = (() => {
+    const raw = String(transportType || "").trim();
+    if (!raw) return "Open Transport";
+    if (/open/i.test(raw)) return "Open Transport";
+    if (/enclosed/i.test(raw)) return "Enclosed Transport";
+    return raw;
   })();
 
   return (
@@ -140,10 +158,10 @@ export function HeroSection({
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-5">
                   <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-md text-sm font-medium">
-                    ✓ Operable
+                    {operableText === "Inoperable" ? "✗" : "✓"} {operableText}
                   </span>
                   <span className="px-3 py-1.5 bg-success/10 text-success rounded-md text-sm font-medium">
-                    🚚 Open Transport
+                    🚚 {transportTypeText}
                   </span>
                   <span className="px-3 py-1.5 bg-warning/10 text-warning rounded-md text-sm font-medium">
                     🚪 Door-to-Door
