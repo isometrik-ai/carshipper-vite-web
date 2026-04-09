@@ -91,44 +91,39 @@ export function EditVehicleDialog({
   };
 
   const handleVinDetect = async () => {
+    //|| !/^[A-HJ-NPR-Z0-9]{17}$/.test(vinInput)
     if (vinInput.length !== 17) {
-      toast.error("VIN must be exactly 17 characters");
+      toast.error("VIN must be exactly 17 valid characters");
       return;
     }
-
-    if (vinLookupLoading) return; // Prevent overlapping requests
-    setVinLookupLoading(true);
-
+    
     try {
       const response = await VinNumberDetails({ vin: vinInput });
       const data = response?.data;
-
-      if (data && Object.keys(data).length > 0) {
-        const yearStr = data?.year || "";
-        const make = data?.make || "";
-        const model = data?.model || "";
-
-        if (make && model) {
-          const parsedYear = yearStr ? parseInt(yearStr, 10) : undefined;
-          setFormData((prev) => ({
-            ...prev,
-            year: parsedYear || prev.year || 2026,
-            make,
-            model,
-            type: prev.type || "SUV",
-            operational: prev.operational ?? true,
-            personalItems: prev.personalItems || "None or less than 100 lbs.",
-            color: prev.color ?? "",
-            vin: vinInput.trim(),
-          }));
-          toast.success("Vehicle details found!");
-          setAddMethod("manual");
-        } else {
-          toast.error("Could not decode VIN. Please enter details manually.");
+    
+      if (data && typeof data === 'object') {
+        const { year, make, model } = data;
+        if (make && model && typeof year === 'string') {
+          const parsedYear = parseInt(year, 10);
+          if (!isNaN(parsedYear)) {
+            setFormData((prev) => ({
+              ...prev,
+              year: parsedYear,
+              make,
+              model,
+              type: prev.type || "SUV",
+              operational: prev.operational ?? true,
+              personalItems: prev.personalItems || "None or less than 100 lbs.",
+              color: prev.color ?? "",
+              vin: vinInput.trim(),
+            }));
+            toast.success("Vehicle details found!");
+            setAddMethod("manual");
+            return;
+          }
         }
-      } else {
-        toast.error("VIN lookup failed. Please enter details manually.");
       }
+      toast.error("Could not decode VIN. Please enter details manually.");
     } catch (error) {
       toast.error("VIN lookup failed. Please enter details manually.");
     } finally {

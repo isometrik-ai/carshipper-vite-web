@@ -578,7 +578,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           model: v.model,
           is_running: v.operational ?? true,
           vin: (v.vin || "").trim(),
-          type: (v.type || "").trim(),
+          type: (v.type || "").trim() || "SUV",
           color: (v.color || "").trim(),
           personal_items_weight: mapPersonalItemsForQuotePayload(v.personalItems || ""),
         })),

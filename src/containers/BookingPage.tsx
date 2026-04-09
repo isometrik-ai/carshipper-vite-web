@@ -298,7 +298,7 @@ const steps = [
   { id: 2, name: "Pickup", shortName: "Pickup" },
   { id: 3, name: "Delivery", shortName: "Delivery" },
   { id: 4, name: "Book Shipment", shortName: "Book" },
-  // { id: 5, name: "Thank You", shortName: "Done" },
+  { id: 5, name: "Thank You", shortName: "Done" },
 ];
 
 const normalizeLocationType = (locationType?: string): string => {
@@ -726,27 +726,27 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
     }
   };
   
-  // if (isSubmitted) {
-  //   return (
-  //     <div className="min-h-screen bg-muted">
-  //       <BookingHeader quoteId={quoteId || mappedQuoteData?.quoteId || ""} />
-  //       <SuccessStep 
-  //         formData={formData} 
-  //         quoteId={quoteId || mappedQuoteData?.quoteId || ""}
-  //         tier={selectedTier}
-  //         price={price}
-  //         vehicle={
-  //           mappedQuoteData?.vehicle ?? {
-  //             year: 0,
-  //             make: "",
-  //             model: "",
-  //           }
-  //         }
-  //         vehicles={mappedQuoteData?.vehicles ?? []}
-  //       />
-  //     </div>
-  //   );
-  // }
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-muted">
+        <BookingHeader quoteId={quoteId || mappedQuoteData?.quoteId || ""} />
+        <SuccessStep 
+          formData={formData} 
+          quoteId={quoteId || mappedQuoteData?.quoteId || ""}
+          tier={selectedTier}
+          price={price}
+          vehicle={
+            mappedQuoteData?.vehicle ?? {
+              year: 0,
+              make: "",
+              model: "",
+            }
+          }
+          vehicles={mappedQuoteData?.vehicles ?? []}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted">
