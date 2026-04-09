@@ -24,11 +24,12 @@ export async function fetchStrapiSeoMetadata(
   apiBaseUrl: string | undefined,
   endpoint: string,
   revalidate = 60,
-  timeoutMs = 8000
+  timeoutMs = 8000,
+  seoFieldsQuery = STRAPI_SEO_FIELDS_QUERY
 ): Promise<SeoMetadata | null> {
   if (!apiBaseUrl) return null;
   const separator = endpoint.includes("?") ? "&" : "?";
-  const url = `${apiBaseUrl}${endpoint}${separator}${STRAPI_SEO_FIELDS_QUERY}`;
+  const url = `${apiBaseUrl}${endpoint}${separator}${seoFieldsQuery}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
