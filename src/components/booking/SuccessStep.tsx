@@ -98,7 +98,7 @@ export function SuccessStep({ formData, quoteId, tier, price, vehicle, vehicles 
           </motion.p>
 
           {/* Confirmation Details */}
-          {/* <motion.div
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -140,7 +140,7 @@ export function SuccessStep({ formData, quoteId, tier, price, vehicle, vehicles 
                 ))}
               </div>
             </motion.div>
-          )} */}
+          )}
 
           {/* Next Steps */}
           <motion.div

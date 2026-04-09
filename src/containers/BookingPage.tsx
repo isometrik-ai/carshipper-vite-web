@@ -207,7 +207,7 @@ const mapQuoteDetailsToBookingQuoteData = (
     const rushDaysMatch = rushDaysStr.match(/\d+/);
     const rushDays = rushDaysMatch ? parseInt(rushDaysMatch[0], 10) : 1;
     const pickupDate = new Date(createdDate);
-    pickupDate.setDate(pickupDate.getDate() + rushDays);
+    pickupDate.setDate(pickupDate.getDate());
     earliestPickup = `${(pickupDate.getMonth() + 1)
       .toString()
       .padStart(2, "0")}/${pickupDate
@@ -281,9 +281,9 @@ const mapQuoteDetailsToBookingQuoteData = (
       (quote.pricing_tiers?.priority?.transport_type || "Open"),
     serviceType: "Door to door",
     prices: {
-      saver: quote.pricing?.tiers?.saver?.price ?? 0,
-      priority: quote.pricing?.tiers?.priority?.price ?? 0,
-      rush: quote.pricing?.tiers?.rush?.price ?? 0,
+      saver: quote.pricing?.tiers?.saver?.estimated_cost ?? 0,
+      priority: quote.pricing?.tiers?.priority?.estimated_cost ?? 0,
+      rush: quote.pricing?.tiers?.rush?.estimated_cost ?? 0,
     },
     customer: {
       name: customerName,

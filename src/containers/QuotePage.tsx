@@ -137,7 +137,8 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
           );
 
           const pickupDate = new Date(createdDate);
-          pickupDate.setDate(pickupDate.getDate() + rushDays);
+          pickupDate.setDate(pickupDate.getDate());
+          //+ rushDays
 
           return formatDisplayDate(pickupDate);
         })()
@@ -147,11 +148,15 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
   // Map pricing tiers from API or use fallback
   const prices = quoteDetails?.data?.quote?.pricing?.tiers
     ? {
-        saver: quoteDetails?.data?.quote?.pricing?.tiers?.saver?.price,
-        priority: quoteDetails?.data?.quote?.pricing?.tiers?.priority?.price,
-        rush: quoteDetails?.data?.quote?.pricing?.tiers?.rush?.price,
+        saver: quoteDetails?.data?.quote?.pricing?.tiers?.saver?.estimated_cost,
+        priority: quoteDetails?.data?.quote?.pricing?.tiers?.priority?.estimated_cost,
+        rush: quoteDetails?.data?.quote?.pricing?.tiers?.rush?.estimated_cost,
+        saverRatingEstimatedPickupDays: quoteDetails?.data?.quote?.pricing?.tiers?.saver?.estimated_pickup_days,
+        priorityRatingEstimatedPickupDays: quoteDetails?.data?.quote?.pricing?.tiers?.priority?.estimated_pickup_days,
+        rushRatingEstimatedPickupDays: quoteDetails?.data?.quote?.pricing?.tiers?.rush?.estimated_pickup_days,
       }
-    : { saver: 0, priority: 0, rush: 0 };
+    : { saver: 0, priority: 0, rush: 0,
+      saverRatingEstimatedPickupDays: 0, priorityRatingEstimatedPickupDays: 0, rushRatingEstimatedPickupDays: 0 };
 
   // Format expiration date
   const expirationDate = quoteDetails?.data?.quote?.expires_at
@@ -164,6 +169,11 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
   // // Remove any characters that are not allowed in our safe ID pattern
   // const safeDisplayQuoteId = rawQuoteId.replace(UNSAFE_QUOTE_ID_CHARS_REGEX, "");
   const vehicle = quoteDetails?.data?.quote?.vehicle[0] || {};
+  const transportType =
+    quoteDetails?.data?.quote?.transport_type ||
+    quoteDetails?.data?.quote?.pricing?.tiers?.priority?.transport_type ||
+    quoteDetails?.data?.quote?.pricing_tiers?.priority?.transport_type ||
+    "";
   return (
     <div className="min-h-screen bg-background">
       <QuoteHeader quoteId={safeDisplayQuoteId} />
@@ -173,6 +183,7 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
           origin={origin}
           destination={destination}
           vehicle={vehicle}
+          transportType={transportType}
           distance={distance}
           transitTime={transitTime}
           earliestPickup={earliestPickup}
