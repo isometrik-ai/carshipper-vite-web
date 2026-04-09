@@ -29,9 +29,8 @@ const SuccessStep = dynamic(() =>
   import("@/components/booking/SuccessStep").then((mod) => mod.SuccessStep)
 );
 import { QuoteGetDetailsAPI } from "@/services/quote-services";
-import { createNewShipmentBooking, getAllVehiclesTypesList } from "@/services/booking-services";
+import { createNewShipmentBooking } from "@/services/booking-services";
 import { toast } from "sonner";
-import { formatFullAddress } from "@/lib/address";
 import { getClientIPAddress } from "@/lib/global";
 
 export interface BookingFormData {
@@ -144,6 +143,7 @@ type BookingQuoteData = {
     model: string;
     is_running?: boolean;
     type?: string;
+    color?: string;
     personal_items_weight?: string;
     condition?: string;
   }>;
@@ -244,6 +244,7 @@ const mapQuoteDetailsToBookingQuoteData = (
       model: v?.model ?? "",
       is_running: v?.is_running,
       type: v?.type,
+      color: v?.color ?? "",
       personal_items_weight: v?.personal_items_weight,
       condition: v?.condition,
     })),
@@ -292,7 +293,7 @@ const steps = [
   { id: 2, name: "Pickup", shortName: "Pickup" },
   { id: 3, name: "Delivery", shortName: "Delivery" },
   { id: 4, name: "Book Shipment", shortName: "Book" },
-  { id: 5, name: "Thank You", shortName: "Done" },
+  // { id: 5, name: "Thank You", shortName: "Done" },
 ];
 
 const normalizeLocationType = (locationType?: string): string => {
@@ -340,6 +341,7 @@ const mapQuoteVehiclesToShippingVehicles = (
     model: v?.model || "",
     type: v?.type || "SUV",
     operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
+    color: (v?.color || "").trim(),
     personalItems: (() => {
       const weight = (v?.personal_items_weight || "").toLowerCase().trim();
       if (weight === "100-150") return "100-200";
@@ -461,6 +463,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
               type: v.type || "SUV",
               condition: "runs_and_drives", //v.operational === false ? "inoperable" : "runs_and_drives",
               personal_items_weight: mapPersonalItemsForBooking(v.personalItems || ""),
+              ...((v.color || "").trim() ? { color: (v.color || "").trim() } : {}),
             }))
           : vehicleFromQuote.length > 0
           ? vehicleFromQuote.map((v: any) => ({
@@ -706,7 +709,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       });
 
       setIsSubmitted(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      nextStep();
     } catch (error) {
       console.error("Booking submission failed", error);
       toast.error("Unable to complete booking", {
@@ -714,40 +717,28 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
       });
     }
   };
-
-  const getVehicleTypeList = async () => {
-    try{
-      const response = await getAllVehiclesTypesList();
-      console.log(response);
-    } catch (error) {
-      console.error("Failed to get contact list", error);
-    }
-  };
-  useEffect(() => {
-    getVehicleTypeList();
-  }, []);
   
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen bg-muted">
-        <BookingHeader quoteId={quoteId || mappedQuoteData?.quoteId || ""} />
-        <SuccessStep 
-          formData={formData} 
-          quoteId={quoteId || mappedQuoteData?.quoteId || ""}
-          tier={selectedTier}
-          price={price}
-          vehicle={
-            mappedQuoteData?.vehicle ?? {
-              year: 0,
-              make: "",
-              model: "",
-            }
-          }
-          vehicles={mappedQuoteData?.vehicles ?? []}
-        />
-      </div>
-    );
-  }
+  // if (isSubmitted) {
+  //   return (
+  //     <div className="min-h-screen bg-muted">
+  //       <BookingHeader quoteId={quoteId || mappedQuoteData?.quoteId || ""} />
+  //       <SuccessStep 
+  //         formData={formData} 
+  //         quoteId={quoteId || mappedQuoteData?.quoteId || ""}
+  //         tier={selectedTier}
+  //         price={price}
+  //         vehicle={
+  //           mappedQuoteData?.vehicle ?? {
+  //             year: 0,
+  //             make: "",
+  //             model: "",
+  //           }
+  //         }
+  //         vehicles={mappedQuoteData?.vehicles ?? []}
+  //       />
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-muted">

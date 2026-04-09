@@ -15,7 +15,6 @@ import { getAllVehicleColorsList, getAllVehiclesTypesList } from "@/services/boo
 import { useQuoteForm } from "@/api/quoteForm";
 import { getIcon } from "@/lib/icons";
 import type { LucideIcon } from "lucide-react";
-import { PageSkeleton } from "./ui/page-skeleton";
 import AddressAutocomplete from "./custom-google-searchbar";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/config";
 import { getFormattedAddressFromGooglePlace } from "@/lib/global";
@@ -24,6 +23,7 @@ import { CreateNewContactPostAPI, CreateNewLeadPostAPI, LeadsGetDetailsAPI } fro
 import CustomPhoneNumberInputField from "@/components/ui/customPhoneNumber/phoneInput";
 import { emailValidator } from "@/lib/helpers";
 import { getSafeQuoteRoute } from "@/shared/routes";
+import { vehicleTypes } from "./ui/dialogs/EditVehicleDialog";
 
 interface QuoteFormProps {
   defaultOrigin?: string;
@@ -254,39 +254,39 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
 
   const [vehicleColorOptions, setVehicleColorOptions] = useState<string[]>([]);
   const [vehicleColorsLoading, setVehicleColorsLoading] = useState(true);
-  const [vehicleTypeOptions, setVehicleTypeOptions] = useState<string[]>([]);
+  const [vehicleTypeOptions, setVehicleTypeOptions] = useState<string[]>(vehicleTypes || []);
   const [vehicleTypesLoading, setVehicleTypesLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [colorRes, typesRes] = await Promise.all([
-          getAllVehicleColorsList(),
-          getAllVehiclesTypesList(),
-        ]);
-        const colorRaw = (colorRes as { data?: unknown })?.data ?? colorRes;
-        const typesRaw = (typesRes as { data?: unknown })?.data ?? typesRes;
-        if (!cancelled) {
-          setVehicleColorOptions(normalizeVehicleColorApiResponse(colorRaw));
-          setVehicleTypeOptions(normalizeVehicleTypesApiResponse(typesRaw));
-        }
-      } catch {
-        if (!cancelled) {
-          setVehicleColorOptions([]);
-          setVehicleTypeOptions([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setVehicleColorsLoading(false);
-          setVehicleTypesLoading(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // useEffect(() => {
+  //   let cancelled = false;
+  //   (async () => {
+  //     try {
+  //       const [colorRes, typesRes] = await Promise.all([
+  //         getAllVehicleColorsList(),
+  //         getAllVehiclesTypesList(),
+  //       ]);
+  //       const colorRaw = (colorRes as { data?: unknown })?.data ?? colorRes;
+  //       const typesRaw = (typesRes as { data?: unknown })?.data ?? typesRes;
+  //       if (!cancelled) {
+  //         setVehicleColorOptions(normalizeVehicleColorApiResponse(colorRaw));
+  //         setVehicleTypeOptions(normalizeVehicleTypesApiResponse(typesRaw));
+  //       }
+  //     } catch {
+  //       if (!cancelled) {
+  //         setVehicleColorOptions([]);
+  //         setVehicleTypeOptions([]);
+  //       }
+  //     } finally {
+  //       if (!cancelled) {
+  //         setVehicleColorsLoading(false);
+  //         setVehicleTypesLoading(false);
+  //       }
+  //     }
+  //   })();
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, []);
 
   // Locations
   const [pickupLocation, setPickupLocation] = useState(defaultOrigin);
@@ -1424,7 +1424,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
             className="flex-1"
             onClick={handleBackClick}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-5 h-5 mr-2" />
             {formConfig.buttonTexts.back_button}
           </Button>
         ) : null}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Car, Pencil, Trash2, Plus, Scan, CarFront, CheckCircle2, Briefcase, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Car, Pencil, Trash2, Plus, Scan, CarFront, CheckCircle2, Briefcase, Loader2, Palette } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { VinNumberDetails } from "@/services/quote-services";
 import { QUOTE_PERSONAL_ITEMS_OPTIONS } from "@/components/VehicleSelector";
@@ -20,6 +19,7 @@ export interface Vehicle {
   type: string;
   operational: boolean;
   personalItems: string;
+  color?: string;
   vin?: string;
 }
 
@@ -30,10 +30,10 @@ interface EditVehicleDialogProps {
   onSave: (vehicles: Vehicle[]) => void;
 }
 
-const years = Array.from({ length: 30 }, (_, i) => 2026 - i);
-const makes = ["Acura", "Audi", "BMW", "Buick", "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia", "Lexus", "Lincoln", "Mazda", "Mercedes-Benz", "Nissan", "Porsche", "Ram", "Subaru", "Tesla", "Toyota", "Volkswagen", "Volvo"];
-const vehicleTypes = ["Sedan", "SUV", "Truck", "Van", "Coupe", "Convertible", "Wagon", "Hatchback", "Motorcycle"];
-const personalItemsOptions = useMemo(() => QUOTE_PERSONAL_ITEMS_OPTIONS, []);
+export const years = Array.from({ length: 30 }, (_, i) => 2026 - i);
+export const makes = ["Acura", "Audi", "BMW", "Buick", "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia", "Lexus", "Lincoln", "Mazda", "Mercedes-Benz", "Nissan", "Porsche", "Ram", "Subaru", "Tesla", "Toyota", "Volkswagen", "Volvo"];
+export const vehicleTypes = ["Sedan", "SUV", "Truck", "Van", "Coupe", "Convertible", "Wagon", "Hatchback", "Motorcycle"];
+const personalItemsOptions = QUOTE_PERSONAL_ITEMS_OPTIONS;
 
 export function EditVehicleDialog({
   open,
@@ -65,6 +65,7 @@ export function EditVehicleDialog({
     type: "SUV",
     operational: true,
     personalItems: "None or less than 100 lbs.",
+    color: "",
   });
 
   const handleEditVehicle = (vehicle: Vehicle) => {
@@ -87,6 +88,7 @@ export function EditVehicleDialog({
       type: "SUV",
       operational: true,
       personalItems: "None or less than 100 lbs.",
+      color: "",
     });
     setVinInput("");
     setIsAddingNew(true);
@@ -121,6 +123,7 @@ export function EditVehicleDialog({
             type: prev.type || "SUV",
             operational: prev.operational ?? true,
             personalItems: prev.personalItems || "None or less than 100 lbs.",
+            color: prev.color ?? "",
             vin: vinInput,
           }));
           toast.success("Vehicle details found!");
@@ -149,6 +152,7 @@ export function EditVehicleDialog({
       type: formData.type || "SUV",
       operational: formData.operational ?? true,
       personalItems: formData.personalItems || "None or less than 100 lbs.",
+      color: (formData.color || "").trim(),
       vin: formData.vin,
     };
 
@@ -286,6 +290,18 @@ export function EditVehicleDialog({
               </div>
 
               <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-muted-foreground" />
+                  Vehicle color (optional)
+                </Label>
+                <Input
+                  placeholder="e.g. Silver, Black"
+                  value={formData.color ?? ""}
+                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label>Is the vehicle operational?</Label>
                 <RadioGroup
                   value={formData.operational ? "yes" : "no"}
@@ -407,6 +423,18 @@ export function EditVehicleDialog({
                     <p className="font-medium">{vehicle.personalItems}</p>
                   </div>
                 </div>
+
+                {(vehicle.color || "").trim() ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                      <Palette className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Color</p>
+                      <p className="font-medium">{(vehicle.color || "").trim()}</p>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           ))}

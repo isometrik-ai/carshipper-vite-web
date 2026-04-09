@@ -2,7 +2,13 @@ import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query
 import { logQuoteFetchFailure } from "@/api/quote";
 import { QUOTE_PAGE_QUERY_KEY, QUOTE_PAGE_STALE_MS } from "@/lib/quotePage.queries";
 import { fetchQuotePageData } from "@/lib/quotePage.utils";
-import QuotePageClient from "./QuotePageClient";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
+import dynamic from "next/dynamic";
+
+const QuotePageClient = dynamic(() => import("./QuotePageClient"), {
+    ssr: false,
+    loading: () => <PageSkeleton />,
+  });
 
 export const revalidate = 60;
 

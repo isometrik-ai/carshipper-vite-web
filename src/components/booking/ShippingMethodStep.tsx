@@ -28,6 +28,7 @@ interface ShippingMethodStepProps {
       model: string;
       is_running?: boolean;
       type?: string;
+      color?: string;
       personal_items_weight?: string;
       condition?: string;
     }>;
@@ -117,6 +118,7 @@ export function ShippingMethodStep({
       model: string;
       is_running?: boolean;
       type?: string;
+      color?: string;
       personal_items_weight?: string;
       condition?: string;
     }> =
@@ -131,6 +133,7 @@ export function ShippingMethodStep({
       model: v?.model || "",
       type: v?.type || "SUV",
       operational: v?.is_running ?? !/inoperable/i.test(v?.condition || ""),
+      color: (v?.color || "").trim(),
       personalItems: (() => {
         const weight = (v?.personal_items_weight || "").toLowerCase().trim();
         if (weight === "100-150") return "100-200";
@@ -301,6 +304,7 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
       make: v.make,
       model: v.model,
       is_running: v.operational,
+      color: (v.color || "").trim(),
     })),
     delivery: deliveries,
     };
@@ -348,6 +352,11 @@ const [pickupDate, setPickupDate] = useState(initialPickupDate);
     { 
       label: "Personal Items", 
       value: primaryVehicle.personalItems,
+      indent: true,
+    },
+    {
+      label: "Color",
+      value: (primaryVehicle.color || "").trim() || "Not set",
       indent: true,
     },
     { 
