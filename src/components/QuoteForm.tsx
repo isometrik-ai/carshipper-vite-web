@@ -885,7 +885,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
               {currentStepConfig?.step_description || "Enter VIN to auto-fill or select year, make & model"}
             </p>
 
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-[30vh] overflow-y-auto pr-1">
               {vehicles.map((vehicle, index) => (
                 <VehicleSelector
                   key={vehicle.id}
@@ -941,7 +941,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
               {currentStepConfig?.step_title || "Vehicle Condition"}
             </h2>
 
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-[52vh] overflow-y-auto pr-1">
               {vehicles.map((vehicle, index) => {
                 const runningQuestion = currentStepConfig?.running_question_text || "Is it running?";
                 const runningOptions = formConfig.runningStatusOptions.length > 0
