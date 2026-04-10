@@ -10,7 +10,7 @@ import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { DELIVERY_TRUCK_ICON_LARRY } from "@/lib/config";
 import type { QuoteResponse } from "@/containers/QuotePage";
-import { getSafeQuoteId } from "@/shared/routes";
+import { resolveSafeQuoteInfoTarget } from "@/shared/routes";
 import { QuoteGetDetailsAPI } from "@/services/quote-services";
 
 const PHONE_DISPLAY = "(888) 555-1234";
@@ -76,32 +76,40 @@ export default function QuoteInfoPage({ params }: { params: { quoteId: string } 
   const [quoteDetails, setQuoteDetails] = useState<QuoteResponse | null>(null);
 
   const firstName = useMemo(() => {
-    const q = (quoteDetails as any)?.data?.quote?.customerDetails ?? (quoteDetails as any)?.quote;
-    const name = `${q?.first_name?.trim()} ${q?.last_name?.trim()}`;
+    const quoteData = (quoteDetails as any)?.data?.quote?.customerDetails ?? (quoteDetails as any)?.quote;
+    const firstNameNormalized = quoteData?.first_name?.trim().toLowerCase() ?? "";
+    const lastNameNormalized = quoteData?.last_name?.trim().toLowerCase() ?? "";
+    const name = `${firstNameNormalized} ${lastNameNormalized}`.trim();
     return name || "Customer";
   }, [quoteDetails]);
 
   useEffect(() => {
-    const safeQuoteId = getSafeQuoteId(quoteId);
-    if (!safeQuoteId) {
+    const target = resolveSafeQuoteInfoTarget(quoteId);
+    if (!target) {
       console.error("Invalid quoteId");
       setLoading(false);
       return;
     }
+    const { quoteId: safeQuoteId } = target;
 
     const controller = new AbortController();
+    let isMounted = true;
 
     const fetchQuoteDetails = async () => {
       try {
-        setLoading(true);
+        if (isMounted) {
+          setLoading(true);
+        }
         const response = await QuoteGetDetailsAPI(safeQuoteId, controller.signal);
-        if (!controller.signal.aborted) {
+        if (isMounted && !controller.signal.aborted) {
           setQuoteDetails(((response as any)?.data ?? response) as QuoteResponse);
         }
       } catch (error) {
-        console.error("Failed to fetch quote details", error);
+        if (isMounted) {
+          console.error("Failed to fetch quote details", error);
+        }
       } finally {
-        if (!controller.signal.aborted) {
+        if (isMounted && !controller.signal.aborted) {
           setLoading(false);
         }
       }
@@ -110,6 +118,7 @@ export default function QuoteInfoPage({ params }: { params: { quoteId: string } 
     void fetchQuoteDetails();
 
     return () => {
+      isMounted = false;
       controller.abort();
     };
   }, [quoteId]);

@@ -8,6 +8,9 @@ export const ROUTES_LIST = {
 // Centralized helpers for building app routes
 export const getQuoteRoute = (quoteId: string) => `${ROUTES_LIST.QUOTE}/${quoteId}`;
 
+export const getQuoteInfoRoute = (route:string,
+  quoteId: string) => `${route}/${quoteId}`;
+
 /**
  * Normalize and validate quote IDs in a single place.
  * Returns null if the ID is invalid or empty.
@@ -33,6 +36,25 @@ export const getSafeQuoteRoute = (rawId: string): string | null => {
 };
 
 /**
+ * Validates a raw quote id from the URL (or API) and returns both the app path and the safe id.
+ * Use this when you need the id for fetches and want the same rules as {@link getSafeQuoteInfoRoute}.
+ */
+export const resolveSafeQuoteInfoTarget = (
+  rawId: string,
+): { path: string; quoteId: string } | null => {
+  const safeId = getSafeQuoteId(rawId);
+  if (!safeId) return null;
+  return { path: getQuoteInfoRoute(ROUTES_LIST.QUOTE_INFO, safeId), quoteId: safeId };
+};
+
+/**
+ * Builds a safe quote-info route (`/quote-info/:id`) or returns null if the ID is invalid.
+ */
+export const getSafeQuoteInfoRoute = (rawId: string): string | null => {
+  return resolveSafeQuoteInfoTarget(rawId)?.path ?? null;
+};
+
+/**
  * Remove the # from the quote id
  */
 export const removeHashFromQuoteId = (rawId: string): string | null => {
@@ -40,9 +62,4 @@ export const removeHashFromQuoteId = (rawId: string): string | null => {
     return null;
   }
   return rawId.trim().replace(/^#/, "");
-};
-
-export const getSafeQuoteInfoRoute = (route: string, quoteId: string): string | null => {
-  const safeId = quoteId; //getSafeQuoteId(quoteId);
-  return safeId ? `${route}/${safeId}` : null;
 };

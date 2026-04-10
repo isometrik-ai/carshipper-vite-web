@@ -24,7 +24,7 @@ import { CreateNewQuotePostAPI } from "@/services/quote-services";
 import { CreateNewContactPostAPI, CreateNewLeadPostAPI, LeadsGetDetailsAPI } from "@/services/leads-service";
 import CustomPhoneNumberInputField from "@/components/ui/customPhoneNumber/phoneInput";
 import { emailValidator } from "@/lib/helpers";
-import { getSafeQuoteInfoRoute, getSafeQuoteRoute, ROUTES_LIST } from "@/shared/routes";
+import { getSafeQuoteInfoRoute } from "@/shared/routes";
 
 interface QuoteFormProps {
   defaultOrigin?: string;
@@ -779,13 +779,14 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
         description: formConfig.successToastDescription,
       });
 
-      const quoteRoute = getSafeQuoteInfoRoute(ROUTES_LIST?.QUOTE_INFO, String(quoteId));
+      const quoteRoute = getSafeQuoteInfoRoute(String(quoteId));
 
-        if (quoteRoute) {
-          toast.success("Quote is created successfully", {
-            description: "Please check you email for further quotation details",
-          });
-          router.push(quoteRoute);
+      if (quoteRoute) {
+        console.log('quoteRoute', quoteRoute, quoteId)
+        toast.success("Quote is created successfully", {
+          description: "Please check you email for further quotation details",
+        });
+        router.push(quoteRoute);
       } else {
         toast.error("Invalid quote ID");
       }
