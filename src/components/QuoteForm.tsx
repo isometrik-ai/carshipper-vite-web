@@ -782,7 +782,6 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
       const quoteRoute = getSafeQuoteInfoRoute(String(quoteId));
 
       if (quoteRoute) {
-        console.log('quoteRoute', quoteRoute, quoteId)
         toast.success("Quote is created successfully", {
           description: "Please check you email for further quotation details",
         });

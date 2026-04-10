@@ -9,7 +9,7 @@ export const ROUTES_LIST = {
 export const getQuoteRoute = (quoteId: string) => `${ROUTES_LIST.QUOTE}/${quoteId}`;
 
 export const getQuoteInfoRoute = (route:string,
-  quoteId: string) => `${route}/${quoteId}`;
+  quoteId: string) => { return route && quoteId ? `${route}/${quoteId}` : null; }
 
 /**
  * Normalize and validate quote IDs in a single place.
