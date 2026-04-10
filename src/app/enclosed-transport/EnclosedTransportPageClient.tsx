@@ -48,6 +48,14 @@ export default function EnclosedTransportPageClient() {
     };
   }, [data]);
 
+  const parsedParagraphs = useMemo(() => {
+    if (!pageData?.textSection?.paragraphs) return [];
+    return pageData.textSection.paragraphs
+      .split(/\n\n+/)
+      .map((p: string) => p.trim())
+      .filter((p: string) => p.length > 0);
+  }, [pageData?.textSection?.paragraphs]);
+
   if (isLoading && !data) {
     return <PageSkeleton />;
   }
@@ -59,14 +67,6 @@ export default function EnclosedTransportPageClient() {
       </div>
     );
   }
-
-  const parsedParagraphs = useMemo(() => {
-    if (!pageData?.textSection?.paragraphs) return [];
-    return pageData.textSection.paragraphs
-      .split(/\n\n+/)
-      .map((p: string) => p.trim())
-      .filter((p: string) => p.length > 0);
-  }, [pageData?.textSection?.paragraphs]);
 
   return (
     <main className="flex-1 pt-20">

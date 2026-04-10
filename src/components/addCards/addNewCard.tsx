@@ -2,6 +2,7 @@ import { CARD, CUSTOM_LIGHT_GRAY, CUSTOM_LIGHT_GRAY_COLOR } from "@/lib/config";
 import { CardCvcElement, CardExpiryElement, CardNumberElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { StripeCardElement, StripeCardNumberElementOptions } from "@stripe/stripe-js";
 import React, { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 
@@ -131,8 +132,8 @@ const AddNewCardsSection = (props:AddNewCardsSectionProps) => {
       event?.preventDefault();
   
       if (!stripe || !elements) {
-        // Stripe.js has not yet loaded.
-        // Make sure to disable form submission until Stripe.js has loaded.
+        handleLoader(false);
+        toast.error("Payment form is not ready yet. Please wait a moment and try again.");
         return;
       }
       const cardElement = elements.getElement(CardNumberElement) as StripeCardElement;
@@ -146,10 +147,12 @@ const AddNewCardsSection = (props:AddNewCardsSectionProps) => {
         handleLoader(false);
         setCardErr(true);
         setErrMsg(error?.message);
+        toast.error(error?.message ?? "We could not verify your card. Please check the details and try again.");
       } else {
         let { id } = paymentMethod;
         handleSubmit && handleSubmit(id, nameOnCard);
         handleLoader(false);
+        toast.success("Card verified successfully. You can continue with your booking.");
       }
     };
   

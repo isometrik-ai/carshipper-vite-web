@@ -196,6 +196,7 @@ const handleSubmit = async () => {
   ]
     .filter(Boolean)
     .join(", ");
+
   return (
     <div className="grid lg:grid-cols-2 gap-6">
       {/* LEFT: Map & Agent */}
@@ -465,7 +466,7 @@ const handleSubmit = async () => {
                 <div className="flex items-center gap-3">
                   <User className="w-5 h-5 text-muted-foreground" />
                   <div>
-                    <p className="font-medium text-foreground">Shipper</p>
+                    <p className="font-medium text-foreground">Broker</p>
                     <p className="text-sm text-muted-foreground">
                       {shipperName}
                     </p>
@@ -657,7 +658,7 @@ const handleSubmit = async () => {
               <div className="text-sm text-muted-foreground space-y-3 max-h-48 overflow-y-auto">
                 <p>1. CarShippers.ai agrees to have the vehicle(s) described in this shipping form shipped on or about the dates requested. CarShippers.ai will find a licensed Carrier (agent) to fulfill the terms and conditions of this agreement. CarShippers.ai does not guarantee a specific pickup or delivery date. The normal pickup time frame is 1 to 3 business days from the first available pickup date.</p>
                 <p>2. This order is subject to all terms and conditions of the Carrier's bills of lading, copies of which are available at the office of the Carrier and are incorporated herein.</p>
-                <p>3. Carrier's responsibility begins when the shipper or his agent signs the bill of lading at pickup, and ends when the receiver or their agent signs the bill of lading at delivery.</p>
+                <p>3. Carrier's responsibility begins when the broker or his agent signs the bill of lading at pickup, and ends when the receiver or their agent signs the bill of lading at delivery.</p>
               </div>
             </div>
 
