@@ -1,0 +1,349 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Pin, Phone, ArrowRight, Star, ShieldCheck } from "lucide-react";
+import GumletImage from "@/components/media/GumletImage";
+import FillImageFrame from "@/components/media/FillImageFrame";
+import { PageSEO } from "@/components/seo/PageSEO";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { DELIVERY_TRUCK_ICON_LARRY } from "@/lib/config";
+import type { QuoteResponse } from "@/containers/QuotePage";
+import { getSafeQuoteId } from "@/shared/routes";
+import { QuoteGetDetailsAPI } from "@/services/quote-services";
+
+const PHONE_DISPLAY = "(888) 555-1234";
+const PHONE_TEL = "8885551234";
+
+const RESOURCE_LINKS = [
+  { href: "/faq", label: "Pickup, delivery & vehicle condition FAQs" },
+  { href: "/blog", label: "Tips from the CarShippers.ai team" },
+  { href: "/pricing", label: "What drives your quoted price" },
+  { href: "/how-it-works", label: "How our transport process works" },
+] as const;
+
+const TRUST_ITEMS = [
+  { label: "Google Reviews", icon: Star },
+  { label: "Accredited business", icon: ShieldCheck },
+  { label: "DOT registered", icon: ShieldCheck },
+  { label: "Trusted transport", icon: ShieldCheck },
+] as const;
+
+function GuaranteeSeal() {
+  return (
+    <div
+      className="mx-auto flex h-[220px] w-[220px] shrink-0 items-center justify-center rounded-full border-[6px] border-blue-800 bg-gradient-to-br from-blue-700 to-blue-900 text-center shadow-lg ring-4 ring-blue-900/10 md:h-[272px] md:w-[272px] md:border-[7px] md:ring-8 lg:h-[300px] lg:w-[300px]"
+      aria-hidden
+    >
+      <div className="px-4 md:px-5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-100 md:text-xs">
+          Money back
+        </p>
+        <p className="my-2 rounded-md bg-white px-2 py-1.5 text-sm font-extrabold text-blue-900 shadow-sm md:my-2.5 md:px-3 md:py-2 md:text-base">
+          100% Risk Free
+        </p>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-100 md:text-xs">
+          Guarantee
+        </p>
+      </div>
+    </div>
+  );
+}
+
+const GUARANTEE_POINTS = [
+  {
+    title: "No Hidden Fees",
+    body: "What you see is what you pay. Clear, upfront pricing every time.",
+  },
+  {
+    title: "Verified & Insured Carriers",
+    body: "Your vehicle is handled by licensed, vetted professionals.",
+  },
+  {
+    title: "Delivery You Can Count On",
+    body: "Real-time coordination ensures your shipment stays on track.",
+  },
+  {
+    title: "Money-Back Assurance",
+    body: "If we fall short, you're protected with our risk-free guarantee.",
+  },
+] as const;
+
+export default function QuoteInfoPage({ params }: { params: { quoteId: string } }) {
+  const { quoteId } = params;
+  const [loading, setLoading] = useState(true);
+  const [quoteDetails, setQuoteDetails] = useState<QuoteResponse | null>(null);
+
+  const firstName = useMemo(() => {
+    const q = (quoteDetails as any)?.data?.quote?.customerDetails ?? (quoteDetails as any)?.quote;
+    const name = `${q?.first_name?.trim()} ${q?.last_name?.trim()}`;
+    return name || "Customer";
+  }, [quoteDetails]);
+
+  useEffect(() => {
+    const safeQuoteId = getSafeQuoteId(quoteId);
+    if (!safeQuoteId) {
+      console.error("Invalid quoteId");
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchQuoteDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await QuoteGetDetailsAPI(safeQuoteId, controller.signal);
+        if (!controller.signal.aborted) {
+          setQuoteDetails(((response as any)?.data ?? response) as QuoteResponse);
+        }
+      } catch (error) {
+        console.error("Failed to fetch quote details", error);
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchQuoteDetails();
+
+    return () => {
+      controller.abort();
+    };
+  }, [quoteId]);
+
+  useEffect(() => {
+    if (!loading) {
+      document.title = "Quote sent | CarShippers.ai";
+    }
+  }, [loading]);
+
+  if (loading && !quoteDetails) {
+    return (
+      <>
+        <PageSEO seoMetadata={null} pageContent={null} />
+        <PageSkeleton />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <PageSEO seoMetadata={null} pageContent={null} />
+
+      <div className="w-full flex-col bg-slate-100 pt-20">
+        {/* Transport quote confirmation */}
+        <section className="relative py-10 md:py-14 lg:py-16">
+          <div className="container mx-auto max-w-6xl px-4">
+            <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="order-2 text-center lg:order-1 lg:text-left"
+              >
+                <p className="text-lg text-slate-800 md:text-xl">
+                  Hi
+                  <strong>
+                    &nbsp;&nbsp;{firstName},
+                  </strong>
+                </p>
+                <p className="mt-4 text-base leading-relaxed text-slate-700 md:text-lg">
+                  Your personalized CarShippers.ai quote is on its way by{" "}
+                  <strong className="font-semibold">email</strong> and{" "}
+                  <strong className="font-semibold">text</strong> so you can review pricing, tiers,
+                  and timing on your schedule. Prefer to talk it through? We&apos;re here when you need
+                  us.
+                </p>
+
+                <h1 className="mt-10 text-2xl font-bold text-blue-900 md:text-3xl">
+                  Helpful guides while you compare options
+                </h1>
+                <p className="mt-3 text-slate-600">
+                  Get clear, practical answers before you book—no jargon, just what matters for your
+                  move:
+                </p>
+                <ul className="mt-6 space-y-3 text-left">
+                  {RESOURCE_LINKS.map((item, index) => (
+                    <motion.li
+                      key={item.href}
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 0.15 + index * 0.06 }}
+                      className="flex items-start gap-3"
+                    >
+                      <Pin
+                        className="mt-0.5 h-5 w-5 shrink-0 text-rose-600"
+                        aria-hidden
+                      />
+                      <Link
+                        href={item.href}
+                        className="text-base font-medium text-blue-500 underline-offset-4 hover:underline"
+                      >
+                        {item.label}
+                      </Link>
+                    </motion.li>
+                  ))}
+                </ul>
+
+                <p className="mt-8 text-slate-700">
+                  Have a question about your quote or route?{" "}
+                  <strong className="font-semibold text-slate-900">
+                    Reach out anytime—we&apos;ll help you choose the option that fits your timeline
+                    and budget.
+                  </strong>
+                </p>
+
+                <p className="mt-6 flex flex-wrap items-center justify-center gap-2 text-slate-800 lg:justify-start">
+                  <Phone className="h-5 w-5 text-rose-600" aria-hidden />
+                  <span>Questions? Call</span>
+                  <a
+                    href={`tel:+1${PHONE_TEL}`}
+                    className="font-semibold text-blue-500 underline-offset-4 hover:underline"
+                  >
+                    {PHONE_DISPLAY}
+                  </a>
+                  <span className="hidden sm:inline">and we&apos;ll walk you through it.</span>
+                </p>
+                <p className="mt-1 text-center text-sm text-slate-600 sm:hidden">
+                  and we&apos;ll walk you through it.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.55, delay: 0.08 }}
+                className="order-1 flex justify-center lg:order-2 lg:justify-end"
+              >
+                <FillImageFrame
+                  aspectClassName="aspect-square w-[152px] shrink-0 rounded-full border-4 border-sky-200/90 shadow-lg ring-4 ring-blue-900/10
+                  sm:w-[168px] md:w-[300px] lg:w-[300px]"
+                  className="bg-gradient-to-br from-blue-900 to-blue-950"
+                >
+                  <GumletImage
+                    src={DELIVERY_TRUCK_ICON_LARRY}
+                    alt="Delivery truck — vehicle transport"
+                    fill
+                    priority
+                    className="object-contain object-center p-1.5 sm:p-2 md:p-2.5"
+                    sizes="(max-width: 640px) 152px, (max-width: 1024px) 192px, 216px"
+                  />
+                </FillImageFrame>
+              </motion.div>
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="container mx-auto mt-8 max-w-5xl px-4"
+          >
+            <div className="rounded-full border border-slate-200/80 bg-white px-4 py-4 shadow-lg shadow-slate-300/40 md:px-8">
+              <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] md:flex-wrap md:justify-center md:overflow-visible [&::-webkit-scrollbar]:hidden">
+                {TRUST_ITEMS.map(({ label, icon: Icon }) => (
+                  <div
+                    key={label}
+                    className="flex min-w-[7.5rem] shrink-0 snap-center flex-col items-center gap-1 text-center md:min-w-0"
+                  >
+                    <Icon className="h-6 w-6 text-slate-800" strokeWidth={1.5} aria-hidden />
+                    <span className="text-xs font-medium text-slate-700">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </section>
+
+        {/* Guarantee + CTA */}
+        <section className="bg-white">
+          <div className="container mx-auto max-w-6xl px-4 py-10 md:py-14">
+            <div className="grid items-start gap-10 md:grid-cols-2 md:items-stretch md:gap-14">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="flex min-h-0 items-center justify-center md:justify-start md:py-4"
+              >
+                <GuaranteeSeal />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.08 }}
+                className="text-center md:text-left"
+              >
+                <h2 className="text-3xl font-bold text-blue-950 md:text-4xl">
+                  The CarShippers Guarantee
+                </h2>
+                <p className="mt-4 text-xl font-bold text-blue-950 md:text-2xl">
+                  100% Risk-Free. Total Peace of Mind.
+                </p>
+                <p className="mt-6 text-base leading-relaxed text-slate-600 md:text-lg">
+                  At CarShippers, we combine AI-powered precision with real human support to deliver a
+                  car shipping experience you can trust from start to finish. From instant quotes to
+                  final delivery, every step is designed to be transparent, reliable, and stress-free.
+                </p>
+                <p className="mt-4 text-base leading-relaxed text-slate-600 md:text-lg">
+                  If we don&apos;t deliver on what we promise, we make it right—no questions, no
+                  hassle.
+                </p>
+                <ol className="mt-8 list-none space-y-5 p-0 text-left text-base leading-relaxed text-slate-700 md:text-lg">
+                  {GUARANTEE_POINTS.map((item, index) => (
+                    <motion.li
+                      key={item.title}
+                      initial={{ opacity: 0, x: -8 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: 0.05 * index }}
+                      className="flex gap-3"
+                    >
+                      <span className="mt-0.5 shrink-0 font-bold tabular-nums text-blue-950">
+                        {index + 1}.
+                      </span>
+                      <span>
+                        <span className="font-semibold text-slate-900">{item.title}</span>
+                        <span className="text-slate-600"> – {item.body}</span>
+                      </span>
+                    </motion.li>
+                  ))}
+                </ol>
+                <p className="mt-8 text-base font-medium leading-relaxed text-slate-700 md:text-lg">
+                  Because shipping your car isn&apos;t just about moving a vehicle—it&apos;s about
+                  delivering confidence, reliability, and complete peace of mind.
+                </p>
+              </motion.div>
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mt-8 bg-[hsl(var(--success))] py-7 md:py-9"
+          >
+            <div className="container mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 px-4 md:flex-row md:gap-8">
+              <p className="text-center text-2xl font-bold text-white md:text-left md:text-3xl">
+                Ready to lock in your shipment?
+              </p>
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-8 py-3.5 text-base font-bold text-slate-900 shadow-md transition hover:bg-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                Speak to agent
+                <ArrowRight className="h-5 w-5" aria-hidden />
+              </Link>
+            </div>
+          </motion.div>
+        </section>
+      </div>
+    </>
+  );
+}

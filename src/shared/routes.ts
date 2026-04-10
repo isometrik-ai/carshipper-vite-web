@@ -2,6 +2,7 @@ import { SAFE_QUOTE_ID_REGEX, UNSAFE_QUOTE_ID_CHARS_REGEX } from "@/lib/regx.con
 
 export const ROUTES_LIST = {
   QUOTE: "/quote",
+  QUOTE_INFO: "/quote-info",
 };
 
 // Centralized helpers for building app routes
@@ -39,4 +40,9 @@ export const removeHashFromQuoteId = (rawId: string): string | null => {
     return null;
   }
   return rawId.trim().replace(/^#/, "");
+};
+
+export const getSafeQuoteInfoRoute = (route: string, quoteId: string): string | null => {
+  const safeId = quoteId; //getSafeQuoteId(quoteId);
+  return safeId ? `${route}/${safeId}` : null;
 };
