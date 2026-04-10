@@ -14,13 +14,13 @@ const FinalCTA = ({ data }: FinalCTAProps) => {
     return {
       headline: data?.headline || "Ready to Ship Your Car?",
       description: data?.description || "Join 10,000+ customers who chose the smarter way to ship",
-      trustBadges: data?.trust_badges && Array.isArray(data.trust_badges) && data.trust_badges.length > 0
+      trustBadges: data?.trust_badges && Array.isArray(data?.trust_badges) && data?.trust_badges?.length > 0
         ? data.trust_badges
         : [],
       primaryButton: data?.primary_button,
-      secondaryButton: data?.secondary_button,
-      phoneNumber: data?.phone_number,
-      phoneHref: data?.phone_href,
+      secondaryButton: data?.secondary_button || null,
+      phoneNumber: data?.phone_number || null,
+      phoneHref: data?.phone_href || null,
     };
   }, [data]);
 
