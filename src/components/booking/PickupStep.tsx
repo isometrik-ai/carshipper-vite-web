@@ -207,7 +207,7 @@ export function PickupStep({ formData, updateFormData, onNext, onBack, quoteData
                   address: string
                 ) => {
                   const formatted = getFormattedAddressFromGooglePlace(addressData);
-                  const line1 =  address || formatted?.addLine1 || "";
+                  const line1 =  formatted?.addLine1 || address || "";
                   const city  = formatted?.city || "";
                   const state = formatted?.stateCode || formatted?.state || "";
                   const zip   = formatted?.zipCode || "";
