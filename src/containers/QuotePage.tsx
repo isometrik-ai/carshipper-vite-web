@@ -168,7 +168,12 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
   const safeDisplayQuoteId = getSafeQuoteId(normalizedQuoteId) ?? "";
   // // Remove any characters that are not allowed in our safe ID pattern
   // const safeDisplayQuoteId = rawQuoteId.replace(UNSAFE_QUOTE_ID_CHARS_REGEX, "");
-  const vehicle = quoteDetails?.data?.quote?.vehicle[0] || {};
+  const rawVehicles = quoteDetails?.data?.quote?.vehicle;
+  const vehicles = Array.isArray(rawVehicles)
+    ? rawVehicles
+    : rawVehicles != null
+      ? [rawVehicles]
+      : [];
   const transportType =
     quoteDetails?.data?.quote?.transport_type ||
     quoteDetails?.data?.quote?.pricing?.tiers?.priority?.transport_type ||
@@ -182,7 +187,7 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
         <HeroSection
           origin={origin}
           destination={destination}
-          vehicle={vehicle}
+          vehicles={vehicles}
           transportType={transportType}
           distance={distance}
           transitTime={transitTime}
