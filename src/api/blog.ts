@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { BlogPageResponse } from "@/types/BlogPage.types";
-import { BLOG_API_URL, STRAPI_API_URL } from "@/lib/strapi";
+import { STRAPI_API_URL } from "@/lib/strapi";
+import { BLOG_API_URL } from "@/lib/config";
 
 /**
  * Fetches Blog page data from Strapi with full population
@@ -18,10 +19,7 @@ const fetchBlogPage = async (): Promise<BlogPageResponse> => {
 };
 
 const fetchBlogPosts = async (): Promise<{ blog_posts: any, blogPostsLoading: boolean }> => {
-  const response = await fetch(
-    `${BLOG_API_URL}`
-  );
-  
+  const response = await fetch(BLOG_API_URL);
   if (!response.ok) {
     throw new Error(`Failed to fetch blog posts: ${response.statusText}`);
   }
