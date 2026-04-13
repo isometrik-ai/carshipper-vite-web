@@ -3,6 +3,79 @@ import type { BlogPageResponse } from "@/types/BlogPage.types";
 import { STRAPI_API_URL } from "@/lib/strapi";
 import { BLOG_API_URL } from "@/lib/config";
 
+type BlogPostNode = {
+  id: string;
+  title: string;
+  slug: string;
+  date: string;
+  excerpt?: string | null;
+  content?: string | null;
+  featuredImage?: {
+    node?: {
+      sourceUrl?: string | null;
+    } | null;
+  } | null;
+};
+
+type GetAllPostsResponse = {
+  data?: {
+    posts?: {
+      nodes?: BlogPostNode[];
+    };
+  };
+};
+
+type GetPostBySlugResponse = {
+  data?: {
+    post?: {
+      id: string;
+      title: string;
+      content: string;
+      excerpt?: string | null;
+      slug?: string | null;
+      date?: string | null;
+    } | null;
+  };
+};
+
+const GET_ALL_POSTS_QUERY = `
+  query GetAllPosts {
+    posts(first: 100) {
+      nodes {
+        id
+        title
+        slug
+        date
+        excerpt
+        content
+        featuredImage {
+          node {
+            sourceUrl
+          }
+        }
+      }
+    }
+  }
+`;
+
+const GET_POST_BY_SLUG_QUERY = `
+  query GetPostBySlug($id: ID!, $idType: PostIdType!) {
+    post(id: $id, idType: $idType) {
+      id
+      title
+      content
+      excerpt
+      slug
+      date
+    }
+  }
+`;
+
+const getBlogGraphQlUrl = (): string =>
+  BLOG_API_URL.endsWith("/graphql")
+    ? BLOG_API_URL
+    : `${BLOG_API_URL.replace(/\/$/, "")}/graphql`;
+
 /**
  * Fetches Blog page data from Strapi with full population
  */
@@ -18,13 +91,45 @@ const fetchBlogPage = async (): Promise<BlogPageResponse> => {
   return response.json();
 };
 
-const fetchBlogPosts = async (): Promise<{ blog_posts: any, blogPostsLoading: boolean }> => {
-  const response = await fetch(BLOG_API_URL);
+const fetchBlogPosts = async (): Promise<GetAllPostsResponse> => {
+  const response = await fetch(getBlogGraphQlUrl(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: GET_ALL_POSTS_QUERY,
+    }),
+  });
+
   if (!response.ok) {
     throw new Error(`Failed to fetch blog posts: ${response.statusText}`);
   }
-  
-  return response.json();
+
+  return response.json() as Promise<GetAllPostsResponse>;
+};
+
+const fetchBlogPost = async (slug: string): Promise<GetPostBySlugResponse["data"]["post"]> => {
+  const response = await fetch(getBlogGraphQlUrl(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: GET_POST_BY_SLUG_QUERY,
+      variables: {
+        id: slug,
+        idType: "SLUG",
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch blog post: ${response.statusText}`);
+  }
+
+  const result = (await response.json()) as GetPostBySlugResponse;
+  return result?.data?.post ?? null;
 };
 
 /**
@@ -45,3 +150,11 @@ export const useBlogPage = () =>
     });
     return { blogPostsData: data, blogPostsLoading: isLoading };
   };
+
+export const useBlogPost = (slug: string) =>
+  useQuery({
+    queryKey: ["blog-post", slug],
+    queryFn: () => fetchBlogPost(slug),
+    enabled: Boolean(slug),
+    refetchOnWindowFocus: false,
+  });
