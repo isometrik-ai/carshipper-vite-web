@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { BlogPageResponse } from "@/types/BlogPage.types";
-import { STRAPI_API_URL } from "@/lib/strapi";
+import { BLOG_API_URL, STRAPI_API_URL } from "@/lib/strapi";
 
 /**
  * Fetches Blog page data from Strapi with full population
@@ -17,6 +17,18 @@ const fetchBlogPage = async (): Promise<BlogPageResponse> => {
   return response.json();
 };
 
+const fetchBlogPosts = async (): Promise<{ blog_posts: any, blogPostsLoading: boolean }> => {
+  const response = await fetch(
+    `${BLOG_API_URL}`
+  );
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch blog posts: ${response.statusText}`);
+  }
+  
+  return response.json();
+};
+
 /**
  * React Query hook for fetching Blog page data
  */
@@ -26,3 +38,12 @@ export const useBlogPage = () =>
     queryFn: fetchBlogPage,
     refetchOnWindowFocus: false,
   });
+
+  export const useBlogPosts = () =>{
+    const { data, isLoading } = useQuery({
+      queryKey: ["blog-posts"],
+      queryFn: fetchBlogPosts,
+      refetchOnWindowFocus: false,
+    });
+    return { blogPostsData: data, blogPostsLoading: isLoading };
+  };
