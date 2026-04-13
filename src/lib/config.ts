@@ -24,4 +24,4 @@ export const LEADS_BASE_API_URL = process.env.NEXT_PUBLIC_LEADS_BASE_API_URL || 
 export const appSecret = "SFMyNTY.g3QAAAACZAAEZGF0YXQAAAADbQAAAAlhY2NvdW50SWRtAAAAGDY5MWFkMjdjMzQ4ZjcwZjUxOGVlMDA1M20AAAAIa2V5c2V0SWRtAAAAJGJmYjgxODc4LTk0NTEtNGZiNi04MmE1LTE5OWIzN2YwNDI2OW0AAAAJcHJvamVjdElkbQAAACRiMTViMDI4MC0xNTA3LTQ4MjMtYTJjNS1hYmI1YTFhZjdmMDNkAAZzaWduZWRuBgAY4n0vnQE.TI8wGDMjNZrXDdri8fO-nupTZiSydltzxZn3l7DnSOw";
 export const licenseKey="lic-IMK0yLFHOosnmvsb5X0I6C2O1Cwvig4DvyW";
 export const DELIVERY_TRUCK_ICON_LARRY = "/images/blue-car-shipper-lorry.png";
-export const BLOG_API_URL = ENV_CONFIG.BLOG_API_URL;
+export const BLOG_API_URL = ENV_CONFIG?.BLOG_API_URL || "https://wordpress-1336774-6338456.cloudwaysapps.com/graphql";
