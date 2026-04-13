@@ -13,6 +13,17 @@ import FillImageFrame from "@/components/media/FillImageFrame";
 import { Search, Calendar, ArrowRight, Tag } from "lucide-react";
 import Link from "next/link";
 
+const htmlToText = (html?: string | null): string => {
+  if (!html) return "";
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&hellip;/gi, "...")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return "";
   try {
@@ -69,8 +80,20 @@ export default function Blog() {
   }, [defaultCategory]);
 
   const blogPosts = useMemo(() => {
+    const graphQlPosts = blogPostsData?.data?.posts?.nodes ?? [];
+    if (graphQlPosts.length > 0) {
+      return graphQlPosts.map((post: any) => ({
+        ...post,
+        // Normalize GraphQL image shape to the UI's expected `featured_image` field.
+        featured_image: post?.featuredImage?.node?.sourceUrl ?? null,
+        // Keep existing rendering logic that expects `published_at`.
+        published_at: post?.date ?? null,
+        // GraphQL returns HTML for excerpt/content; normalize for card/search rendering.
+        excerpt: htmlToText(post?.excerpt || post?.content),
+      }));
+    }
     return data?.data?.blog_posts || [];
-  }, [data]);
+  }, [blogPostsData, data]);
 
   const filteredPosts = useMemo(() => {
     return blogPosts.filter((post: any) => {
@@ -86,7 +109,10 @@ export default function Blog() {
     return data?.data?.page_content || [];
   }, [data]);
 
-  if (isLoading && !data) {
+  if (
+    // isLoading && !data|| 
+    blogPostsLoading && !blogPostsData
+  ) {
     return (
       <>
         <PageSEO seoMetadata={null} pageContent={null} />
