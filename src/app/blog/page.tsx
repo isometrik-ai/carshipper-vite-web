@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { useBlogPage } from "@/api/blog";
+import { useBlogPage, useBlogPosts } from "@/api/blog";
 import { getStrapiMediaUrl } from "@/lib/strapi";
 import GumletImage from "@/components/media/GumletImage";
 import FillImageFrame from "@/components/media/FillImageFrame";
@@ -29,6 +29,7 @@ const formatDate = (dateString: string | null | undefined): string => {
 
 export default function Blog() {
   const { data, isLoading } = useBlogPage();
+  const { blogPostsData, blogPostsLoading } = useBlogPosts();
   const [searchQuery, setSearchQuery] = useState("");
 
   const pageData = useMemo(() => {
