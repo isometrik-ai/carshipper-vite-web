@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
-import { cache } from "react";
-import type { CaliforniaShippingResponse } from "@/types/CaliforniaShipping.types";
+import { getCaliforniaSeo } from "@/lib/californiaCarShippingSeo.server";
 import CaliforniaShippingPageClient from "@/app/california-car-shipping/CaliforniaShippingPageClient";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://carshippers.ai";
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
-const HAS_VALID_STRAPI_API_URL =
-  typeof STRAPI_API_URL === "string" &&
-  (STRAPI_API_URL.startsWith("http://") || STRAPI_API_URL.startsWith("https://"));
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://carshippers.ai";
 
-const toAbsoluteUrl = (url?: string | null): string | undefined => {
+export const toAbsoluteUrl = (url?: string | null): string | undefined => {
   if (!url) return undefined;
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   if (url.startsWith("/") && !url.includes("//")) {
@@ -18,7 +13,7 @@ const toAbsoluteUrl = (url?: string | null): string | undefined => {
   return undefined;
 };
 
-const parseRobots = (robots?: string | null): Metadata["robots"] => {
+export const parseRobots = (robots?: string | null): Metadata["robots"] => {
   if (!robots) return undefined;
   const value = robots.toLowerCase();
   return {
@@ -26,41 +21,6 @@ const parseRobots = (robots?: string | null): Metadata["robots"] => {
     follow: !value.includes("nofollow"),
   };
 };
-
-async function fetchCaliforniaSeo(): Promise<CaliforniaShippingResponse["data"]["seo_metadata"] | null> {
-  if (!HAS_VALID_STRAPI_API_URL) return null;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
-  const seoQuery =
-    "?populate[seo_metadata][fields][0]=meta_title" +
-    "&populate[seo_metadata][fields][1]=meta_description" +
-    "&populate[seo_metadata][fields][2]=meta_keywords" +
-    "&populate[seo_metadata][fields][3]=canonical_url" +
-    "&populate[seo_metadata][fields][4]=og_title" +
-    "&populate[seo_metadata][fields][5]=og_description" +
-    "&populate[seo_metadata][fields][6]=og_type" +
-    "&populate[seo_metadata][fields][7]=og_url" +
-    "&populate[seo_metadata][fields][8]=twitter_card" +
-    "&populate[seo_metadata][fields][9]=twitter_title" +
-    "&populate[seo_metadata][fields][10]=twitter_description" +
-    "&populate[seo_metadata][fields][11]=robots";
-
-  try {
-    const response = await fetch(`${STRAPI_API_URL}/api/california-car-shipping${seoQuery}`, {
-      next: { revalidate: 60 },
-      signal: controller.signal,
-    });
-    if (!response.ok) return null;
-    const payload = (await response.json()) as CaliforniaShippingResponse;
-    return payload?.data?.seo_metadata ?? null;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-const getCaliforniaSeo = cache(fetchCaliforniaSeo);
 
 export async function generateMetadata(): Promise<Metadata> {
   const seo = await getCaliforniaSeo();
@@ -106,4 +66,3 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function LocationNameShippingPage() {
   return <CaliforniaShippingPageClient />;
 }
-
