@@ -57,10 +57,10 @@ export default function BlogPostPage() {
 
       <article className="max-w-4xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-bold mb-4">{post.title}</h1>
-        {post.date ? (
+        {post.published_at ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
             <Calendar className="h-4 w-4" />
-            <span>{formatDate(post.date)}</span>
+            <span>{formatDate(post.published_at)}</span>
           </div>
         ) : null}
         <div
