@@ -8,6 +8,7 @@ import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useBlogPage, useBlogPosts } from "@/api/blog";
 import { getStrapiMediaUrl } from "@/lib/strapi";
+import { normalizeBlogPosts } from "@/lib/blogPostData";
 import GumletImage from "@/components/media/GumletImage";
 import FillImageFrame from "@/components/media/FillImageFrame";
 import { Search, Calendar, ArrowRight, Tag } from "lucide-react";
@@ -69,10 +70,10 @@ export default function Blog() {
   }, [defaultCategory]);
 
   const blogPosts = useMemo(() => {
-    if (blogPostsData.length > 0) {
+    if (Array.isArray(blogPostsData) && blogPostsData.length > 0) {
       return blogPostsData;
     }
-    return data?.data?.blog_posts || [];
+    return normalizeBlogPosts(data?.data?.blog_posts || []);
   }, [blogPostsData, data]);
 
   const filteredPosts = useMemo(() => {
@@ -89,10 +90,7 @@ export default function Blog() {
     return data?.data?.page_content || [];
   }, [data]);
 
-  if (
-    // isLoading && !data|| 
-    blogPostsLoading && blogPostsData.length === 0
-  ) {
+  if (blogPostsLoading || (blogPostsLoading && blogPosts.length === 0)) {
     return (
       <>
         <PageSEO seoMetadata={null} pageContent={null} />

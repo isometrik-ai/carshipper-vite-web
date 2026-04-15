@@ -72,7 +72,8 @@ export interface QuoteIntoPageData {
   QuestionSection: QuoteIntoPageContactCTA[];
   GuaranteeSection: QuoteIntoPageGuaranteeBlock[];
   ReadyToShipmentSection: QuoteIntoPageCallToAction[];
-  HelpFulQuidesSection: QuoteIntoPageHeroSection[];
+  HelpFulQuidesSection?: QuoteIntoPageHeroSection[];
+  HelpfulGuidesSection?: QuoteIntoPageHeroSection[];
   ReviewsSection: QuoteIntoPageReviewBadge[];
   localizations: unknown[];
 }

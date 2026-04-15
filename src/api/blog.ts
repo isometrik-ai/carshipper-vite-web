@@ -62,6 +62,33 @@ const getBlogGraphQlUrl = (): string =>
     ? BLOG_API_URL
     : `${BLOG_API_URL.replace(/\/$/, "")}/graphql`;
 
+const executeBlogGraphQlRequest = async <TResponse>({
+  query,
+  variables,
+  errorContext,
+}: {
+  query: string;
+  variables?: Record<string, unknown>;
+  errorContext: string;
+}): Promise<TResponse> => {
+  const response = await fetch(getBlogGraphQlUrl(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query,
+      variables,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${errorContext}: ${response.statusText}`);
+  }
+
+  return (await response.json()) as TResponse;
+};
+
 /**
  * Fetches Blog page data from Strapi with full population
  */
@@ -78,26 +105,10 @@ const fetchBlogPage = async (): Promise<BlogPageResponse> => {
 };
 
 const fetchBlogPosts = async (): Promise<GetAllPostsResponse> => {
-  const controller = new AbortController();
-  const responsePromise = fetch(getBlogGraphQlUrl(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: GET_ALL_POSTS_QUERY,
-    }),
-    signal: controller.signal
+  const result = await executeBlogGraphQlRequest<GetAllPostsResponse>({
+    query: GET_ALL_POSTS_QUERY,
+    errorContext: "blog posts",
   });
-  // Optionally, store controller to cancel request if needed
-  if (!responsePromise) {
-    throw new Error(`Failed to initiate fetch for blog posts`);
-  }
-  const response = await responsePromise;
-  if (!response.ok) {
-    throw new Error(`Failed to fetch blog posts: ${response.statusText}`);
-  }
-  const result = (await response.json()) as GetAllPostsResponse;
   const nodes = result?.data?.posts?.nodes ?? [];
   return {
     ...result,
@@ -106,29 +117,14 @@ const fetchBlogPosts = async (): Promise<GetAllPostsResponse> => {
 };
 
 const fetchBlogPost = async (slug: string): Promise<NormalizedBlogPost | null> => {
-  const controller = new AbortController();
-  const responsePromise = fetch(getBlogGraphQlUrl(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const result = await executeBlogGraphQlRequest<GetPostBySlugResponse>({
+    query: GET_POST_BY_SLUG_QUERY,
+    variables: {
+      id: slug,
+      idType: "SLUG",
     },
-    body: JSON.stringify({
-      query: GET_POST_BY_SLUG_QUERY,
-      variables: {
-        id: slug,
-        idType: "SLUG",
-      },
-    }),
-    signal: controller.signal
+    errorContext: "blog post",
   });
-  if (!responsePromise) {
-    throw new Error(`Failed to initiate fetch for blog post`);
-  }
-  const response = await responsePromise;
-  if (!response.ok) {
-    throw new Error(`Failed to fetch blog post: ${response.statusText}`);
-  }
-  const result = (await response.json()) as GetPostBySlugResponse;
   return result?.data?.post ? normalizeGraphQlPost(result.data.post) : null;
 };
 
