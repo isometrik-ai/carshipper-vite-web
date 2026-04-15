@@ -44,7 +44,7 @@ export function parseQuoteIntoPageResponse(
     guaranteeHero,
     guaranteeContact,
     readyToShipment: d.ReadyToShipmentSection?.[0] ?? null,
-    helpfulGuides: d.HelpFulQuidesSection?.[0] ?? null,
+    helpfulGuides: d?.HelpfulGuidesSection?.[0] ?? d?.HelpFulQuidesSection?.[0] ?? null,
     reviews: d.ReviewsSection ?? [],
   };
 }

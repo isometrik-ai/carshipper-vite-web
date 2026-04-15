@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useDebugValue, useEffect, useMemo, useState } from "react";
+import { useDebugValue, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Pin, Phone, ArrowRight, Star, ShieldCheck } from "lucide-react";
 import GumletImage from "@/components/media/GumletImage";
@@ -10,10 +10,9 @@ import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { DELIVERY_TRUCK_ICON_LARRY } from "@/lib/config";
 import { parseQuoteIntoPageResponse } from "@/lib/quoteIntoPage.viewModel";
-import type { QuoteResponse } from "@/containers/QuotePage";
 import { resolveSafeQuoteInfoTarget } from "@/shared/routes";
-import { QuoteGetDetailsAPI } from "@/services/quote-services";
 import { useQuoteIntoPage } from "@/api/quoteIntoPage";
+import { useQuoteDetails } from "@/api/quoteDetails";
 
 const PHONE_DISPLAY = "(888) 555-1234";
 const PHONE_TEL = "8885551234";
@@ -78,8 +77,6 @@ export type QuoteInfoPageClientProps = {
 
 export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps) {
   const { quoteId } = params;
-  const [loading, setLoading] = useState(true);
-  const [quoteDetails, setQuoteDetails] = useState<QuoteResponse | null>(null);
 
   const { data: quoteIntoStrapi, isLoading: quoteIntoStrapiLoading } = useQuoteIntoPage(undefined, {
     refetchOnMount: "always",
@@ -95,6 +92,19 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
     (s) => (s.vm ? "quote-into Strapi ready" : s.strapiLoading ? "loading" : "empty")
   );
 
+  const safeTarget = useMemo(() => resolveSafeQuoteInfoTarget(quoteId), [quoteId]);
+  const safeQuoteId = safeTarget?.quoteId;
+
+  useEffect(() => {
+    if (!safeTarget) {
+      console.error("Invalid quoteId");
+    }
+  }, [safeTarget]);
+
+  const { data: quoteDetails, isLoading: quoteDetailsLoading } = useQuoteDetails(safeQuoteId);
+
+  const loading = quoteDetailsLoading && !quoteDetails;
+
   const firstName = useMemo(() => {
     const quoteData = (quoteDetails as any)?.data?.quote?.customerDetails ?? (quoteDetails as any)?.quote;
     const firstNameNormalized = quoteData?.first_name?.trim().toLowerCase() ?? "";
@@ -102,46 +112,6 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
     const name = `${firstNameNormalized} ${lastNameNormalized}`.trim();
     return name || "Customer";
   }, [quoteDetails]);
-
-  useEffect(() => {
-    const target = resolveSafeQuoteInfoTarget(quoteId);
-    if (!target) {
-      console.error("Invalid quoteId");
-      setLoading(false);
-      return;
-    }
-    const { quoteId: safeQuoteId } = target;
-
-    const controller = new AbortController();
-    let isMounted = true;
-
-    const fetchQuoteDetails = async () => {
-      try {
-        if (isMounted) {
-          setLoading(true);
-        }
-        const response = await QuoteGetDetailsAPI(safeQuoteId, controller.signal);
-        if (isMounted && !controller.signal.aborted) {
-          setQuoteDetails(((response as any)?.data ?? response) as QuoteResponse);
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error("Failed to fetch quote details", error);
-        }
-      } finally {
-        if (isMounted && !controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void fetchQuoteDetails();
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [quoteId]);
 
   useEffect(() => {
     if (!loading) {
