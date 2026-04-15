@@ -4,17 +4,15 @@ import Link from "next/link";
 import { useDebugValue, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Pin, Phone, ArrowRight, Star, ShieldCheck } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import GumletImage from "@/components/media/GumletImage";
 import FillImageFrame from "@/components/media/FillImageFrame";
 import { PageSEO } from "@/components/seo/PageSEO";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { DELIVERY_TRUCK_ICON_LARRY } from "@/lib/config";
 import { parseQuoteIntoPageResponse } from "@/lib/quoteIntoPage.viewModel";
-import type { QuoteResponse } from "@/containers/QuotePage";
 import { resolveSafeQuoteInfoTarget } from "@/shared/routes";
-import { QuoteGetDetailsAPI } from "@/services/quote-services";
 import { useQuoteIntoPage } from "@/api/quoteIntoPage";
+import { useQuoteDetails } from "@/api/quoteDetails";
 
 const PHONE_DISPLAY = "(888) 555-1234";
 const PHONE_TEL = "8885551234";
@@ -103,16 +101,7 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
     }
   }, [safeTarget]);
 
-  const { data: quoteDetails, isLoading: quoteDetailsLoading } = useQuery({
-    queryKey: ["quote-details", safeQuoteId],
-    enabled: Boolean(safeQuoteId),
-    queryFn: async () => {
-      const response = await QuoteGetDetailsAPI(safeQuoteId as string);
-      return ((response as any)?.data ?? response) as QuoteResponse;
-    },
-    // Keep UX non-blocking if quote lookup fails, matching previous behavior.
-    retry: false,
-  });
+  const { data: quoteDetails, isLoading: quoteDetailsLoading } = useQuoteDetails(safeQuoteId);
 
   const loading = quoteDetailsLoading && !quoteDetails;
 
