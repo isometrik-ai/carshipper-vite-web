@@ -2,39 +2,25 @@ import { useQuery } from "@tanstack/react-query";
 import type { BlogPageResponse } from "@/types/BlogPage.types";
 import { STRAPI_API_URL } from "@/lib/strapi";
 import { BLOG_API_URL } from "@/lib/config";
-
-type BlogPostNode = {
-  id: string;
-  title: string;
-  slug: string;
-  date: string;
-  excerpt?: string | null;
-  content?: string | null;
-  featuredImage?: {
-    node?: {
-      sourceUrl?: string | null;
-    } | null;
-  } | null;
-};
+import {
+  normalizeGraphQlPost,
+  normalizeGraphQlPosts,
+  type GraphQlBlogPostNode,
+  type NormalizedBlogPost,
+} from "@/lib/blogPostNormalizer";
 
 type GetAllPostsResponse = {
   data?: {
     posts?: {
-      nodes?: BlogPostNode[];
+      nodes?: GraphQlBlogPostNode[];
     };
   };
+  normalizedPosts?: NormalizedBlogPost[];
 };
 
 type GetPostBySlugResponse = {
   data?: {
-    post?: {
-      id: string;
-      title: string;
-      content: string;
-      excerpt?: string | null;
-      slug?: string | null;
-      date?: string | null;
-    } | null;
+    post?: GraphQlBlogPostNode | null;
   };
 };
 
@@ -92,7 +78,8 @@ const fetchBlogPage = async (): Promise<BlogPageResponse> => {
 };
 
 const fetchBlogPosts = async (): Promise<GetAllPostsResponse> => {
-  const response = await fetch(getBlogGraphQlUrl(), {
+  const controller = new AbortController();
+  const responsePromise = fetch(getBlogGraphQlUrl(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -100,17 +87,27 @@ const fetchBlogPosts = async (): Promise<GetAllPostsResponse> => {
     body: JSON.stringify({
       query: GET_ALL_POSTS_QUERY,
     }),
+    signal: controller.signal
   });
-
+  // Optionally, store controller to cancel request if needed
+  if (!responsePromise) {
+    throw new Error(`Failed to initiate fetch for blog posts`);
+  }
+  const response = await responsePromise;
   if (!response.ok) {
     throw new Error(`Failed to fetch blog posts: ${response.statusText}`);
   }
-
-  return response.json() as Promise<GetAllPostsResponse>;
+  const result = (await response.json()) as GetAllPostsResponse;
+  const nodes = result?.data?.posts?.nodes ?? [];
+  return {
+    ...result,
+    normalizedPosts: normalizeGraphQlPosts(nodes),
+  };
 };
 
-const fetchBlogPost = async (slug: string): Promise<GetPostBySlugResponse["data"]["post"]> => {
-  const response = await fetch(getBlogGraphQlUrl(), {
+const fetchBlogPost = async (slug: string): Promise<NormalizedBlogPost | null> => {
+  const controller = new AbortController();
+  const responsePromise = fetch(getBlogGraphQlUrl(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -122,14 +119,17 @@ const fetchBlogPost = async (slug: string): Promise<GetPostBySlugResponse["data"
         idType: "SLUG",
       },
     }),
+    signal: controller.signal
   });
-
+  if (!responsePromise) {
+    throw new Error(`Failed to initiate fetch for blog post`);
+  }
+  const response = await responsePromise;
   if (!response.ok) {
     throw new Error(`Failed to fetch blog post: ${response.statusText}`);
   }
-
   const result = (await response.json()) as GetPostBySlugResponse;
-  return result?.data?.post ?? null;
+  return result?.data?.post ? normalizeGraphQlPost(result.data.post) : null;
 };
 
 /**
@@ -148,7 +148,7 @@ export const useBlogPage = () =>
       queryFn: fetchBlogPosts,
       refetchOnWindowFocus: false,
     });
-    return { blogPostsData: data, blogPostsLoading: isLoading };
+    return { blogPostsData: data?.normalizedPosts ?? [], blogPostsLoading: isLoading };
   };
 
 export const useBlogPost = (slug: string) =>
