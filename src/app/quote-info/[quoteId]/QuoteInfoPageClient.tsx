@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useDebugValue, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Pin, Phone, ArrowRight, Star, ShieldCheck } from "lucide-react";
+import { Compass, Pin, Phone, ArrowRight, Star, ShieldCheck } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import GumletImage from "@/components/media/GumletImage";
 import FillImageFrame from "@/components/media/FillImageFrame";
 import { PageSEO } from "@/components/seo/PageSEO";
@@ -13,6 +14,7 @@ import { parseQuoteIntoPageResponse } from "@/lib/quoteIntoPage.viewModel";
 import { resolveSafeQuoteInfoTarget } from "@/shared/routes";
 import { useQuoteIntoPage } from "@/api/quoteIntoPage";
 import { useQuoteDetails } from "@/api/quoteDetails";
+import type { QuoteIntoPageResponse } from "@/types/QuoteIntoPage.types";
 
 const PHONE_DISPLAY = "(888) 555-1234";
 const PHONE_TEL = "8885551234";
@@ -24,14 +26,46 @@ const RESOURCE_LINKS = [
   { href: "/how-it-works", label: "How our transport process works" },
 ] as const;
 
-const TRUST_ITEMS = [
+const DEFAULT_TRUST_ITEMS: { label: string; icon: LucideIcon }[] = [
   { label: "Google Reviews", icon: Star },
   { label: "Accredited business", icon: ShieldCheck },
   { label: "DOT registered", icon: ShieldCheck },
   { label: "Trusted transport", icon: ShieldCheck },
-] as const;
+];
 
-function GuaranteeSeal() {
+function reviewBadgeIcon(iconName: string | null | undefined): LucideIcon {
+  const key = iconName?.toLowerCase() ?? "";
+  if (key === "star") return Star;
+  if (key === "compass") return Compass;
+  return ShieldCheck;
+}
+
+/** Renders Strapi `highlighted_text` (e.g. "email and text") with emphasis, similar to quote hero. */
+function HighlightedChannels({ text }: { text: string | null | undefined }) {
+  const raw = text?.trim();
+  if (!raw) return null;
+  const parts = raw.split(/\s+and\s+/i).filter(Boolean);
+  if (parts.length >= 2) {
+    return (
+      <>
+        <strong className="font-semibold">{parts[0]}</strong>
+        {" and "}
+        <strong className="font-semibold">{parts.slice(1).join(" and ")}</strong>
+      </>
+    );
+  }
+  return <strong className="font-semibold">{raw}</strong>;
+}
+
+function GuaranteeSeal({
+  topLabel,
+  middleLabel,
+  bottomLabel,
+}: {
+  topLabel: string;
+  middleLabel: string;
+  bottomLabel: string;
+}) {
   return (
     <div
       className="mx-auto flex h-[220px] w-[220px] shrink-0 items-center justify-center rounded-full border-[6px] border-blue-800 bg-gradient-to-br from-blue-700 to-blue-900 text-center shadow-lg ring-4 ring-blue-900/10 md:h-[272px] md:w-[272px] md:border-[7px] md:ring-8 lg:h-[300px] lg:w-[300px]"
@@ -39,13 +73,13 @@ function GuaranteeSeal() {
     >
       <div className="px-4 md:px-5">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-100 md:text-xs">
-          Money back
+          {topLabel}
         </p>
         <p className="my-2 rounded-md bg-white px-2 py-1.5 text-sm font-extrabold text-blue-900 shadow-sm md:my-2.5 md:px-3 md:py-2 md:text-base">
-          100% Risk Free
+          {middleLabel}
         </p>
         <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-100 md:text-xs">
-          Guarantee
+          {bottomLabel}
         </p>
       </div>
     </div>
@@ -73,19 +107,41 @@ const GUARANTEE_POINTS = [
 
 export type QuoteInfoPageClientProps = {
   params: { quoteId: string };
+  /** Optional seed (tests); production uses server prefetch + `useQuoteIntoPage` hydration. */
+  initialQuoteIntoData?: QuoteIntoPageResponse;
 };
 
-export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps) {
+function digitsOnlyPhone(s: string): string {
+  return s.replace(/\D/g, "");
+}
+
+export default function QuoteInfoPageClient({ params, initialQuoteIntoData }: QuoteInfoPageClientProps) {
   const { quoteId } = params;
 
-  const { data: quoteIntoStrapi, isLoading: quoteIntoStrapiLoading } = useQuoteIntoPage(undefined, {
-    refetchOnMount: "always",
+  const { data: quoteIntoStrapi, isLoading: quoteIntoStrapiLoading } = useQuoteIntoPage(initialQuoteIntoData, {
+    refetchOnMount: initialQuoteIntoData !== undefined ? false : "always",
   });
 
   const quoteIntoPageVm = useMemo(
     () => parseQuoteIntoPageResponse(quoteIntoStrapi),
     [quoteIntoStrapi]
   );
+
+  const trustItems = useMemo(() => {
+    const reviews = quoteIntoPageVm?.reviews ?? [];
+    if (!quoteIntoPageVm || !reviews) return DEFAULT_TRUST_ITEMS;
+    if (reviews.length === 0) return DEFAULT_TRUST_ITEMS;
+    return reviews.map((r) => ({
+      label: r.section_title,
+      icon: reviewBadgeIcon(r.section_icon_name),
+    }));
+  }, [quoteIntoPageVm]);
+
+  const questionCta = quoteIntoPageVm?.questionBlocks?.[0];
+  const displayPhone = questionCta?.phone_number?.trim() || PHONE_DISPLAY;
+  const sanitizedPhoneNumber = digitsOnlyPhone(questionCta?.phone_number ?? "");
+  const telHref =
+      sanitizedPhoneNumber.length >= 10 ? `tel:+1${sanitizedPhoneNumber.slice(-10)}` : `tel:+1${PHONE_TEL}`;
 
   useDebugValue(
     { vm: quoteIntoPageVm, strapiLoading: quoteIntoStrapiLoading },
@@ -113,24 +169,39 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
     return name || "Customer";
   }, [quoteDetails]);
 
+  const seoMetadata = quoteIntoStrapi?.data?.SeoMetaData ?? null;
+
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !seoMetadata?.meta_title) {
       document.title = "Quote sent | CarShippers.ai";
     }
-  }, [loading]);
+  }, [loading, seoMetadata?.meta_title]);
 
   if (loading && !quoteDetails) {
     return (
       <>
-        <PageSEO seoMetadata={null} pageContent={null} />
+        <PageSEO seoMetadata={seoMetadata ?? undefined} pageContent={null} />
         <PageSkeleton />
       </>
     );
   }
 
+  const hero = quoteIntoPageVm?.hero;
+  const helpful = quoteIntoPageVm?.helpfulGuides;
+  const gHero = quoteIntoPageVm?.guaranteeHero;
+  const gContact = quoteIntoPageVm?.guaranteeContact;
+  const ready = quoteIntoPageVm?.readyToShipment;
+
+  const sealMiddle = (() => {
+    const line = gHero?.main_headline?.trim();
+    if (!line) return "100% Risk Free";
+    const first = line.split(".")[0]?.trim();
+    return first || line;
+  })();
+
   return (
     <>
-      <PageSEO seoMetadata={null} pageContent={null} />
+      <PageSEO seoMetadata={seoMetadata ?? undefined} pageContent={null} />
 
       <div className="w-full flex-col bg-slate-100 pt-20">
         {/* Transport quote confirmation */}
@@ -144,25 +215,27 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
                 className="order-2 text-center lg:order-1 lg:text-left"
               >
                 <p className="text-lg text-slate-800 md:text-xl">
-                  Hi
+                  {hero?.description ?? "Hi"}
                   <strong>
                     &nbsp;&nbsp;{firstName},
                   </strong>
                 </p>
                 <p className="mt-4 text-base leading-relaxed text-slate-700 md:text-lg">
-                  Your personalized CarShippers.ai quote is on its way by{" "}
-                  <strong className="font-semibold">email</strong> and{" "}
-                  <strong className="font-semibold">text</strong> so you can review pricing, tiers,
-                  and timing on your schedule. Prefer to talk it through? We&apos;re here when you need
-                  us.
+                  {hero?.secondary_description ??
+                    "Your personalized CarShippers.ai quote is on its way by"}{" "}
+                  <HighlightedChannels
+                    text={hero?.highlighted_text ?? "email and text"}
+                  />{" "}
+                  {hero?.main_headline ??
+                    "so you can review pricing, tiers, and timing on your schedule. Prefer to talk it through? We're here when you need us."}
                 </p>
 
                 <h1 className="mt-10 text-2xl font-bold text-blue-900 md:text-3xl">
-                  Helpful guides while you compare options
+                  {helpful?.tagline ?? "Helpful guides while you compare options"}
                 </h1>
                 <p className="mt-3 text-slate-600">
-                  Get clear, practical answers before you book—no jargon, just what matters for your
-                  move:
+                  {helpful?.main_headline ??
+                    "Get clear, practical answers before you book—no jargon, just what matters for your move:"}
                 </p>
                 <ul className="mt-6 space-y-3 text-left">
                   {RESOURCE_LINKS.map((item, index) => (
@@ -188,21 +261,21 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
                 </ul>
 
                 <p className="mt-8 text-slate-700">
-                  Have a question about your quote or route?{" "}
+                  {helpful?.FooterTitle ?? "Have a question about your quote or route? "}
                   <strong className="font-semibold text-slate-900">
-                    Reach out anytime—we&apos;ll help you choose the option that fits your timeline
-                    and budget.
+                    {helpful?.BolderFooterTitle ??
+                      "Reach out anytime—we'll help you choose the option that fits your timeline and budget."}
                   </strong>
                 </p>
 
                 <p className="mt-6 flex flex-wrap items-center justify-center gap-2 text-slate-800 lg:justify-start">
                   <Phone className="h-5 w-5 text-rose-600" aria-hidden />
-                  <span>Questions? Call</span>
+                  <span>{questionCta?.title ?? "Questions"}? Call</span>
                   <a
-                    href={`tel:+1${PHONE_TEL}`}
+                    href={telHref}
                     className="font-semibold text-blue-500 underline-offset-4 hover:underline"
                   >
-                    {PHONE_DISPLAY}
+                    {displayPhone}
                   </a>
                   <span className="hidden sm:inline">and we&apos;ll walk you through it.</span>
                 </p>
@@ -243,7 +316,7 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
           >
             <div className="rounded-full border border-slate-200/80 bg-white px-4 py-4 shadow-lg shadow-slate-300/40 md:px-8">
               <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] md:flex-wrap md:justify-center md:overflow-visible [&::-webkit-scrollbar]:hidden">
-                {TRUST_ITEMS.map(({ label, icon: Icon }) => (
+                {trustItems.map(({ label, icon: Icon }) => (
                   <div
                     key={label}
                     className="flex min-w-[7.5rem] shrink-0 snap-center flex-col items-center gap-1 text-center md:min-w-0"
@@ -268,7 +341,11 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
                 transition={{ duration: 0.5 }}
                 className="flex min-h-0 items-center justify-center md:justify-start md:py-4"
               >
-                <GuaranteeSeal />
+                <GuaranteeSeal
+                  topLabel={gContact?.title ?? "Money back"}
+                  middleLabel={sealMiddle}
+                  bottomLabel={gContact?.description ?? "Guarantee"}
+                />
               </motion.div>
 
               <motion.div
@@ -279,19 +356,18 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
                 className="text-center md:text-left"
               >
                 <h2 className="text-3xl font-bold text-blue-950 md:text-4xl">
-                  The CarShippers Guarantee
+                  {gHero?.tagline ?? "The CarShippers Guarantee"}
                 </h2>
                 <p className="mt-4 text-xl font-bold text-blue-950 md:text-2xl">
-                  100% Risk-Free. Total Peace of Mind.
+                  {gHero?.main_headline ?? "100% Risk-Free. Total Peace of Mind."}
                 </p>
                 <p className="mt-6 text-base leading-relaxed text-slate-600 md:text-lg">
-                  At CarShippers, we combine AI-powered precision with real human support to deliver a
-                  car shipping experience you can trust from start to finish. From instant quotes to
-                  final delivery, every step is designed to be transparent, reliable, and stress-free.
+                  {gHero?.description ??
+                    "At CarShippers, we combine AI-powered precision with real human support to deliver a car shipping experience you can trust from start to finish. From instant quotes to final delivery, every step is designed to be transparent, reliable, and stress-free."}
                 </p>
                 <p className="mt-4 text-base leading-relaxed text-slate-600 md:text-lg">
-                  If we don&apos;t deliver on what we promise, we make it right—no questions, no
-                  hassle.
+                  {gHero?.secondary_description ??
+                    "If we don't deliver on what we promise, we make it right—no questions, no hassle."}
                 </p>
                 <ol className="mt-8 list-none space-y-5 p-0 text-left text-base leading-relaxed text-slate-700 md:text-lg">
                   {GUARANTEE_POINTS.map((item, index) => (
@@ -314,8 +390,8 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
                   ))}
                 </ol>
                 <p className="mt-8 text-base font-medium leading-relaxed text-slate-700 md:text-lg">
-                  Because shipping your car isn&apos;t just about moving a vehicle—it&apos;s about
-                  delivering confidence, reliability, and complete peace of mind.
+                  {gHero?.BolderFooterTitle ??
+                    "Because shipping your car isn't just about moving a vehicle—it's about delivering confidence, reliability, and complete peace of mind."}
                 </p>
               </motion.div>
             </div>
@@ -330,7 +406,7 @@ export default function QuoteInfoPageClient({ params }: QuoteInfoPageClientProps
           >
             <div className="container mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 px-4 md:flex-row md:gap-8">
               <p className="text-center text-2xl font-bold text-white md:text-left md:text-3xl">
-                Ready to lock in your shipment?
+                {ready?.headline ?? "Ready to lock in your shipment?"}
               </p>
               <Link
                 href="/contact"
