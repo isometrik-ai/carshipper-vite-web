@@ -129,19 +129,19 @@ export default function QuoteInfoPageClient({ params, initialQuoteIntoData }: Qu
 
   const trustItems = useMemo(() => {
     const reviews = quoteIntoPageVm?.reviews ?? [];
+    if (!quoteIntoPageVm || !reviews) return DEFAULT_TRUST_ITEMS;
     if (reviews.length === 0) return DEFAULT_TRUST_ITEMS;
     return reviews.map((r) => ({
       label: r.section_title,
       icon: reviewBadgeIcon(r.section_icon_name),
     }));
-  }, [quoteIntoPageVm?.reviews]);
+  }, [quoteIntoPageVm]);
 
   const questionCta = quoteIntoPageVm?.questionBlocks?.[0];
   const displayPhone = questionCta?.phone_number?.trim() || PHONE_DISPLAY;
+  const sanitizedPhoneNumber = digitsOnlyPhone(questionCta?.phone_number ?? "");
   const telHref =
-    questionCta?.phone_number && digitsOnlyPhone(questionCta.phone_number).length >= 10
-      ? `tel:+1${digitsOnlyPhone(questionCta.phone_number).slice(-10)}`
-      : `tel:+1${PHONE_TEL}`;
+      sanitizedPhoneNumber.length >= 10 ? `tel:+1${sanitizedPhoneNumber.slice(-10)}` : `tel:+1${PHONE_TEL}`;
 
   useDebugValue(
     { vm: quoteIntoPageVm, strapiLoading: quoteIntoStrapiLoading },
@@ -180,7 +180,7 @@ export default function QuoteInfoPageClient({ params, initialQuoteIntoData }: Qu
   if (loading && !quoteDetails) {
     return (
       <>
-        <PageSEO seoMetadata={seoMetadata} pageContent={null} />
+        <PageSEO seoMetadata={seoMetadata ?? undefined} pageContent={null} />
         <PageSkeleton />
       </>
     );
@@ -201,7 +201,7 @@ export default function QuoteInfoPageClient({ params, initialQuoteIntoData }: Qu
 
   return (
     <>
-      <PageSEO seoMetadata={seoMetadata} pageContent={null} />
+      <PageSEO seoMetadata={seoMetadata ?? undefined} pageContent={null} />
 
       <div className="w-full flex-col bg-slate-100 pt-20">
         {/* Transport quote confirmation */}
