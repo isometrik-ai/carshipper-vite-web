@@ -402,7 +402,7 @@ const QuoteForm = ({ defaultOrigin = "", defaultDestination = "" }: QuoteFormPro
           contactInfo?.first_name?.trim()?.length > 0 &&
           contactInfo?.last_name?.trim()?.length > 0 &&
           contactInfo?.email?.trim()?.length > 0 &&
-          contactInfo?.phone?.trim()?.length > 0 &&
+          // contactInfo?.phone?.trim()?.length > 0 &&
           !contactErrors?.email &&
           !contactErrors?.phone
         );
