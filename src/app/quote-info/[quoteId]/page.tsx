@@ -23,9 +23,6 @@ export default async function QuoteInfoPage({ params }: { params: { quoteId: str
     });
   } catch (error) {
     logQuoteIntoPageFetchFailure(error);
-  } finally {
-    // Dispose of the QueryClient to prevent memory leaks in serverless environments
-    queryClient.clear();
   }
 
   return (

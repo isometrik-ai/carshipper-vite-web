@@ -1,3 +1,5 @@
+import type { SeoMetadata } from "@/types/LandingPage.types";
+
 /**
  * Strapi `shared.hero-section` blocks on the quote-into single type (CMS fields may differ from marketing hero).
  */
@@ -67,7 +69,7 @@ export interface QuoteIntoPageData {
   updatedAt: string;
   publishedAt: string | null;
   locale: string;
-  SeoMetaData: unknown | null;
+  SeoMetaData: SeoMetadata | null;
   HeroSection: QuoteIntoPageHeroSection[];
   QuestionSection: QuoteIntoPageContactCTA[];
   GuaranteeSection: QuoteIntoPageGuaranteeBlock[];
