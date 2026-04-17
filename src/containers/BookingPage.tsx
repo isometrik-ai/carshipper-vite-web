@@ -281,9 +281,9 @@ const mapQuoteDetailsToBookingQuoteData = (
       (quote.pricing_tiers?.priority?.transport_type || "Open"),
     serviceType: "Door to door",
     prices: {
-      saver: quote.pricing?.tiers?.saver?.estimated_cost ?? 0,
-      priority: quote.pricing?.tiers?.priority?.estimated_cost ?? 0,
-      rush: quote.pricing?.tiers?.rush?.estimated_cost ?? 0,
+      saver: quote.pricing?.tiers?.saver?.price ?? 0,
+      priority: quote.pricing?.tiers?.priority?.price ?? 0,
+      rush: quote.pricing?.tiers?.rush?.price ?? 0,
     },
     customer: {
       name: customerName,
@@ -323,10 +323,19 @@ const normalizeLocationType = (locationType?: string): string => {
 
 const mapPersonalItemsForBooking = (personalItems: string): string => {
   const normalized = (personalItems || "").toLowerCase().trim();
+  // API codes already on the vehicle (from quote fetch / mapQuoteVehiclesToShippingVehicles)
+  if (normalized === "0-100" || normalized === "0_100") return "0-100";
+  if (normalized === "100-150" || normalized === "100_150") return "100-150";
+  if (normalized === "150-200" || normalized === "150_200") return "150-200";
+  if (normalized === "200+" || /^200\s*\+$/.test(normalized)) return "200+";
+  // Internal UI / hydrate uses "100-200" for the middle band (see mapQuoteVehiclesToShippingVehicles)
+  if (normalized === "100-200") return "100-150";
+  // Human-readable labels from quote form (QUOTE_PERSONAL_ITEMS_OPTIONS, etc.)
   if (normalized.includes("none") || normalized.includes("less than 100")) return "0-100";
   if (normalized.includes("100-150")) return "100-150";
   if (normalized.includes("150-200")) return "150-200";
   if (normalized.includes("more than 200")) return "200+";
+  if (normalized.includes("100-200")) return "100-150";
   return "0-100";
 };
 
@@ -692,6 +701,7 @@ export default function BookingPage(props: { quoteId: string; initialTier?: "sav
           last_name: customerLastName,
           email: customerEmail,
           phone: stripPhoneHyphens(customerPhone),
+          country_code:"+1",
           company_name:
             formData.pickupBusinessName || formData.deliveryBusinessName || "",
           account_type: "business"//hasCompany ? "business" : "personal",
