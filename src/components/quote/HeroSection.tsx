@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { MapPin, Flag, Calendar, Package } from "lucide-react";
 import { FadeIn, ScaleIn } from "@/components/animations/AnimationWrappers";
-import { formatDisplayDate } from "@/lib/helpers";
+import { formatDisplayDate, formatPersonalItemsLabel } from "@/lib/helpers";
 import {
   type CarouselApi,
   Carousel,
@@ -17,6 +17,8 @@ export type QuoteHeroVehicle = {
   model?: string;
   is_running?: boolean;
   condition?: string;
+  /** API field, e.g. "0-100", "100-150", "150-200", "200+" */
+  personal_items_weight?: string;
 };
 
 interface HeroSectionProps {
@@ -100,7 +102,7 @@ function VehicleHeroCard({
             <Package className="w-4 h-4 shrink-0" />
             Personal Items
           </span>
-          <span className="font-semibold text-right">Up to 100 lbs</span>
+          <span className="font-semibold text-right">{formatPersonalItemsLabel(vehicle.personal_items_weight)}</span>
         </div>
       </div>
     </div>
