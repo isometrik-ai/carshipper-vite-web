@@ -148,9 +148,9 @@ export default function QuotePage({ quoteId }: { quoteId: string }) {
   // Map pricing tiers from API or use fallback
   const prices = quoteDetails?.data?.quote?.pricing?.tiers
     ? {
-        saver: quoteDetails?.data?.quote?.pricing?.tiers?.saver?.estimated_cost,
-        priority: quoteDetails?.data?.quote?.pricing?.tiers?.priority?.estimated_cost,
-        rush: quoteDetails?.data?.quote?.pricing?.tiers?.rush?.estimated_cost,
+        saver: quoteDetails?.data?.quote?.pricing?.tiers?.saver?.price,
+        priority: quoteDetails?.data?.quote?.pricing?.tiers?.priority?.price,
+        rush: quoteDetails?.data?.quote?.pricing?.tiers?.rush?.price,
         saverRatingEstimatedPickupDays: quoteDetails?.data?.quote?.pricing?.tiers?.saver?.estimated_pickup_days,
         priorityRatingEstimatedPickupDays: quoteDetails?.data?.quote?.pricing?.tiers?.priority?.estimated_pickup_days,
         rushRatingEstimatedPickupDays: quoteDetails?.data?.quote?.pricing?.tiers?.rush?.estimated_pickup_days,
