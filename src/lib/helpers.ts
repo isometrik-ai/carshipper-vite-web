@@ -43,3 +43,15 @@ export const formatDisplayDate = (
     year: "numeric",
   });
 };
+
+/** Maps quote/booking API `personal_items_weight` codes to user-facing labels. */
+export const formatPersonalItemsLabel = (weight: unknown): string => {
+  const raw = typeof weight === "string" ? weight.trim() : String(weight ?? "").trim();
+  const w = raw.toLowerCase();
+  if (!w) return "Up to 100 lbs";
+  if (w === "0-100" || w === "0_100") return "Up to 100 lbs";
+  if (w === "100-150" || w === "100_150") return "100–150 lbs";
+  if (w === "150-200" || w === "150_200") return "150–200 lbs";
+  if (w === "200+" || /^200\s*\+$/.test(w) || w.includes("more than 200")) return "200+ lbs";
+  return raw;
+};
