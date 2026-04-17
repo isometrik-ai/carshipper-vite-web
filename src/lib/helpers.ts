@@ -53,5 +53,5 @@ export const formatPersonalItemsLabel = (weight: unknown): string => {
   if (w === "100-150" || w === "100_150") return "100–150 lbs";
   if (w === "150-200" || w === "150_200") return "150–200 lbs";
   if (w === "200+" || /^200\s*\+$/.test(w) || w.includes("more than 200")) return "200+ lbs";
-  return raw;
+  return raw?.substring(0, 100); // or another reasonable size limit
 };
